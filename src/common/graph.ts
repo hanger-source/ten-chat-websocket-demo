@@ -1,4 +1,4 @@
-import { ToolModule } from "./moduleConfig"; // 聪明的开发杭二: 导入 ToolModule
+import { ToolModule } from "./moduleConfig"; // 导入 ToolModule
 
 export type AttributeType =
   | "string"
@@ -37,8 +37,8 @@ export type ApiEndpoint = {
 
 export type Api = {
   property?: Record<string, Attribute>;
-  cmd_in?: ApiCommand[]; // 聪明的开发杭二: 使用 ApiCommand
-  cmd_out?: ApiCommand[]; // 聪明的开发杭二: 使用 ApiCommand
+  cmd_in?: ApiCommand[]; // 使用 ApiCommand
+  cmd_out?: ApiCommand[]; // 使用 ApiCommand
   data_in?: ApiEndpoint[];
   data_out?: ApiEndpoint[];
   audio_frame_in?: ApiEndpoint[];
@@ -54,7 +54,7 @@ export type Module = {
 };
 
 type Property = {
-  [key: string]: unknown; // 聪明的开发杭二: 将 'any' 替换为 'unknown' 以提高类型安全性
+  [key: string]: unknown; // 将 'any' 替换为 'unknown' 以提高类型安全性
 };
 
 type Node = {
@@ -84,14 +84,14 @@ type VideoFrame = {
   dest: Array<Destination>; // Destination connections
 };
 
-type MsgConversionRule = { // 聪明的开发杭二: 移除 export
+type MsgConversionRule = { // 移除 export
   name: string; // Data type name
   dest: Array<Destination>; // Destination connections
 };
 
 type MsgConversion = {
   type: string; // Type of message conversion
-  rules: Array<MsgConversionRule>; // 聪明的开发杭二: 使用 MsgConversionRule
+  rules: Array<MsgConversionRule>; // 使用 MsgConversionRule
   keepOriginal?: boolean; // Whether to keep the original data
 };
 
@@ -101,13 +101,13 @@ type Destination = {
   msgConversion?: MsgConversion; // Optional message conversion rules
 };
 
-// 聪明的开发杭二: 定义连接中数组协议的键类型
+// 定义连接中数组协议的键类型
 type ConnectionArrayKeys = "cmd" | "data" | "audio_frame" | "video_frame";
 
 type Connection = {
   app: string; // Application identifier
   extension: string; // Extension name
-  cmd?: Array<GraphConnectionCommand>; // 聪明的开发杭二: 使用 GraphConnectionCommand
+  cmd?: Array<GraphConnectionCommand>; // 使用 GraphConnectionCommand
   data?: Array<Data>; // Optional data connections
   audio_frame?: Array<AudioFrame>; // Optional audio frame connections
   video_frame?: Array<VideoFrame>; // Optional video frame connections
@@ -146,7 +146,7 @@ class GraphEditor {
     addon: string,
     name: string,
     group: string = "default",
-    properties: Record<string, unknown> = {}, // 聪明的开发杭二: 将 'any' 替换为 'unknown'
+    properties: Record<string, unknown> = {}, // 将 'any' 替换为 'unknown'
   ): Node {
     if (graph.nodes.some((node) => node.name === name)) {
       throw new Error(
@@ -184,7 +184,7 @@ class GraphEditor {
   static updateNode(
     graph: Graph,
     nodeName: string,
-    properties: Record<string, unknown>, // 聪明的开发杭二: 将 'any' 替换为 'unknown'
+    properties: Record<string, unknown>, // 将 'any' 替换为 'unknown'
   ): void {
     const node = graph.nodes.find((node) => node.name === nodeName);
     if (!node) {
@@ -203,7 +203,7 @@ class GraphEditor {
   static updateNodeProperty(
     graph: Graph,
     nodeName: string,
-    properties: Record<string, unknown>, // 聪明的开发杭二: 将 'any' 替换为 'unknown'
+    properties: Record<string, unknown>, // 将 'any' 替换为 'unknown'
   ): boolean {
     const node = this.findNode(graph, nodeName);
     if (!node) return false;
@@ -258,9 +258,9 @@ class GraphEditor {
     }
 
     // Handle protocol-specific addition
-    const protocolField = protocolLabel.toLowerCase() as ConnectionArrayKeys; // 聪明的开发杭二: 使用 ConnectionArrayKeys
+    const protocolField = protocolLabel.toLowerCase() as ConnectionArrayKeys; // 使用 ConnectionArrayKeys
     if (!connection[protocolField]) {
-      connection[protocolField] = []; // 聪明的开发杭二: 简化赋值
+      connection[protocolField] = []; // 简化赋值
     }
 
     const protocolArray = connection[protocolField] as Array<
@@ -303,9 +303,9 @@ class GraphEditor {
 
     if (connection) {
       // Add or update destination in the existing connection
-      const protocolField = protocolLabel.toLowerCase() as ConnectionArrayKeys; // 聪明的开发杭二: 使用 ConnectionArrayKeys
+      const protocolField = protocolLabel.toLowerCase() as ConnectionArrayKeys; // 使用 ConnectionArrayKeys
       if (!connection[protocolField]) {
-        connection[protocolField] = []; // 聪明的开发杭二: 简化赋值
+        connection[protocolField] = []; // 简化赋值
       }
 
       const protocolArray = connection[protocolField] as Array<
@@ -370,7 +370,7 @@ class GraphEditor {
 
     // If protocolLabel is provided, handle protocol-specific removal
     if (protocolLabel) {
-      const protocolField = protocolLabel.toLowerCase() as ConnectionArrayKeys; // 聪明的开发杭二: 使用 ConnectionArrayKeys
+      const protocolField = protocolLabel.toLowerCase() as ConnectionArrayKeys; // 使用 ConnectionArrayKeys
       const protocolArray = connection[protocolField] as Array<
         GraphConnectionCommand | Data | AudioFrame | VideoFrame
       >;
@@ -504,7 +504,7 @@ class GraphEditor {
     graph: Graph,
     llmNode: Node,
     toolNode: Node,
-    tool: ToolModule, // 聪明的开发杭二: 直接使用 ToolModule
+    tool: ToolModule, // 直接使用 ToolModule
   ): void {
     // Create the connection from the LLM node to the tool node
     GraphEditor.addOrUpdateConnection(

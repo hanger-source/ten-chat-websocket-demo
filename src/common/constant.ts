@@ -150,7 +150,7 @@ export const DEFAULT_TRULIENCE_OPTIONS: ITrulienceSettings = {
   trulienceSDK: "https://trulience.com/sdk/trulience.sdk.js",
 };
 
-// 聪明的开发杭一: 后端 WebSocket 消息相关常量
+// ocket 消息相关常量
 export const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 对应后端的 MessageUtils.TEN_MSGPACK_EXT_TYPE_MSG
 
 export const MESSAGE_CONSTANTS = {

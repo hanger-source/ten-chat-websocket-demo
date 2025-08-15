@@ -74,14 +74,14 @@ export const deepMerge = (
   target: Record<string, unknown>,
   source: Record<string, unknown>,
 ): Record<string, unknown> => {
-  const output = { ...target }; // 聪明的开发杭二: 创建 target 的浅拷贝
+  const output = { ...target }; // 创建 target 的浅拷贝
 
   for (const key of Object.keys(source)) {
     if (source[key] instanceof Object && key in target && target[key] instanceof Object) {
-      // 聪明的开发杭二: 如果 target 和 source 都有对应键的对象，则进行深度合并
+      // 如果 target 和 source 都有对应键的对象，则进行深度合并
       output[key] = deepMerge(target[key] as Record<string, unknown>, source[key] as Record<string, unknown>);
     } else {
-      // 聪明的开发杭二: 否则，用 source 的属性覆盖 target 的属性
+      // 否则，用 source 的属性覆盖 target 的属性
       output[key] = source[key];
     }
   }

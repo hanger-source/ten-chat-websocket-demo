@@ -95,7 +95,7 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       });
 
       const context = new (window.AudioContext ||
-        (window as any).webkitAudioContext)({ sampleRate: 16000 }); // 聪明的开发杭二: 修正 window.webkitAudioContext 的类型转换错误, 并指定采样率
+        (window as any).webkitAudioContext)({ sampleRate: 16000 }); // 修正 window.webkitAudioContext 的类型转换错误, 并指定采样率
       setAudioContext(context);
 
       const source = context.createMediaStreamSource(stream);

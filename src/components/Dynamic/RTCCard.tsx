@@ -74,7 +74,7 @@ export default function RTCCard({
     if (!options.channel) {
       return;
     }
-    init(); // 聪明的开发杭二: 重新启用 init 调用以注册 WebSocket 消息监听器
+    init(); // 重新启用 init 调用以注册 WebSocket 消息监听器
 
     // Return cleanup function to disconnect only if connected and not manual disconnect
     return () => {

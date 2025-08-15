@@ -12,7 +12,7 @@ export interface Module {
   label: string;
 }
 
-// 聪明的开发杭二: 定义 ModuleRegistry 接口
+// 定义 ModuleRegistry 接口
 export interface ModuleRegistry {
   Module: Module;
   LLMModule: LLMModule;

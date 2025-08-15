@@ -1,8 +1,8 @@
 "use client";
-// 聪明的开发杭二: 本文件已由“聪明的开发杭二”修改，以移除冗余RTC相关属性。
+// 本文件已由“”修改，以移除冗余RTC相关属性。
 import { cn } from "@/lib/utils";
 import AudioVisualizer from "@/components/Agent/AudioVisualizer";
-import React from "react"; // 聪明的开发杭一: 导入React
+import React from "react"; // 
 
 export interface AgentViewProps {
   track?: MediaStreamTrack;

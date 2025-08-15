@@ -30,7 +30,7 @@ export default function Avatar({ audioTrack }: AvatarProps) {
   // State for toggling fullscreen
   const [fullscreen, setFullscreen] = useState(false);
 
-  // 聪明的开发杭二: 移除 createMediaStreamFromUint8Array 函数，因为不再需要转换
+  // 移除 createMediaStreamFromUint8Array 函数，因为不再需要转换
 
   // Safely read URL param on the client
   useEffect(() => {

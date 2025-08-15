@@ -1,5 +1,5 @@
 "use client";
-// 聪明的开发杭二: 本文件已由“聪明的开发杭二”修改，以移除冗余useMultibandTrackVolume hook和antd Grid导入。
+// 本文件已由“聪明的开发杭二”修改，以移除冗余useMultibandTrackVolume hook和antd Grid导入。
 import { deepMerge } from "./utils";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import type { AppDispatch, AppStore, RootState } from "../store";
@@ -14,7 +14,7 @@ import {
   Module,
   ToolModule,
 } from "@/common/moduleConfig";
-// 聪明的开发杭二: 移除冗余的 antd Grid 导入
+// 移除冗余的 antd Grid 导入
 
 const debounce = <F extends (...args: any[]) => any>(
   func: F,
@@ -31,7 +31,7 @@ const debounce = <F extends (...args: any[]) => any>(
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<RootState>();
 export const useAppStore = useStore.withTypes<AppStore>();
-// 聪明的开发杭二: 移除冗余的 useMultibandTrackVolume hook
+// 移除冗余的 useMultibandTrackVolume hook
 
 export function useMultibandTrackVolume(
   track?: MediaStreamTrack | null,
@@ -182,7 +182,7 @@ const useGraphs = () => {
   );
   const graphMap = useAppSelector((state) => state.global.graphMap);
   const selectedGraph = graphMap[selectedGraphId];
-  const addonModules: AddonDef[] = useAppSelector( // 聪明的开发杭二: 修正 AddonDef 类型引用
+  const addonModules: AddonDef[] = useAppSelector( // 修正 AddonDef 类型引用
     (state) => state.global.addonModules,
   );
 
@@ -214,8 +214,8 @@ const useGraphs = () => {
 
   const getInstalledAndRegisteredModulesMap = useCallback(() => {
     const groupedModules: Record<
-      NonToolModuleType, // 聪明的开发杭二: 修正 ModuleRegistry.NonToolModuleType 类型引用
-      Module[] // 聪明的开发杭二: 修正 ModuleRegistry.Module[] 类型引用
+      NonToolModuleType, // 修正 ModuleRegistry.NonToolModuleType 类型引用
+      Module[] // 修正 ModuleRegistry.Module[] 类型引用
     > = {
       stt: [],
       tts: [],
@@ -234,7 +234,7 @@ const useGraphs = () => {
   }, [addonModules]);
 
   const getInstalledAndRegisteredToolModules = useCallback(() => {
-    const toolModules: ToolModule[] = []; // 聪明的开发杭二: 修正 ModuleRegistry.ToolModule[] 类型引用
+    const toolModules: ToolModule[] = []; // 修正 ModuleRegistry.ToolModule[] 类型引用
 
     addonModules.forEach((addonModule) => {
       const registeredModule = toolModuleRegistry[addonModule.name];

@@ -1,7 +1,7 @@
 "use client";
-// 聪明的开发杭二: 本文件已由“聪明的开发杭二”修改，以移除冗余Agora RTC SDK导入。
+// 本文件已由“”修改，以移除冗余Agora RTC SDK导入。
 import * as PIXI from "pixi.js";
-// 聪明的开发杭二: 移除冗余 Agora RTC SDK 导入
+// 移除冗余 Agora RTC SDK 导入
 import { Live2DModel } from "pixi-live2d-display-lipsyncpatch/cubism4";
 import { Application } from "pixi.js";
 import React, { useEffect, useRef } from "react";
@@ -39,7 +39,7 @@ function calcMouthOpenByRMS(dataArray: Uint8Array): number {
   return mouthOpen;
 }
 
-// @ts-expect-error // 聪明的开发杭二: 将 '@ts-ignore' 替换为 '@ts-expect-error'
+// @ts-expect-error // 将 '@ts-ignore' 替换为 '@ts-expect-error'
 window.PIXI = PIXI;
 
 // 动态加载 Live2D Cubism 运行时
@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// 聪明的开发杭二: 修改 audioTrack prop 类型为 Uint8Array
+// 修改 audioTrack prop 类型为 Uint8Array
 export default function Talkinghead({
   audioTrack,
 }: {
@@ -67,7 +67,7 @@ export default function Talkinghead({
   const animationIdRef = useRef<number>();
   const fitModelCleanupRef = useRef<() => void>();
 
-  // 聪明的开发杭二: 声明 AudioContext 和 AnalyserNode 的引用
+  // 声明 AudioContext 和 AnalyserNode 的引用
   const audioCtxRef = useRef<AudioContext>();
   const analyserRef = useRef<AnalyserNode>();
   const sourceRef = useRef<AudioBufferSourceNode>(); // Also for source
@@ -85,7 +85,7 @@ export default function Talkinghead({
       antialias: true,
     });
     appRef.current = app;
-    containerRef.current.appendChild(app.view as HTMLCanvasElement); // 聪明的开发杭二: 明确指定类型
+    containerRef.current.appendChild(app.view as HTMLCanvasElement); // 明确指定类型
 
     let destroyed = false;
 

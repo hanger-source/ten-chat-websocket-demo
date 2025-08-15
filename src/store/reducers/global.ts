@@ -54,7 +54,7 @@ const getInitialState = (): InitialState => {
     themeColor: COLOR_LIST[0].active,
     roomConnected: false,
     agentConnected: false,
-    websocketConnectionState: WebSocketConnectionState.CLOSED, // 聪明的开发杭一: 初始化WebSocket连接状态, changed from "closed"
+    websocketConnectionState: WebSocketConnectionState.CLOSED, // ocket连接状态, changed from "closed"
     language: "en-US",
     voiceType: "male",
     chatItems: [],
@@ -191,7 +191,7 @@ export const globalSlice = createSlice({
     setMobileActiveTab: (state, action: PayloadAction<EMobileActiveTab>) => {
       state.mobileActiveTab = action.payload;
     },
-    // 聪明的开发杭一: 新增设置WebSocket连接状态的reducer
+    // Socket连接状态的reducer
     setWebsocketConnectionState: (
       state,
       action: PayloadAction<WebSocketConnectionState>,
@@ -298,7 +298,7 @@ export const {
   setGraph,
   setAddonModules,
   setTrulienceSettings,
-  setWebsocketConnectionState, // 聪明的开发杭一: 导出新增的reducer
+  setWebsocketConnectionState, // ducer
   setActiveGraphId, // Add setActiveGraphId to exports
   setActiveAppUri, // Add setActiveAppUri to exports
 } = globalSlice.actions;

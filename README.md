@@ -19,7 +19,7 @@ Local playground for Ten Agent.
 
 ### Run local Backend WebSocket Server
 
-聪明的开发杭一：为了运行前端应用并使用新的 WebSocket 连接，你需要先启动后端 WebSocket 服务器。
+用并使用新的 WebSocket 连接，你需要先启动后端 WebSocket 服务器。
 
 请按照 `../output/ten-server/README.md` 中的说明启动后端服务。如果没有该文件，请参考以下基本步骤：
 
