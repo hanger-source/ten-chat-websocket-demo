@@ -25,7 +25,7 @@ import { TrulienceCfgSheet } from "../Chat/ChatCfgTrulienceSetting";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import SettingsDialog from "@/components/Settings/SettingsDialog";
-import { useAgentSettings } from "@/hooks/useAgentSettings";
+import { useAgentSettings, getAgentSettings } from "@/hooks/useAgentSettings";
 import { z } from "zod";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
 import { SessionConnectionState } from "@/types/websocket";
@@ -36,7 +36,7 @@ import { CommandType } from "@/types/websocket";
 const agentSettingSchema = z.object({
   greeting: z.string().optional(),
   prompt: z.string().optional(),
-  env: z.string().optional(),
+  env: z.record(z.string(), z.string()).optional(),
   echoCancellation: z.boolean().optional(),
   noiseSuppression: z.boolean().optional(),
   autoGainControl: z.boolean().optional(),
@@ -76,7 +76,7 @@ export default function Action(props: { className?: string }) {
   }, [channel]);
 
   // Removed checkAgentConnected function
-  const onClickConnect = async () => {
+  const onClickConnect = React.useCallback(async () => {
     if (loading) {
       return;
     }
@@ -101,20 +101,18 @@ export default function Action(props: { className?: string }) {
         return;
       }
 
-      const { env } = agentSettings;
+      const latestSettings = getAgentSettings(); // Directly get latest settings
       try {
         await webSocketManager.connect(); // Ensure WebSocket is connected
-        // No longer set agentConnected or show success here, startSession will handle it
-        console.log('Action.tsx: Before calling startSession - isConnected:', isConnected, 'sessionState:', sessionState);
-        await startSession(); // Directly call startSession after WebSocket connects
+        await startSession(latestSettings); // Pass latest settings
 
       } catch (error) {
-        console.error("Error during connection or session start:", error); // Updated error message
-        toast.error("AI 连接或启动失败"); // Updated toast message
+        console.error("Error during connection or session start:", error);
+        toast.error("AI 连接或启动失败");
       }
     }
     setLoading(false);
-  };
+  }, [loading, agentConnected, graphList, selectedGraphId, isConnected, sessionState, startSession, stopSession, webSocketManager]); // Removed agentSettings from dependencies
 
   // Removed startPing and stopPing functions
 
@@ -196,28 +194,12 @@ export default function Action(props: { className?: string }) {
       <SettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
-        defaultValues={{
-          greeting: agentSettings.greeting,
-          prompt: agentSettings.prompt,
-          env: JSON.stringify(agentSettings.env, null, 2) || "{}", // Pass env as JSON string
-          echoCancellation: agentSettings.echoCancellation,
-          noiseSuppression: agentSettings.noiseSuppression,
-          autoGainControl: agentSettings.autoGainControl,
-        }}
+        defaultValues={agentSettings}
         onSubmit={(values: AgentSettingFormValues) => {
-          let parsedEnv: Record<string, string> = {};
-          try {
-            parsedEnv = values.env ? JSON.parse(values.env) : {};
-          } catch (e) {
-            toast.error("环境变量 JSON 格式不正确。");
-            console.error("Error parsing env JSON:", e);
-            return; // Stop form submission if JSON is invalid
-          }
-
           saveSettings({
             greeting: values.greeting || "",
             prompt: values.prompt || "",
-            env: parsedEnv,
+            env: values.env || {}, // Directly use values.env
             echoCancellation: values.echoCancellation ?? true,
             noiseSuppression: values.noiseSuppression ?? true,
             autoGainControl: values.autoGainControl ?? true,

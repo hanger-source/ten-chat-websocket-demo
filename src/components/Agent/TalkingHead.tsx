@@ -14,7 +14,7 @@ function calcMouthOpenByRMS(dataArray: Uint8Array): number {
   let sum = 0;
   let count = 0;
 
-  console.log(`calcMouthOpenByRMS: dataArray length = ${dataArray.length}`); // Add logging for dataArray length
+  // console.log(`calcMouthOpenByRMS: dataArray length = ${dataArray.length}`); // Add logging for dataArray length
 
   // 分析更精确的频段范围，专注于语音频率
   const startIndex = Math.floor(dataArray.length * 0.2); // 20% 开始
@@ -34,7 +34,7 @@ function calcMouthOpenByRMS(dataArray: Uint8Array): number {
   const normalizedValue = Math.max(0, (rms - 0.001) * 15);
   const mouthOpen = Math.min(Math.pow(normalizedValue, 0.8), 1);
 
-  console.log(`calcMouthOpenByRMS: RMS=${rms.toFixed(4)}, MouthOpen=${mouthOpen.toFixed(4)}`); // Add logging
+  // console.log(`calcMouthOpenByRMS: RMS=${rms.toFixed(4)}, MouthOpen=${mouthOpen.toFixed(4)}`); // Add logging
 
   return mouthOpen;
 }

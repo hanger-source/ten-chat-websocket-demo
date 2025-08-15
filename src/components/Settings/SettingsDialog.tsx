@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 const agentSettingSchema = z.object({
   greeting: z.string().optional(),
   prompt: z.string().optional(),
+  env: z.record(z.string(), z.string()).optional(), // Add env to schema
   echoCancellation: z.boolean().optional(),
   noiseSuppression: z.boolean().optional(),
   autoGainControl: z.boolean().optional(),
@@ -39,7 +40,7 @@ type AgentSettingFormValues = z.infer<typeof agentSettingSchema>;
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues: AgentSettingFormValues & { env?: string };
+  defaultValues: AgentSettingFormValues;
   onSubmit: (values: AgentSettingFormValues) => void;
 }
 
@@ -66,22 +67,20 @@ export default function SettingsDialog({
   useEffect(() => {
     if (open) {
       form.reset({
-        greeting: defaultValues.greeting || "",
-        prompt: defaultValues.prompt || "",
-        echoCancellation: defaultValues.echoCancellation,
-        noiseSuppression: defaultValues.noiseSuppression,
-        autoGainControl: defaultValues.autoGainControl,
+        greeting: agentSettings.greeting || "",
+        prompt: agentSettings.prompt || "",
+        echoCancellation: agentSettings.echoCancellation,
+        noiseSuppression: agentSettings.noiseSuppression,
+        autoGainControl: agentSettings.autoGainControl,
       });
     }
-  }, [open, defaultValues, form]);
+  }, [open, agentSettings, form]);
 
   const handleSubmit = (data: AgentSettingFormValues) => {
-    const env = agentSettings.env; // Use existing env
-
     const newSettings: IAgentSettings = {
       greeting: data.greeting || "",
       prompt: data.prompt || "",
-      env: env,
+      env: { ...agentSettings.env, ...data.env }, // Merge existing env with new env data
       echoCancellation: data.echoCancellation ?? true,
       noiseSuppression: data.noiseSuppression ?? true,
       autoGainControl: data.autoGainControl ?? true,

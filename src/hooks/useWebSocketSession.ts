@@ -14,7 +14,7 @@ const FRONTEND_APP_URI = "mock_front://test_app"; // Define fixed frontend URI
 interface UseWebSocketSessionResult {
   isConnected: boolean;
   sessionState: SessionConnectionState;
-  startSession: () => Promise<void>;
+  startSession: (agentSettings: IAgentSettings) => Promise<void>;
   stopSession: () => Promise<void>;
   sendMessage: (name: string, messageContent: string) => void; // Changed message type to string
   sendCommand: (commandType: CommandType, srcLoc?: Location, destLocs?: Location[], properties?: Record<string, any>) => void; // Make srcLoc and destLocs optional
@@ -34,10 +34,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
   const selectedGraph = selectedGraphId ? graphMap[selectedGraphId] : null;
 
   // 获取设置中的属性
-  const { agentSettings } = useAgentSettings(); // Get agentSettings using the hook
   const options = useAppSelector((state: RootState) => state.global.options);
-
-  // console.log(`useWebSocketSession: Render - selectedGraphId: ${selectedGraphId}, activeGraphId: ${activeGraphId}, activeAppUri: ${activeAppUri}`);
 
   const sessionStateRef = useRef<SessionConnectionState>(SessionConnectionState.IDLE);
   const [sessionState, setSessionState] = useState<SessionConnectionState>(SessionConnectionState.IDLE);
@@ -50,7 +47,6 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
   }), [activeGraphId, selectedGraphId]); // FRONTEND_APP_URI is constant, no need in dependency array
 
   const handleConnectionStateChange = useCallback((newState: WebSocketConnectionState) => {
-    console.log("useWebSocketSession: WebSocket connection state changed to:", newState);
     dispatch(setWebsocketConnectionState(newState));
     if (newState === WebSocketConnectionState.CLOSED) {
       dispatch(setAgentConnected(false));
@@ -59,7 +55,6 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       // webSocketManager.setManualDisconnectFlag(false); // Removed: Flag is reset by WebSocketManager's handleReconnect
       setSessionState(SessionConnectionState.IDLE);
       sessionStateRef.current = SessionConnectionState.IDLE;
-      console.log("useWebSocketSession: WebSocket disconnected, session state reset to IDLE.");
     }
   }, [dispatch]);
 
@@ -70,7 +65,6 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
     }
     const cmdResult = message as CommandResult;
 
-    console.log(`useWebSocketSession: Received CMD_RESULT for ${cmdResult.original_cmd_name}: success=${cmdResult.success}, message=${cmdResult.errorMessage || cmdResult.error}`);
     if (cmdResult.original_cmd_name === CommandType.START_GRAPH) {
       if (cmdResult.success) {
         setSessionState(SessionConnectionState.SESSION_ACTIVE);
@@ -112,20 +106,18 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
     return () => {
       webSocketManager.offConnectionStateChange(handleConnectionStateChange);
       webSocketManager.offMessage(MessageType.CMD_RESULT, handleCommandResult);
-      console.log("useWebSocketSession: Cleaning up WebSocket connection and session listeners");
       setSessionState(SessionConnectionState.IDLE);
       sessionStateRef.current = SessionConnectionState.IDLE;
     };
   }, [handleConnectionStateChange, handleCommandResult]);
 
-  const startSession = useCallback(async () => {
+  const startSession = useCallback(async (agentSettings: IAgentSettings) => {
     if (!selectedGraph) {
       toast.error("请先选择一个图");
       return;
     }
 
     const currentWebsocketConnectionState = webSocketManager.getConnectionState();
-    console.log(`useWebSocketSession: Attempting to start session. websocketConnectionState: ${currentWebsocketConnectionState} sessionState: ${sessionStateRef.current}`);
     if (currentWebsocketConnectionState !== WebSocketConnectionState.OPEN || sessionStateRef.current !== SessionConnectionState.IDLE) {
       toast.error("无法启动 AI：WebSocket 未连接或 AI 已激活"); // Changed message
       return;
@@ -151,16 +143,12 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
     });
     setSessionState(SessionConnectionState.CONNECTING_SESSION);
 
-  }, [selectedGraph, defaultLocation, dispatch]);
+  }, [selectedGraph, defaultLocation, dispatch, options]); // Remove agentSettings from dependencies
 
   const stopSession = useCallback(async () => {
     if (sessionStateRef.current === SessionConnectionState.SESSION_ACTIVE) {
-      console.log("useWebSocketSession: Explicitly stopping AI. Sending STOP_GRAPH command."); // Changed message
-      
-      console.log("useWebSocketSession: About to set _isManualDisconnect to true.");
       webSocketManager.setManualDisconnectFlag(true); // Set manual disconnect flag BEFORE sending STOP_GRAPH
-      console.log("useWebSocketSession: _isManualDisconnect set to true.");
-
+      
       const destLocsForStop: Location[] = activeAppUri ? [{
         app_uri: activeAppUri,
         graph_id: activeGraphId,
