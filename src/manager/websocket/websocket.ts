@@ -427,4 +427,4 @@ export class WebSocketManager {
 }
 
 // 创建全局 WebSocket 管理器实例
-export const webSocketManager = new WebSocketManager('ws://localhost:9090/websocket');
+export const webSocketManager = new WebSocketManager(import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:9090/websocket');

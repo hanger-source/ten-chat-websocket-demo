@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Graph, AddonDef } from "./graph";
 
-const agentUrl = "http://localhost:9090";
+const agentUrl = import.meta.env.VITE_AGENT_URL || "http://localhost:9090";
 const api = axios.create({
   baseURL: agentUrl,
 });

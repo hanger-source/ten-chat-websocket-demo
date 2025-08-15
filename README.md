@@ -1,9 +1,9 @@
 # ten-chat-websocket-demo
-![Demo](https://github.com/hanger-source/ten-realtime-chat/blob/main/demo.png)
+![Demo](https://github.com/hanger-source/ten-realtime-chat/raw/main/demo.png)
 
-- [返回主项目](https://github.com/hanger-source/ten-realtime-chat/blob/main/README.md): `ten-realtime-chat` 是一个全面的实时聊天应用示例，旨在展示如何高效整合基于 WebSocket 的前端和基于 Java `ten4j` 框架的后端，实现高性能、高并发的双向实时通信。
+- [返回主项目](https://github.com/hanger-source/ten-realtime-chat): `ten-realtime-chat` 是一个全面的实时聊天应用示例，旨在展示如何高效整合基于 WebSocket 的前端和基于 Java `ten4j` 框架的后端，实现高性能、高并发的双向实时通信。
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/hanger-source/ten-chat-websocket-demo/blob/main/LICENSE)
 
 ## 🚀 项目简介
 
@@ -15,7 +15,7 @@
 
 -   **实时消息传输**: 利用 WebSocket 协议，实现消息的即时发送与接收，确保沟通无延迟。
 -   **直观的用户界面**: 采用 `React` 和 `Tailwind CSS` 构建，提供简洁、美观且响应式的聊天界面，适配不同设备。
--   **深度集成 ten4j**: 后端完全基于 `ten4j` 框架开发，充分展现其在构建高性能、高并发实时通信应用方面的强大能力。
+-   **深度集成 [ten4j](https://github.com/hanger-source/ten4j)**: 后端完全基于 `ten4j` 框架开发，充分展现其在构建高性能、高并发实时通信应用方面的强大能力。
 -   **可扩展架构**: 项目结构清晰，易于理解和扩展，方便开发者在此基础上进行二次开发。
 -   **跨平台兼容**: 前端可在现代浏览器中运行，后端基于 Java，具备良好的跨平台特性。
 
@@ -47,29 +47,18 @@ git clone <项目地址>
 cd ten-realtime-chat
 ```
 
-### 2. 启动后端服务 (`ten4j`)
-
-进入 `ten4j` 目录并编译运行后端服务。请确保您的系统已安装 Java 开发环境 (JDK) 和 Maven。
-
-```bash
-cd ten4j
-mvn clean install
-mvn spring-boot:run
-```
-
-请确认后端服务已成功启动，并监听 WebSocket 连接 (通常在 `ws://localhost:8080/websocket` 等地址)。
-
-### 3. 启动前端应用 (`ten-chat-websocket-demo`)
+### 2. 启动前端应用 (`ten-chat-websocket-demo`)
 
 在新终端中，进入 `ten-chat-websocket-demo` 目录，安装依赖并启动前端应用：
 
 ```bash
-cd ten-chat-websocket-demo
 bun install
 bun run dev
 ```
 
 前端应用通常会在 `http://localhost:3000` 或类似地址上启动。在浏览器中打开该地址即可访问功能完备的实时聊天应用。
+
+**注意**: 如果您是单独运行此前端项目，请确保后端服务 (`ten4j`) 已在 `http://localhost:8080` 启动并运行。
 
 ## 📂 文件结构
 
@@ -104,4 +93,4 @@ ten-realtime-chat/
 
 ## 📄 许可证
 
-本项目采用 Apache 2.0 许可证。更多详情请参阅 [LICENSE](LICENSE) 文件。
+本项目采用 Apache 2.0 许可证。更多详情请参阅 [`LICENSE`](https://github.com/hanger-source/ten-chat-websocket-demo/blob/main/LICENSE) 文件。
