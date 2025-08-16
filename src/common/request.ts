@@ -2,7 +2,7 @@ import axios from "axios";
 import { Graph, AddonDef } from "./graph";
 
 // 从 window 对象获取动态注入的环境变量，如果没有则回退到 /api
-const agentUrl = "/api";
+const agentUrl = import.meta.env.VITE_BACKEND_URL; // 从环境变量获取后端URL
 const api = axios.create({
   baseURL: agentUrl,
 });

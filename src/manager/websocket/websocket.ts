@@ -427,4 +427,4 @@ export class WebSocketManager {
 }
 
 // 创建全局 WebSocket 管理器实例
-export const webSocketManager = new WebSocketManager(import.meta.env.VITE_BACKEND_URL?.replace("http", "ws") + "/websocket" || "/websocket");
+export const webSocketManager = new WebSocketManager((import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080').replace('http', 'ws') + '/websocket');
