@@ -9,15 +9,16 @@ import {
 import { useAppDispatch, useAppSelector } from "@/common/hooks";
 import { setSelectedGraphId } from "@/store/reducers/global";
 import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react"; // Import ExternalLink icon
 
 export function RemoteGraphSelect() {
   const dispatch = useAppDispatch();
   const graphName = useAppSelector((state) => state.global.selectedGraphId);
   const graphs = useAppSelector((state) => state.global.graphList);
+  const graphMap = useAppSelector((state) => state.global.graphMap); // Get graphMap
   const websocketConnectionState = useAppSelector((state) => state.global.websocketConnectionState);
 
-  // console.log('RemoteGraphSelect: graphName', graphName);
-  // console.log('RemoteGraphSelect: graphs', graphs);
+  const selectedGraph = graphName ? graphMap[graphName] : null;
 
   const onGraphNameChange = (val: string) => {
     dispatch(setSelectedGraphId(val));
@@ -31,7 +32,7 @@ export function RemoteGraphSelect() {
   // console.log('RemoteGraphSelect: graphOptions', graphOptions);
 
   return (
-    <>
+    <div className="flex items-center space-x-2">
       <Select
         value={graphName}
         onValueChange={onGraphNameChange}
@@ -51,6 +52,6 @@ export function RemoteGraphSelect() {
           ))}
         </SelectContent>
       </Select>
-    </>
+    </div>
   );
 }

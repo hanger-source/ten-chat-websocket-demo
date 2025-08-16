@@ -69,6 +69,15 @@ export default function Action(props: { className?: string }) {
   const { agentSettings, saveSettings } = useAgentSettings();
   const { isConnected, sessionState, defaultLocation, startSession, stopSession } = useWebSocketSession();
 
+  const selectedGraph = React.useMemo(() => {
+      return graphList.find((graph) => graph.uuid === selectedGraphId);
+  }, [graphList, selectedGraphId]);
+
+  const docUrl = selectedGraph?.docUrl;
+
+  console.log("Action.tsx: selectedGraph:", selectedGraph); // 排查日志
+  console.log("Action.tsx: docUrl:", docUrl); // 排查日志
+
   React.useEffect(() => {
     if (channel) {
       // No longer need to check agent connected here, useWebSocketSession handles it
@@ -195,6 +204,7 @@ export default function Action(props: { className?: string }) {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         defaultValues={agentSettings}
+        docUrl={docUrl} // Pass docUrl here
         onSubmit={(values: AgentSettingFormValues) => {
           saveSettings({
             greeting: values.greeting || "",

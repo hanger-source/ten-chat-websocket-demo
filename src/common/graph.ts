@@ -117,6 +117,7 @@ type Graph = {
   uuid: string;
   name: string;
   autoStart: boolean;
+  docUrl?: string; // Add docUrl here
   nodes: Node[];
   connections: Connection[];
 };

@@ -25,6 +25,7 @@ import { IAgentSettings } from "@/types"; // Import IAgentSettings
 import { Switch } from "@/components/ui/switch";
 import { ChevronDown, ChevronUp } from "lucide-react"; // Import icons
 import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react"; // Import ExternalLink icon
 
 const agentSettingSchema = z.object({
   greeting: z.string().optional(),
@@ -42,6 +43,7 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultValues: AgentSettingFormValues;
   onSubmit: (values: AgentSettingFormValues) => void;
+  docUrl?: string; // Add docUrl prop here
 }
 
 export default function SettingsDialog({
@@ -49,6 +51,7 @@ export default function SettingsDialog({
   onOpenChange,
   defaultValues,
   onSubmit,
+  docUrl, // Destructure docUrl prop
 }: SettingsDialogProps) {
   const { agentSettings, saveSettings } = useAgentSettings();
   const [showAudioSettings, setShowAudioSettings] = useState(false); // New state for collapsable section
@@ -235,7 +238,17 @@ export default function SettingsDialog({
               </Button>
             </div>
 
-            <Button type="submit">保存</Button>
+            <div className="flex justify-between items-center mt-4">
+              <Button type="submit">保存</Button>
+              {docUrl && (
+                <a href={docUrl} target="_blank" rel="noopener noreferrer" title="查看说明文档">
+                  <span className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 text-sm">
+                    <ExternalLink className="h-4 w-4" />
+                    <span>说明文档</span>
+                  </span>
+                </a>
+              )}
+            </div>
           </form>
         </Form>
       </DialogContent>
