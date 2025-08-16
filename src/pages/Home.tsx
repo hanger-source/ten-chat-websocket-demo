@@ -20,6 +20,7 @@ import AuthInitializer from "@/components/authInitializer"; // Add AuthInitializ
 import RTCCard from "@/components/Dynamic/RTCCard"; // Import RTCCard
 import { RootState } from "@/store"; // Import RootState
 import { WebSocketConnectionState } from "@/types/websocket"; // Import WebSocketConnectionState
+import { useAudioRecorder } from "@/hooks/useAudioRecorder"; // 启用 useAudioRecorder hook
 
 function Home() {
   try {
@@ -31,14 +32,10 @@ function Home() {
 
     // const { isConnected, sessionState, defaultLocation } = useWebSocketSession(); // Removed
     // const { agentSettings } = useAgentSettings(); // Removed
-    // const { mediaStreamTrack, micPermission, sendAudioFrame } = useMicrophoneStream({ isConnected, sessionState, defaultLocation, settings: agentSettings }); // Removed
-    // const [audioMute, setAudioMute] = React.useState(true); // Removed
+    // const { mediaStreamTrack, micPermission, sendAudioFrame } = useMicrophoneStream({ isConnected, sessionState, defaultLocation, settings: agentSettings }); // Pass settings and get micPermission and sendAudioFrame
+    // const [audioMute, setAudioMute] = React.useState(true);
 
-    // const { recordedChunksCount, onAudioDataCaptured, downloadRecordedAudio } = useAudioRecorder(); // Commented out useAudioRecorder hook
-    // Removed recordedChunksCount, onAudioDataCaptured, downloadRecordedAudio from usage below
-    const recordedChunksCount = 0; // Dummy value
-    const onAudioDataCaptured = (audioData: Uint8Array) => {}; // Dummy function
-    const downloadRecordedAudio = () => {}; // Dummy function
+    const { recordedChunksCount, onAudioDataCaptured, downloadRecordedAudio } = useAudioRecorder(); // 启用 useAudioRecorder hook
 
     // Removed getSessionStateText function and related logging
     // const activeTrack = audioMute ? undefined : (mediaStreamTrack || undefined);
@@ -59,7 +56,7 @@ function Home() {
               },
             )}>
               <div className="flex h-full flex-col min-h-0 bg-gray-50 w-full">
-                <RTCCard className="flex-1" />
+                <RTCCard className="flex-1" recordedChunksCount={recordedChunksCount} downloadRecordedAudio={downloadRecordedAudio} onAudioDataCaptured={onAudioDataCaptured} />
               </div>
             </div>
 

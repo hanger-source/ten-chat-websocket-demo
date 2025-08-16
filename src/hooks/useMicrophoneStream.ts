@@ -22,10 +22,12 @@ export function useMicrophoneStream({ isConnected, sessionState, defaultLocation
   const streamTrackRef = useRef<MediaStreamTrack | null>(null); // New: useRef for the track
 
   const sendAudioFrame = React.useCallback((audioData: Uint8Array) => {
+    // console.log('AGENT_TRACE: sendAudioFrame called with audioData length:', audioData.length);
     if (isConnected && sessionState === SessionConnectionState.SESSION_ACTIVE) {
+      // console.log('AGENT_TRACE: sendAudioFrame - isConnected and sessionState are active. Sending audio to WebSocket.');
       webSocketManager.sendAudioFrame(audioData, defaultLocation, [defaultLocation]);
     } else {
-      console.warn('WebSocket 未连接或会话未激活，跳过发送音频数据。');
+      console.warn('WebSocket 未连接或会话未激活，跳过发送音频数据。', { isConnected, sessionState });
     }
   }, [isConnected, sessionState, defaultLocation]);
 

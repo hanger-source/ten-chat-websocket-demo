@@ -42,8 +42,14 @@ let hasInit: boolean = false;
 
 export default function RTCCard({
   className,
+  recordedChunksCount,
+  downloadRecordedAudio,
+  onAudioDataCaptured, // Destructure onAudioDataCaptured
 }: {
   className?: string;
+  recordedChunksCount: number; // Add prop
+  downloadRecordedAudio: () => void; // Add prop
+  onAudioDataCaptured: (audioData: Uint8Array) => void; // Add prop
 }) {
   const dispatch = useAppDispatch();
   const options = useAppSelector((state: RootState) => state.global.options);
@@ -217,7 +223,18 @@ export default function RTCCard({
       {/* Bottom region for microphone and video blocks */}
       <div className="w-full space-y-2 px-2 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
         {/* Microphone control area */}
-        <Microphone onMuteChange={setAudioMute} isConnected={isConnected} sessionState={sessionState} defaultLocation={defaultLocation} onAudioDataCaptured={sendAudioFrame} /> {/* Pass sendAudioFrame */}
+        <Microphone
+          onMuteChange={setAudioMute}
+          isConnected={isConnected}
+          sessionState={sessionState}
+          defaultLocation={defaultLocation}
+          recordedChunksCount={recordedChunksCount}
+          downloadRecordedAudio={downloadRecordedAudio}
+          onRawAudioDataAvailable={(audioData) => {
+            sendAudioFrame(audioData);
+            // onAudioDataCaptured(audioData);
+          }} // Pass raw audio data to sendAudioFrame and onAudioDataCaptured
+        />
 
         {/* Audio Visualizer area */}
         <div>

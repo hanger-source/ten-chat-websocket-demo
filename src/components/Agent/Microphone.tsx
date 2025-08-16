@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MicIcon } from "@/components/icons/mic";
 import MicrophoneDeviceSelect from "@/components/Agent/MicrophoneDeviceSelect"; // Import MicrophoneDeviceSelect
 import { SessionConnectionState, Location } from "@/types/websocket";
-import { useMicrophoneStream } from "@/hooks/useMicrophoneStream";
+// import { useMicrophoneStream } from "@/hooks/useMicrophoneStream"; // Removed
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAgentSettings } from "@/hooks/useAgentSettings"; // Import useAgentSettings
@@ -15,7 +15,9 @@ interface MicrophoneProps {
   sessionState: SessionConnectionState;
   defaultLocation: Location;
   onMuteChange: (isMuted: boolean) => void;
-  onAudioDataCaptured?: (audioData: Uint8Array) => void; // New prop for audio data
+  onRawAudioDataAvailable?: (audioData: Uint8Array) => void; // New prop for raw audio data
+  recordedChunksCount: number; // Add prop for recordedChunksCount
+  downloadRecordedAudio: () => void; // Add prop for downloadRecordedAudio
 }
 
 export const Microphone: React.FC<MicrophoneProps> = ({
@@ -23,7 +25,9 @@ export const Microphone: React.FC<MicrophoneProps> = ({
   sessionState,
   defaultLocation,
   onMuteChange,
-  onAudioDataCaptured,
+  onRawAudioDataAvailable, // Destructure new prop
+  recordedChunksCount, // Destructure recordedChunksCount
+  downloadRecordedAudio, // Destructure downloadRecordedAudio
 }) => {
   const [audioMute, setAudioMute] = useState(true); // Changed initial state to true
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
@@ -44,12 +48,12 @@ export const Microphone: React.FC<MicrophoneProps> = ({
 
   const { agentSettings, updateSettings } = useAgentSettings(); // Use agent settings
 
-  const { sendAudioFrame } = useMicrophoneStream({
-    isConnected,
-    sessionState,
-    defaultLocation,
-    settings: agentSettings, // Pass agent settings to useMicrophoneStream
-  });
+  // const { sendAudioFrame } = useMicrophoneStream({
+  //   isConnected,
+  //   sessionState,
+  //   defaultLocation,
+  //   settings: agentSettings, // Pass agent settings to useMicrophoneStream
+  // });
 
   useEffect(() => {
     if (!audioMute && isConnected && sessionState === SessionConnectionState.SESSION_ACTIVE) {
@@ -63,6 +67,8 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       // setRecordedChunksCount(0);
     };
   }, [audioMute, isConnected, sessionState, agentSettings.autoGainControl, agentSettings.noiseSuppression, agentSettings.echoCancellation, onMuteChange]); // Add agentSettings to dependencies
+
+  // console.log('AGENT_TRACE: Microphone Component rendered.', { isConnected, sessionState, defaultLocation, onMuteChange, onRawAudioDataAvailable, recordedChunksCount, downloadRecordedAudio });
 
   const startMicrophone = async () => {
     console.log('MicrophoneBlock: startMicrophone called');
@@ -116,10 +122,8 @@ export const Microphone: React.FC<MicrophoneProps> = ({
             pcmData[i] = Math.max(-1, Math.min(1, inputBuffer[i])) * 0x7fff;
           }
           const pcmUint8 = new Uint8Array(pcmData.buffer);
-          sendAudioFrame(pcmUint8);
 
-          // New: Pass captured audio data to parent via callback
-          onAudioDataCaptured?.(pcmUint8);
+          onRawAudioDataAvailable?.(pcmUint8);
         }
       };
 

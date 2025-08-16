@@ -80,8 +80,12 @@ export function useAudioRecorder(): UseAudioRecorderResult {
 
   // Callback to receive audio data from the microphone component
   const onAudioDataCaptured = useCallback((audioData: Uint8Array) => {
+    // console.log('AGENT_TRACE: useAudioRecorder - onAudioDataCaptured called with data length:', audioData.length);
     recordedAudioChunksRef.current.push(audioData);
-    setRecordedChunksCount(prev => prev + 1);
+    setRecordedChunksCount(prev => {
+      // console.log('AGENT_TRACE: useAudioRecorder - recordedChunksCount updated to:', prev + 1);
+      return prev + 1;
+    });
   }, []);
 
   // Function to clear recorded data
