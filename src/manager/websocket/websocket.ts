@@ -47,7 +47,7 @@ export class WebSocketManager {
     private commandSendHandlers: ((commandName: CommandType, properties: Record<string, any>) => void)[] = []; // New: Handlers for command send events
     private _isManualDisconnect: boolean = false; // New: Flag to indicate manual disconnect
 
-    constructor(private url: string) { }
+    constructor(private url: string) {}
 
     // 连接 WebSocket
     public async connect(): Promise<void> {
@@ -427,4 +427,4 @@ export class WebSocketManager {
 }
 
 // 创建全局 WebSocket 管理器实例
-export const webSocketManager = new WebSocketManager(import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:9090/websocket');
+export const webSocketManager = new WebSocketManager(import.meta.env.VITE_BACKEND_URL?.replace("http", "ws") + "/websocket" || "/websocket");
