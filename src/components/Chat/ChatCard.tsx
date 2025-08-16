@@ -21,6 +21,7 @@ export default function ChatCard(props: { className?: string }) {
     role: 'user' | 'agent' | 'assistant';
     end_of_segment?: boolean; // Added to track streaming status of each message
     groupTimestamp?: number; // Added to link messages to their group
+    group_id?: string; // Add group_id to chatMessages state
     asrRequestId?: string; // New: Unique ID for ASR requests to track partial results
   }[]>([]);
   const lastGroupTimestampRef = React.useRef<number | undefined>(undefined);
@@ -52,10 +53,12 @@ export default function ChatCard(props: { className?: string }) {
       if (message.type === MessageType.DATA && message.properties) {
         const { role, end_of_segment, group_timestamp: currentGroupTimestamp, asr_request_id: asrRequestId } = message.properties;
         const text = message.properties.audio_text || message.properties.text; // Prefer audio_text
+        const group_id = message.properties.group_id; // Extract group_id
 
         console.log('ChatCard: extracted text', text);
         console.log('ChatCard: currentGroupTimestamp', currentGroupTimestamp);
         console.log('ChatCard: lastGroupTimestampRef.current', lastGroupTimestampRef.current);
+        // console.log(`排查日志: 收到消息 group_id: ${group_id}, end_of_segment: ${end_of_segment}`);
 
         if (typeof text === 'string' && (role === 'user' || role === 'agent' || role === 'assistant')) {
           setChatMessages((prevMessages) => {
@@ -116,12 +119,12 @@ export default function ChatCard(props: { className?: string }) {
                 newMessages.push({ text, role, end_of_segment: true, groupTimestamp: undefined });
                 lastGroupTimestampRef.current = undefined; // Reset AI group tracker when user speaks
             } else { // role is 'agent' or 'assistant'
-              // Conditions for appending to the last message (streaming within the same group)
+              // Conditions for appending to the last message (streaming within the same group or same group_id)
               const shouldAppend = (
                 lastMessage &&
-                lastMessage.groupTimestamp === currentGroupTimestamp && // Must be the same active group
                 lastMessage.role === role && // Must be the same role
-                lastMessage.end_of_segment === false // Last message was an ongoing stream
+                lastMessage.end_of_segment === false && // Last message was an ongoing stream
+                (lastMessage.group_id === group_id || (typeof lastMessage.groupTimestamp === 'number' && lastMessage.groupTimestamp === currentGroupTimestamp)) // Same group by group_id or groupTimestamp
               );
 
               if (shouldAppend) {
@@ -131,9 +134,11 @@ export default function ChatCard(props: { className?: string }) {
                   text: lastMessage.text + text,
                   end_of_segment: end_of_segment // Update with current frame's end_of_segment status
                 };
+                // console.log(`排查日志: 消息追加，group_id: ${group_id}, text: ${newMessages[newMessages.length - 1].text}`);
               } else {
                 // Start a new message
-                newMessages.push({ text, role, end_of_segment, groupTimestamp: currentGroupTimestamp });
+                newMessages.push({ text, role, end_of_segment, groupTimestamp: currentGroupTimestamp, group_id: group_id });
+                // console.log(`排查日志: 新消息，group_id: ${group_id}, text: ${text}`);
                 // If it's a new AI message bubble, update the lastGroupTimestampRef
                 // This is already handled by the group_timestamp logic above, but ensure it's consistent
                 if (typeof currentGroupTimestamp === 'number') {

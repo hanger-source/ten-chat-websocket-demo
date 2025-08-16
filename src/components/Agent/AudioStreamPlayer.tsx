@@ -14,6 +14,7 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const activeGroupTimestampRef = useRef<number | undefined>(undefined); // New ref to track the currently active group timestamp
   const currentSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const activeGroupIdRef = useRef<string | undefined>(undefined); // New ref to track the currently active group_id
 
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -40,6 +41,7 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       setIsPlaying(false);
       nextPlaybackTimeRef.current = 0; // 重置起始时间
       activeGroupTimestampRef.current = undefined; // Reset active group timestamp
+      activeGroupIdRef.current = undefined; // Reset active group_id
       console.log('AudioStreamPlayer: Playback stopped and queue cleared. New queue length:', audioQueueRef.current.length);
     }
   }, []);
@@ -122,36 +124,55 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       console.log('AudioStreamPlayer: Received audio frame (full message)', message);
 
       const currentGroupTimestamp = message.properties?.group_timestamp; // Get group_timestamp from properties (corrected)
+      const currentGroupId = message.properties?.group_id; // Get group_id from properties
       const lastTs = activeGroupTimestampRef.current;
-      console.log(`AudioStreamPlayer: handleAudioFrame - currentGroupTimestamp: ${currentGroupTimestamp}, lastGroupTimestampRef.current: ${lastTs}`);
+      const lastId = activeGroupIdRef.current; 
+      // console.log(`排查日志: AudioStreamPlayer: handleAudioFrame - currentGroupTimestamp: ${currentGroupTimestamp}, lastGroupTimestampRef.current: ${lastTs}, currentGroupId: ${currentGroupId}, activeGroupIdRef.current: ${lastId}`);
       console.log(`AudioStreamPlayer: Received audio frame with ${message.buf?.byteLength || 0} bytes.`); // Add logging
 
-      // If this is the *first* frame we've ever received, or if a new group has started
-      if (lastTs === undefined || (typeof currentGroupTimestamp === 'number' && currentGroupTimestamp > lastTs)) {
-        console.log(`AudioStreamPlayer: New group (timestamp: ${currentGroupTimestamp}) detected. Calling stopPlayback() and updating lastGroupTimestampRef.`);
+      let isNewGroup = false;
+
+      if (typeof currentGroupTimestamp === 'number') {
+        // 如果有 group_timestamp，优先使用 group_timestamp 判断新组
+        if (lastTs === undefined || currentGroupTimestamp > lastTs) {
+          isNewGroup = true;
+        }
+      } else if (typeof currentGroupId === 'string') {
+        // 如果没有 group_timestamp，使用 group_id 判断新组
+        if (lastId === undefined || currentGroupId !== lastId) {
+          isNewGroup = true;
+        }
+      }
+
+      if (isNewGroup) {
+        // console.log(`排查日志: AudioStreamPlayer: New group (timestamp: ${currentGroupTimestamp}, id: ${currentGroupId}) detected. Calling stopPlayback() and updating refs.`);
         stopAndClearPlayback(); // Stop current playback and clear queue
         activeGroupTimestampRef.current = currentGroupTimestamp; // Set the new active group timestamp
-      } else if (typeof currentGroupTimestamp === 'number' && currentGroupTimestamp < lastTs) {
-        // This frame belongs to an old group, discard it.
-        console.log(`AudioStreamPlayer: Discarding audio frame from old group (${currentGroupTimestamp} < active ${lastTs}).`);
+        activeGroupIdRef.current = currentGroupId; // Set the new active group_id
+      } else if ((typeof currentGroupTimestamp === 'number' && currentGroupTimestamp < lastTs!) || (typeof currentGroupId === 'string' && currentGroupId !== lastId && typeof lastId !== 'undefined')) {
+        // 忽略旧的 group_timestamp 或不同但已存在 group_id 的消息
+        // console.log(`排查日志: AudioStreamPlayer: Discarding audio frame from old/mismatched group.`);
         return; // Important: discard old frames
       }
 
       // Process the current frame ONLY if it belongs to the *active* group.
-      // If currentGroupTimestamp is undefined (e.g., first frame and lastTs is undefined, or missing group_timestamp in message),
-      // we still process it, assuming it's part of the implicit first group.
+      // If group_timestamp and group_id are undefined (e.g., first frame and no group info), we still process it.
       // If group_timestamp exists and matches lastTs, then process.
-      if (message.buf && typeof message.sample_rate === 'number' && typeof message.number_of_channel === 'number' && (
-        (typeof currentGroupTimestamp === 'undefined' && typeof lastTs === 'undefined') || // First frame ever, no group timestamp yet
-        (typeof currentGroupTimestamp === 'number' && currentGroupTimestamp === lastTs) // Belongs to current active group
-      )) {
+      // If group_timestamp is undefined but group_id exists and matches lastId, then process.
+      const shouldProcess = (
+        (typeof currentGroupTimestamp === 'undefined' && typeof currentGroupId === 'undefined') || // First frame ever, no group info yet
+        (typeof currentGroupTimestamp === 'number' && currentGroupTimestamp === lastTs) || // Belongs to current active group by timestamp
+        (typeof currentGroupTimestamp === 'undefined' && typeof currentGroupId === 'string' && currentGroupId === lastId) // Belongs to current active group by id (if no timestamp)
+      );
+
+      if (message.buf && typeof message.sample_rate === 'number' && typeof message.number_of_channel === 'number' && shouldProcess) {
         // 假设 bits_per_sample 总是 16
         // 过滤掉空的音频帧
         if (message.buf.byteLength > 0) {
-          console.log('AudioStreamPlayer: Calling processAudioBuffer with new audio data for current group.');
+          // console.log('AudioStreamPlayer: Calling processAudioBuffer with new audio data for current group.');
           processAudioBuffer(message.buf, message.sample_rate, message.number_of_channel, currentGroupTimestamp); // Pass number_of_channel
         } else {
-          console.log('AudioStreamPlayer: Received empty audio frame for current group, skipping playback.');
+          // console.log('AudioStreamPlayer: Received empty audio frame for current group, skipping playback.');
         }
       } else {
         console.warn('AudioStreamPlayer: Incomplete or mismatched group audio frame received, skipping.', message);
