@@ -13,20 +13,9 @@ export default function MessageList(props: {
 }) {
   const { className, messages } = props;
 
-  // console.log('MessageList: received messages', messages);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  // 自动滚动到底部
-  React.useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [messages]); // 依赖 messages 变化触发滚动
-
   return (
     <div
-      ref={containerRef}
-      className={cn("flex-grow space-y-2 overflow-y-auto p-4", className)}
+      className={cn("space-y-2", className)}
     >
       {messages.map((item, index) => {
         return <MessageItem data={item} key={index} />;

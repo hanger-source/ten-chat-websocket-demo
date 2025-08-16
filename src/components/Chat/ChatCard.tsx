@@ -25,6 +25,7 @@ export default function ChatCard(props: { className?: string }) {
     asrRequestId?: string; // New: Unique ID for ASR requests to track partial results
   }[]>([]);
   const lastGroupTimestampRef = React.useRef<number | undefined>(undefined);
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null); // New ref for messages container
 
   const sessionStatusText = React.useMemo(() => {
     switch (sessionState) {
@@ -179,6 +180,13 @@ export default function ChatCard(props: { className?: string }) {
     };
   }, []);
 
+  // Auto-scroll to bottom when new messages arrive
+  React.useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]); // Dependency on chatMessages to trigger scroll
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
@@ -209,11 +217,11 @@ export default function ChatCard(props: { className?: string }) {
       <div className={cn("h-full overflow-hidden flex flex-col", className)}>
         <div className="flex w-full flex-col flex-1">
           {/* Scrollable messages container */}
-          <div className="flex-1 overflow-y-auto px-4 pt-4">
-            <MessageList messages={chatMessages} />
+          <div className="flex-1 overflow-y-auto max-h-[600px]" ref={messagesContainerRef}>
+            <MessageList messages={chatMessages} className="p-4" />
           </div>
           {/* Input area */}
-          <div className="border-t pt-4 px-4 pb-4">
+          <div className="border-t pt-4 px-4 pb-4 shrink-0 min-h-[80px]">
             {/* 会话状态显示区域 */}
             <div className="flex items-center space-x-2 mb-2">
               {sessionState === SessionConnectionState.SESSION_ACTIVE && (
