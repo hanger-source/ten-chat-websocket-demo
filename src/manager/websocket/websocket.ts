@@ -167,7 +167,7 @@ export class WebSocketManager {
         audioData: Uint8Array,
         srcLoc: Location,
         destLocs: Location[] = [],
-        name: string = "audio_frame",
+        name: string = "pcm_frame",
         sampleRate: number = 48000,
         channels: number = 1,
         bitsPerSample: number = 16,
