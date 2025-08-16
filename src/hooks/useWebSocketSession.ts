@@ -8,6 +8,7 @@ import { Graph } from "@/common/graph";
 import { toast } from 'sonner';
 import { RootState } from "@/store";
 import { useAgentSettings } from "./useAgentSettings"; // Import useAgentSettings
+import { IAgentSettings } from "@/types"; // Add this import
 
 const FRONTEND_APP_URI = "mock_front://test_app"; // Define fixed frontend URI
 
@@ -139,6 +140,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       predefined_graph_name: selectedGraph.name,
       // 将智能体设置和 options 打平放入 properties
       ...agentSettings, // Spread agentSettings here
+      ...agentSettings.env, // Spread agentSettings.env here to flatten its properties
       ...options,
     });
     setSessionState(SessionConnectionState.CONNECTING_SESSION);

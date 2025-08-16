@@ -52,6 +52,10 @@ export default function SettingsDialog({
 }: SettingsDialogProps) {
   const { agentSettings, saveSettings } = useAgentSettings();
   const [showAudioSettings, setShowAudioSettings] = useState(false); // New state for collapsable section
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false); // New state for advanced settings dialog
+  const [advancedEnvJson, setAdvancedEnvJson] = useState(
+    JSON.stringify(agentSettings.env, null, 2), // Initialize with existing env JSON
+  );
 
   const form = useForm<AgentSettingFormValues>({
     resolver: zodResolver(agentSettingSchema),
@@ -73,6 +77,8 @@ export default function SettingsDialog({
         noiseSuppression: agentSettings.noiseSuppression,
         autoGainControl: agentSettings.autoGainControl,
       });
+      // Update advancedEnvJson when the main dialog opens or agentSettings change
+      setAdvancedEnvJson(JSON.stringify(agentSettings.env, null, 2));
     }
   }, [open, agentSettings, form]);
 
@@ -89,6 +95,22 @@ export default function SettingsDialog({
     saveSettings(newSettings);
     onOpenChange(false);
     toast.success("设置已保存");
+  };
+
+  const handleAdvancedSettingsSave = () => {
+    try {
+      const parsedEnv = JSON.parse(advancedEnvJson);
+      if (typeof parsedEnv !== "object" || parsedEnv === null) {
+        throw new Error("无效的 JSON 格式，请提供一个对象。");
+      }
+      // Update only the env part of the settings
+      const newSettings: IAgentSettings = { ...agentSettings, env: parsedEnv };
+      saveSettings(newSettings);
+      setShowAdvancedSettings(false);
+      toast.success("高级设置已保存");
+    } catch (e: any) {
+      toast.error("保存失败: " + (e.message || "无效的 JSON"));
+    }
   };
 
   return (
@@ -203,10 +225,49 @@ export default function SettingsDialog({
               )}
             </div>
 
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAdvancedSettings(true)}
+              >
+                高级设置
+              </Button>
+            </div>
+
             <Button type="submit">保存</Button>
           </form>
         </Form>
       </DialogContent>
+
+      {/* Advanced Settings Dialog */}
+      <Dialog
+        open={showAdvancedSettings}
+        onOpenChange={setShowAdvancedSettings}
+      >
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>高级设置 (JSON)</DialogTitle>
+          </DialogHeader>
+          <div className="flex-grow overflow-y-auto">
+            <Textarea
+              value={advancedEnvJson}
+              onChange={(e) => setAdvancedEnvJson(e.target.value)}
+              className="h-full min-h-[300px] font-mono text-xs"
+              placeholder="请输入 JSON 格式的高级设置"
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowAdvancedSettings(false)}
+            >
+              取消
+            </Button>
+            <Button onClick={handleAdvancedSettingsSave}>保存高级设置</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
