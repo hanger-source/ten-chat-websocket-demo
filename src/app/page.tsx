@@ -70,7 +70,7 @@ export default function Home() {
           {(!useTrulienceAvatar || isCompactLayout || !avatarInLargeWindow) && (
             <DynamicChatCard
               className={cn(
-                "m-0 w-full rounded-b-lg bg-white shadow-lg border border-gray-200 md:rounded-lg flex-auto",
+                "m-0 w-full rounded-b-lg bg-white shadow-lg border border-gray-200 md:rounded-lg flex-1 min-h-0",
                 {
                   ["hidden md:flex"]: mobileActiveTab === EMobileActiveTab.AGENT,
                 }
