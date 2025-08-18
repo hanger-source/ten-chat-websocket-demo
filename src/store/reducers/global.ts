@@ -240,11 +240,11 @@ const initializeGraphData = createAsyncThunk(
         apiFetchGraphs(),
         apiFetchInstalledAddons(),
       ]);
-      dispatch(setGraphList(fetchedGraphs.map((graph) => graph)));
+      dispatch(setGraphList(Array.isArray(fetchedGraphs) ? fetchedGraphs.map((graph) => graph) : []));
       dispatch(setAddonModules(modules));
     } else {
       const fetchedGraphs = await apiFetchGraphs();
-      dispatch(setGraphList(fetchedGraphs.map((graph) => graph)));
+      dispatch(setGraphList(Array.isArray(fetchedGraphs) ? fetchedGraphs.map((graph) => graph) : []));
     }
   },
 );

@@ -16,4 +16,8 @@ export default defineConfig({
     preview: {
         port: 3000,
     },
+    build: {
+        minify: false,
+        sourcemap: true,
+    },
 })
