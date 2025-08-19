@@ -17,12 +17,13 @@ export default function ChatCard(props: { className?: string }) {
   const { isConnected, sessionState, defaultLocation, sendMessage } = useWebSocketSession();
 
   const [chatMessages, setChatMessages] = React.useState<{
-    text: string;
+    text?: string; // Make text optional
     role: 'user' | 'agent' | 'assistant';
     end_of_segment?: boolean; // Added to track streaming status of each message
-    groupTimestamp?: number; // Added to link messages to their group
+    group_timestamp?: number; // Changed from groupTimestamp to group_timestamp
     group_id?: string; // Add group_id to chatMessages state
-    asrRequestId?: string; // New: Unique ID for ASR requests to track partial results
+    asr_request_id?: string; // Changed from asrRequestId to asr_request_id
+    image_url?: string; // Changed from imageUrl to image_url
   }[]>([]);
   const lastGroupTimestampRef = React.useRef<number | undefined>(undefined);
   const messagesContainerRef = React.useRef<HTMLDivElement>(null); // New ref for messages container
@@ -55,13 +56,15 @@ export default function ChatCard(props: { className?: string }) {
         const { role, end_of_segment, group_timestamp: currentGroupTimestamp, asr_request_id: asrRequestId } = message.properties;
         const text = message.properties.audio_text || message.properties.text; // Prefer audio_text
         const group_id = message.properties.group_id; // Extract group_id
+        const image_url = message.properties.type === "image_url" ? message.properties.data : undefined; // Corrected: Extract image URL as image_url
 
         console.log('ChatCard: extracted text', text);
         console.log('ChatCard: currentGroupTimestamp', currentGroupTimestamp);
         console.log('ChatCard: lastGroupTimestampRef.current', lastGroupTimestampRef.current);
+        console.log('ChatCard: extracted image_url', image_url);
         // console.log(`排查日志: 收到消息 group_id: ${group_id}, end_of_segment: ${end_of_segment}`);
 
-        if (typeof text === 'string' && (role === 'user' || role === 'agent' || role === 'assistant')) {
+        if (typeof text === 'string' && (role === 'user' || role === 'agent' || role === 'assistant') || image_url) { // Allow messages with just an image
           setChatMessages((prevMessages) => {
             const newMessages = [...prevMessages];
 
@@ -69,7 +72,7 @@ export default function ChatCard(props: { className?: string }) {
             if (message.name === "asr_result" && role === 'user') {
               if (typeof asrRequestId === 'string') {
                 const existingAsrMessageIndex = newMessages.findIndex(
-                  (msg) => msg.role === 'user' && msg.asrRequestId === asrRequestId && msg.end_of_segment === false
+                  (msg) => msg.role === 'user' && msg.asr_request_id === asrRequestId && msg.end_of_segment === false
                 );
 
                 if (existingAsrMessageIndex !== -1) {
@@ -82,7 +85,7 @@ export default function ChatCard(props: { className?: string }) {
                 } else {
                   // If no existing non-final message found for this asrRequestId, create a new one.
                   // This covers cases where it's a new asrRequestId or the previous one was finalized.
-                  newMessages.push({ text, role, end_of_segment, asrRequestId });
+                  newMessages.push({ text, role, end_of_segment, asr_request_id: asrRequestId });
                 }
                 // When an ASR message (user) is processed, reset AI group tracker
                 lastGroupTimestampRef.current = undefined;
@@ -101,7 +104,7 @@ export default function ChatCard(props: { className?: string }) {
               currentGroupTimestamp > lastGroupTimestampRef.current // New group started
             )) {
               // 如果上一个消息属于不同的组，确保它被标记为结束，不再被追加
-              if (lastMessage && (lastMessage.role === 'agent' || lastMessage.role === 'assistant') && lastMessage.groupTimestamp !== currentGroupTimestamp) {
+              if (lastMessage && (lastMessage.role === 'agent' || lastMessage.role === 'assistant') && lastMessage.group_timestamp !== currentGroupTimestamp) {
                 lastMessage.end_of_segment = true; // Mark old segment as ended
               }
               lastGroupTimestampRef.current = currentGroupTimestamp; // 更新为最新的 group_timestamp
@@ -117,7 +120,7 @@ export default function ChatCard(props: { className?: string }) {
             if (role === 'user') { // This branch handles user messages *not* from asr_result
                 // For manually typed user messages, ensure they create a new entry.
                 // ASR results are handled in the specific block above.
-                newMessages.push({ text, role, end_of_segment: true, groupTimestamp: undefined });
+                newMessages.push({ text, role, end_of_segment: true, group_timestamp: undefined, image_url }); // Include image_url
                 lastGroupTimestampRef.current = undefined; // Reset AI group tracker when user speaks
             } else { // role is 'agent' or 'assistant'
               // Conditions for appending to the last message (streaming within the same group or same group_id)
@@ -125,20 +128,21 @@ export default function ChatCard(props: { className?: string }) {
                 lastMessage &&
                 lastMessage.role === role && // Must be the same role
                 lastMessage.end_of_segment === false && // Last message was an ongoing stream
-                (lastMessage.group_id === group_id || (typeof lastMessage.groupTimestamp === 'number' && lastMessage.groupTimestamp === currentGroupTimestamp)) // Same group by group_id or groupTimestamp
+                (lastMessage.group_id === group_id || (typeof lastMessage.group_timestamp === 'number' && lastMessage.group_timestamp === currentGroupTimestamp)) // Same group by group_id or groupTimestamp
               );
 
               if (shouldAppend) {
                 // Append text and update end_of_segment status
                 newMessages[newMessages.length - 1] = {
                   ...lastMessage,
-                  text: lastMessage.text + text,
-                  end_of_segment: end_of_segment // Update with current frame's end_of_segment status
+                  text: (lastMessage.text || '') + (text || ''), // Ensure text is string for concatenation
+                  end_of_segment: end_of_segment,
+                  image_url: image_url || lastMessage.image_url // Prioritize new image, or keep old one
                 };
                 // console.log(`排查日志: 消息追加，group_id: ${group_id}, text: ${newMessages[newMessages.length - 1].text}`);
               } else {
                 // Start a new message
-                newMessages.push({ text, role, end_of_segment, groupTimestamp: currentGroupTimestamp, group_id: group_id });
+                newMessages.push({ text, role, end_of_segment, group_timestamp: currentGroupTimestamp, group_id: group_id, image_url });
                 // console.log(`排查日志: 新消息，group_id: ${group_id}, text: ${text}`);
                 // If it's a new AI message bubble, update the lastGroupTimestampRef
                 // This is already handled by the group_timestamp logic above, but ensure it's consistent
@@ -204,7 +208,7 @@ export default function ChatCard(props: { className?: string }) {
     // 添加用户消息到聊天列表
     setChatMessages((prevMessages) => [
       ...prevMessages,
-      { text: inputValue, role: 'user', end_of_segment: true, groupTimestamp: undefined },
+      { text: inputValue, role: 'user', end_of_segment: true, group_timestamp: undefined },
     ]);
 
     console.log("发送消息:", inputValue);

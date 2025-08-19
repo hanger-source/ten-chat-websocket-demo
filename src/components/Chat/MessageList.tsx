@@ -7,8 +7,13 @@ import { cn } from "@/lib/utils";
 export default function MessageList(props: {
   className?: string;
   messages: {
-    text: string;
+    text?: string; // Make text optional
     role: 'user' | 'agent' | 'assistant';
+    end_of_segment?: boolean;
+    group_timestamp?: number;
+    group_id?: string;
+    asr_request_id?: string;
+    image_url?: string; // Add image_url
   }[];
 }) {
   const { className, messages } = props;
@@ -24,7 +29,7 @@ export default function MessageList(props: {
   );
 }
 
-export function MessageItem(props: { data: { text: string; role: 'user' | 'agent' | 'assistant' } }) {
+export function MessageItem(props: { data: { text?: string; role: 'user' | 'agent' | 'assistant'; end_of_segment?: boolean; group_timestamp?: number; group_id?: string; asr_request_id?: string; image_url?: string; } }) {
   const { data } = props;
 
   return (
@@ -47,7 +52,8 @@ export function MessageItem(props: { data: { text: string; role: 'user' | 'agent
             "bg-primary text-primary-foreground": data.role === 'user',
           })}
         >
-          <p>{data.text}</p>
+          {data.text && <p>{data.text}</p>}
+          {data.image_url && <img src={data.image_url} alt="AI generated image" className="mt-2 rounded-md max-w-full h-auto" />}
         </div>
       </div>
     </>
