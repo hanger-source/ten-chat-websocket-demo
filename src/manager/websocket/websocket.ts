@@ -217,6 +217,7 @@ export class WebSocketManager {
             timestamp: Date.now(),
         };
         this.sendMessage(videoFrameMessage);
+        console.log(`[websocket] 发送视频帧: {}`, videoFrameMessage); // Added full message log
     }
 
     // 发送命令

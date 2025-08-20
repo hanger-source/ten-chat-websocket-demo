@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
-import { MessageType, Location } from '@/types/websocket';
+import { MessageType, Location, WebSocketConnectionState } from '@/types/websocket'; // Import WebSocketConnectionState
 import { MESSAGE_CONSTANTS } from '@/common/constant';
 
 interface UseVideoFrameSenderProps {
@@ -16,7 +16,8 @@ export const useVideoFrameSender = ({ videoStream, intervalMs = 1000, srcLoc, de
   const intervalIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (videoStream) {
+    const currentConnectionState = webSocketManager.getConnectionState(); // Get current connection state
+    if (videoStream && currentConnectionState === WebSocketConnectionState.OPEN) { // Add connection state check
       if (!videoRef.current) {
         videoRef.current = document.createElement('video');
         videoRef.current.autoplay = true;
@@ -59,7 +60,6 @@ export const useVideoFrameSender = ({ videoStream, intervalMs = 1000, srcLoc, de
                       0, // Temporary placeholder for pixelFormat. Please provide the correct integer mapping for "jpeg" or other formats.
                       false // isEof
                     );
-                    console.log(`[VIDEO_LOG] Sending video frame: size=${uint8Array.length}`);
 
                   };
                   reader.readAsArrayBuffer(blob);
@@ -70,6 +70,7 @@ export const useVideoFrameSender = ({ videoStream, intervalMs = 1000, srcLoc, de
         }
       };
     } else {
+      console.log(`[websocket] 停止发送视频帧: videoStream {} 或连接状态 {}`, videoStream, currentConnectionState);
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
         intervalIdRef.current = null;
@@ -85,7 +86,7 @@ export const useVideoFrameSender = ({ videoStream, intervalMs = 1000, srcLoc, de
         videoRef.current.remove();
       }
     };
-  }, [videoStream, intervalMs, srcLoc, destLocs]);
+  }, [videoStream, intervalMs, srcLoc, destLocs]); // Removed currentConnectionState from dependencies
 
   return { videoRef, canvasRef };
 };

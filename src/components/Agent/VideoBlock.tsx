@@ -93,8 +93,8 @@ export default function VideoBlock(props: {
     extension_name: "video_extension",
   }];
 
-  useVideoFrameSender({
-    videoStream: videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream,
+  const { canvasRef } = useVideoFrameSender({
+    videoStream: videoMute ? null : (videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream),
     srcLoc,
     destLocs,
   });
@@ -107,6 +107,7 @@ export default function VideoBlock(props: {
           video: selectedDeviceId ? { deviceId: selectedDeviceId } : true,
         });
         setCameraStream(stream);
+        // console.log("[VIDEO_LOG] Camera stream obtained:", stream);
       } catch (error) {
         console.error("[VIDEO_LOG] Error accessing camera:", error);
         setCameraStream(null);
@@ -117,6 +118,7 @@ export default function VideoBlock(props: {
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         setScreenStream(stream);
+        // console.log("[VIDEO_LOG] Screen stream obtained:", stream);
       } catch (error) {
         console.error("[VIDEO_LOG] Error accessing screen:", error);
         setScreenStream(null);
@@ -124,20 +126,22 @@ export default function VideoBlock(props: {
     };
 
     if (videoSourceType === VideoSourceType.CAMERA) {
+      // console.log("[VIDEO_LOG] Attempting to get camera stream...");
       getCameraStream();
     } else if (videoSourceType === VideoSourceType.SCREEN) {
+      // console.log("[VIDEO_LOG] Attempting to get screen stream...");
       getScreenStream();
     }
 
     return () => {
       // Clean up streams when component unmounts or videoSourceType changes
       if (cameraStream) {
-        console.log("[VIDEO_LOG] Stopping camera stream tracks.");
+        // console.log("[VIDEO_LOG] Stopping camera stream tracks.", cameraStream);
         cameraStream.getTracks().forEach(track => track.stop());
         setCameraStream(null);
       }
       if (screenStream) {
-        console.log("[VIDEO_LOG] Stopping screen stream tracks.");
+        // console.log("[VIDEO_LOG] Stopping screen stream tracks.", screenStream);
         screenStream.getTracks().forEach(track => track.stop());
         setScreenStream(null);
       }
@@ -247,6 +251,8 @@ export default function VideoBlock(props: {
           muted={true}
         />
       </div>
+      {/* 用于在后台捕获视频帧的 Canvas 元素 */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
     </VideoDeviceWrapper>
   );
 }
