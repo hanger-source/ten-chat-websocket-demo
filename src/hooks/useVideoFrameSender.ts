@@ -10,7 +10,7 @@ interface UseVideoFrameSenderProps {
   destLocs: Location[];
 }
 
-export const useVideoFrameSender = ({ videoStream, intervalMs = 100, srcLoc, destLocs }: UseVideoFrameSenderProps) => {
+export const useVideoFrameSender = ({ videoStream, intervalMs = 1000, srcLoc, destLocs }: UseVideoFrameSenderProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const intervalIdRef = useRef<number | null>(null);
@@ -47,27 +47,18 @@ export const useVideoFrameSender = ({ videoStream, intervalMs = 100, srcLoc, des
                     const arrayBuffer = reader.result as ArrayBuffer;
                     const uint8Array = new Uint8Array(arrayBuffer);
 
-                    const videoFrameMessage = {
-                      id: webSocketManager["generateMessageId"](), // Access private method for now
-                      type: MessageType.VIDEO_FRAME,
-                      name: "video_frame",
-                      src_loc: srcLoc,
-                      dest_locs: destLocs,
-                      buf: uint8Array,
-                      is_eof: false,
-                      frame_timestamp: Date.now(),
-                      timestamp: Date.now(),
-                      properties: {
-                        width: canvas.width,
-                        height: canvas.height,
-                        // Add other video properties if needed (e.g., format, codec)
-                      },
-                    };
-                    // webSocketManager.sendMessage(videoFrameMessage); // Send video frame
-                    // console.log("Sending video frame:", videoFrameMessage);
-
-                    // Use sendData for now, assuming backend can handle generic data
-                    webSocketManager.sendData(uint8Array, "video/webm");
+                    // Replaced with sendVideoFrame
+                    webSocketManager.sendVideoFrame(
+                      uint8Array,
+                      canvas.width,
+                      canvas.height,
+                      srcLoc,
+                      destLocs,
+                      "video_frame", // name
+                      // format: "jpeg", // format (assuming image/jpeg from canvas.toBlob) - Backend expects int pixelFormat
+                      0, // Temporary placeholder for pixelFormat. Please provide the correct integer mapping for "jpeg" or other formats.
+                      false // isEof
+                    );
                     console.log(`[VIDEO_LOG] Sending video frame: size=${uint8Array.length}`);
 
                   };

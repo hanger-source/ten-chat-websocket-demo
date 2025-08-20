@@ -191,6 +191,34 @@ export class WebSocketManager {
         this.sendMessage(audioFrameMessage);
     }
 
+    // 发送视频帧数据
+    public sendVideoFrame(
+        videoData: Uint8Array,
+        width: number,
+        height: number,
+        srcLoc: Location,
+        destLocs: Location[] = [],
+        name: string = "video_frame",
+        pixelFormat: number = 0, // Changed from format: string to pixelFormat: number
+        isEof: boolean = false,
+    ): void {
+        const videoFrameMessage: VideoFrame = {
+            id: this.generateMessageId(),
+            type: MessageType.VIDEO_FRAME,
+            name: name,
+            src_loc: srcLoc,
+            dest_locs: destLocs,
+            data: videoData,
+            width: width,
+            height: height,
+            pixel_format: pixelFormat, // Changed from format to pixel_format
+            is_eof: isEof,
+            frame_timestamp: Date.now(),
+            timestamp: Date.now(),
+        };
+        this.sendMessage(videoFrameMessage);
+    }
+
     // 发送命令
     public sendCommand(
         commandName: CommandType,
