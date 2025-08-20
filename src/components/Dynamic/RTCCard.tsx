@@ -12,14 +12,6 @@ import {
 } from "@/store/reducers/global";
 import Avatar from "@/components/Agent/AvatarTrulience";
 import TalkingheadBlock from "@/components/Agent/TalkingHead";
-import {
-  WebSocketEvents,
-  WebSocketMessageType,
-  IAudioFrame,
-  IDataMessage,
-  IDataMessageRaw,
-  IDataMessageJson,
-} from "@/manager/websocket/types";
 import { RootState } from "@/store";
 import {
   IChatItem,
@@ -29,7 +21,7 @@ import {
 } from "@/types";
 // import NetworkIndicator from "@/components/Dynamic/NetworkIndicator"; // Removed
 import DynamicChatCard from "@/components/Chat/ChatCard";
-import { Message, MessageType, WebSocketConnectionState } from "@/types/websocket";
+import { Message, MessageType, WebSocketConnectionState, AudioFrame, Data } from "@/types/websocket"; // Added AudioFrame, Data
 import { useMicrophoneStream } from "@/hooks/useMicrophoneStream"; // Import useMicrophoneStream
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Import useWebSocketSession
 import { useAgentSettings } from "@/hooks/useAgentSettings"; // Import useAgentSettings
@@ -118,11 +110,11 @@ export default function RTCCard({
     // console.log("RTCCard: onRemoteAudioTrack called with message:", message.type);
     if (message.type === MessageType.AUDIO_FRAME) {
       // console.log("RTCCard: Full audio frame message received:", message); // Add this line to log the full message
-      const audioFrame = message as unknown as IAudioFrame;
+      const audioFrame = message as AudioFrame; // Changed to AudioFrame
       // console.log(
       //   `[websocket] Received remote audio track ${audioFrame.buf.length} bytes`,
       // );
-      setRemoteAudioData(audioFrame.buf);
+      setRemoteAudioData(audioFrame.buf); // Use audioFrame.buf for new AudioFrame
       // console.log("RTCCard: remoteAudioData updated with length:", audioFrame.buf.length);
     }
   };
@@ -133,35 +125,35 @@ export default function RTCCard({
     let chatItem: IChatItem | undefined;
 
     if (message.type === MessageType.DATA) {
-      const dataMessage = message as unknown as IDataMessage;
-      if (dataMessage.content_type === "application/json") {
-        const jsonMessage = dataMessage as unknown as IDataMessageJson;
-        const payload = jsonMessage.json_payload;
+      const dataMessage = message as Data; // Changed to Data
+      if (dataMessage.content_type === "application/json" && dataMessage.data) { // Check if data exists
+        try {
+          const payload = JSON.parse(new TextDecoder().decode(dataMessage.data)); // Parse data as JSON
+          chatType = (payload.chat_role as EMessageType) || EMessageType.AGENT;
 
-        chatType = (payload.chat_role as EMessageType) || EMessageType.AGENT;
-
-        chatItem = {
-          userId: payload.user_id || "",
-          text: payload.text || "",
-          data_type: payload.data_type ? (payload.data_type as EMessageDataType) : EMessageDataType.OTHER,
-          type: chatType,
-          isFinal: payload.is_final,
-          time: payload.time || Date.now(),
-          userName: payload.user_name || "",
-        };
+          chatItem = {
+            userId: payload.user_id || "",
+            text: payload.text || "",
+            data_type: payload.data_type ? (payload.data_type as EMessageDataType) : EMessageDataType.OTHER,
+            type: chatType,
+            isFinal: payload.is_final,
+            time: payload.time || Date.now(),
+            userName: payload.user_name || "",
+          };
+        } catch (error) {
+          console.error(`[${new Date().toISOString()}] RTCCard: Error parsing JSON data:`, error);
+        }
       } else if (dataMessage.data) {
-        const rawMessage = dataMessage as unknown as IDataMessageRaw;
-        const textContent = new TextDecoder().decode(rawMessage.data);
-
+        const textContent = new TextDecoder().decode(dataMessage.data); // Use dataMessage.data
         chatType = EMessageType.AGENT;
         chatItem = {
-          userId: rawMessage.name || "",
+          userId: dataMessage.name || "", // Use dataMessage.name
           text: textContent,
           data_type: EMessageDataType.TEXT,
           type: chatType,
-          isFinal: rawMessage.is_eof,
-          time: rawMessage.timestamp || Date.now(),
-          userName: rawMessage.name || "Agent",
+          isFinal: dataMessage.is_eof, // Use dataMessage.is_eof
+          time: dataMessage.timestamp || Date.now(), // Use dataMessage.timestamp
+          userName: dataMessage.name || "Agent", // Use dataMessage.name
         };
       } else {
         // console.warn(`[${new Date().toISOString()}] RTCCard: Received unexpected Data message content type: ${dataMessage.content_type || 'N/A'}`, dataMessage);

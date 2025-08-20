@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import { webSocketManager } from "@/manager/websocket/websocket"; // cketManager
-import { IAudioFrame } from "@/manager/websocket/types"; // oFrame类型
+import { AudioFrame } from "@/types/websocket"; // oFrame类型
+import { MessageType } from "@/types/websocket"; // MessageType类型
+import { Message } from "@/types/websocket"; // Message类型
 
 export interface StreamPlayerProps {
   style?: React.CSSProperties;
@@ -31,21 +33,24 @@ export const LocalStreamPlayer = React.forwardRef(
     React.useLayoutEffect(() => {
       // oContext
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as {webkitAudioContext: typeof AudioContext}).webkitAudioContext)();
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)(); // Cast to any to resolve type error
       }
 
       // cket的AudioFrameReceived事件
-      const handleAudioFrame = (audioFrame: IAudioFrame) => {
-        audioQueueRef.current.push(audioFrame.data);
-        if (!isPlayingRef.current && !mute) {
-          playNextAudioChunk();
+      const handleAudioFrame = (message: Message) => {
+        if (message.type === MessageType.AUDIO_FRAME) {
+          const audioFrame = message as AudioFrame;
+          audioQueueRef.current.push(audioFrame.buf);
+          if (!isPlayingRef.current && !mute) {
+            playNextAudioChunk();
+          }
         }
       };
 
-      wsManager.on("audioFrameReceived", handleAudioFrame);
+      wsManager.onMessage(MessageType.AUDIO_FRAME, handleAudioFrame);
 
       return () => {
-        wsManager.off("audioFrameReceived", handleAudioFrame);
+        wsManager.offMessage(MessageType.AUDIO_FRAME, handleAudioFrame);
         // Context
         if (audioContextRef.current) {
           audioContextRef.current.close();

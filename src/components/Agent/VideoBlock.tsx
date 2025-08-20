@@ -8,7 +8,7 @@ import { VIDEO_SOURCE_OPTIONS, VideoSourceType, MESSAGE_CONSTANTS } from "@/comm
 import { MonitorIcon, MonitorXIcon } from "lucide-react";
 import { LocalVideoStreamPlayer } from "./LocalVideoStreamPlayer";
 import { useVideoFrameSender } from "@/hooks/useVideoFrameSender";
-import { ILocation } from "@/manager/websocket/types";
+import { Location } from "@/types/websocket";
 
 
 export const ScreenIconByStatus = (
@@ -82,12 +82,12 @@ export default function VideoBlock(props: {
   const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<string | undefined>(undefined);
 
-  const srcLoc: ILocation = {
+  const srcLoc: Location = {
     app_uri: "client_app",
     graph_id: "client_graph",
     extension_name: MESSAGE_CONSTANTS.SYS_EXTENSION_NAME,
   };
-  const destLocs: ILocation[] = [{
+  const destLocs: Location[] = [{
     app_uri: "server_app",
     graph_id: "server_graph",
     extension_name: "video_extension",

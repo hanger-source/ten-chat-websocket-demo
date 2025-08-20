@@ -1,8 +1,8 @@
-import { Message, Data, Command, CommandResult, Location, MessageType, StartGraphCommand, StopGraphCommand, CommandType, AudioFrame } from '@/types/websocket';
+import { Message, Data, Command, StartGraphCommand, StopGraphCommand, CommandResult, AudioFrame, VideoFrame, WebSocketConnectionState, Location, MessageType, CommandType } from '@/types/websocket';
 import { encode, decode, ExtensionCodec, ExtData } from '@msgpack/msgpack';
 // import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique ids
 import { MESSAGE_CONSTANTS } from '@/common/constant'; // Import MESSAGE_CONSTANTS
-import { WebSocketConnectionState } from '@/types/websocket'; // Ensure this points to correct WebSocketConnectionState
+// import { WebSocketConnectionState } from './types'; // Ensure this points to correct WebSocketConnectionState
 
 // TEN框架自定义MsgPack扩展类型码
 const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 恢复自定义扩展类型码

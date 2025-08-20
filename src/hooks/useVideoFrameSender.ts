@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
-import { WebSocketMessageType, ILocation } from '@/manager/websocket/types';
+import { MessageType, Location } from '@/types/websocket';
 import { MESSAGE_CONSTANTS } from '@/common/constant';
 
 interface UseVideoFrameSenderProps {
   videoStream: MediaStream | null;
   intervalMs?: number;
-  srcLoc: ILocation;
-  destLocs: ILocation[];
+  srcLoc: Location;
+  destLocs: Location[];
 }
 
 export const useVideoFrameSender = ({ videoStream, intervalMs = 100, srcLoc, destLocs }: UseVideoFrameSenderProps) => {
@@ -49,7 +49,7 @@ export const useVideoFrameSender = ({ videoStream, intervalMs = 100, srcLoc, des
 
                     const videoFrameMessage = {
                       id: webSocketManager["generateMessageId"](), // Access private method for now
-                      type: WebSocketMessageType.VideoFrame,
+                      type: MessageType.VIDEO_FRAME,
                       name: "video_frame",
                       src_loc: srcLoc,
                       dest_locs: destLocs,
