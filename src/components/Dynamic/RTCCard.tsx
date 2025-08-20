@@ -73,7 +73,7 @@ export default function RTCCard({
   const { mediaStreamTrack, micPermission, sendAudioFrame } = useMicrophoneStream({ isConnected, sessionState, defaultLocation, settings: agentSettings }); // Pass settings and get micPermission and sendAudioFrame
   const [audioMute, setAudioMute] = React.useState(true);
   // Live2D 控制
-  const [showLive2D, setShowLive2D] = useState(true); 
+  const [showLive2D, setShowLive2D] = useState(false); 
   // const onAudioDataCaptured = (audioData: Uint8Array) => {}; // Dummy function for Microphone
 
   React.useEffect(() => {
