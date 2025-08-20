@@ -37,6 +37,8 @@ import { Microphone } from "@/components/Agent/Microphone"; // Import Microphone
 import AudioVisualizer from "@/components/Agent/AudioVisualizer"; // Import AudioVisualizer
 import { Button } from "@/components/ui/button"; // Import Button
 import { useState } from "react"; // Import useState
+import VideoBlock from "@/components/Agent/VideoBlock"; // 引入 VideoBlock 组件
+import { VideoSourceType } from "@/common/constant"; // 新增：导入 VideoSourceType
 
 let hasInit: boolean = false;
 
@@ -73,7 +75,8 @@ export default function RTCCard({
   const { mediaStreamTrack, micPermission, sendAudioFrame } = useMicrophoneStream({ isConnected, sessionState, defaultLocation, settings: agentSettings }); // Pass settings and get micPermission and sendAudioFrame
   const [audioMute, setAudioMute] = React.useState(true);
   // Live2D 控制
-  const [showLive2D, setShowLive2D] = useState(false); 
+  const [showLive2D, setShowLive2D] = useState(false);
+  const [videoSourceType, setVideoSourceType] = useState<VideoSourceType>(VideoSourceType.CAMERA); // 新增视频源类型状态
   // const onAudioDataCaptured = (audioData: Uint8Array) => {}; // Dummy function for Microphone
 
   React.useEffect(() => {
@@ -181,7 +184,7 @@ export default function RTCCard({
   };
 
   return (
-    <div className={cn("flex h-full flex-col min-h-0 bg-gray-50", className)}>
+    <div className={cn("flex h-full flex-col min-h-0 bg-gray-50 flex-1 min-w-[400px]", className)}> {/* Added min-w-[400px] */}
       {/* Scrollable top region (Avatar or ChatCard or Talkinghead) */}
       {useTrulienceAvatar ? (
         !avatarInLargeWindow ? (
@@ -221,7 +224,7 @@ export default function RTCCard({
       )}
 
       {/* Bottom region for microphone and video blocks */}
-      <div className="w-full space-y-2 px-2 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="w-full space-y-2 px-2 py-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-y-auto"> {/* Added overflow-y-auto */}
         {/* Microphone control area */}
         <Microphone
           onMuteChange={setAudioMute}
@@ -267,6 +270,12 @@ export default function RTCCard({
             )}
           </div>
         </div>
+
+        {/* Video Block area */}
+        <VideoBlock
+          videoSourceType={videoSourceType}
+          onVideoSourceChange={setVideoSourceType}
+        />
       </div>
     </div>
   );

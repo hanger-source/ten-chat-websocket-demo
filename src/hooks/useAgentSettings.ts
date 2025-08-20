@@ -4,7 +4,6 @@ import { IAgentSettings } from "@/types";
 const DEFAULT_AGENT_SETTINGS: IAgentSettings = {
   greeting: "",
   prompt: "",
-  token: "",
   env: {
     // BAILIAN_DASHSCOPE_API_KEY: "", // Removed BAILIAN_DASHSCOPE_API_KEY from default env
     GREETING: "",
