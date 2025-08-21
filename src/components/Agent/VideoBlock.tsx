@@ -77,7 +77,7 @@ export default function VideoBlock(props: {
   onVideoSourceChange: (value: VideoSourceType) => void,
 }) {
   const { videoSourceType, onVideoSourceChange } = props;
-  const [videoMute, setVideoMute] = React.useState(false);
+  const [videoMute, setVideoMute] = React.useState(true);
   const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
   const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<string | undefined>(undefined);
