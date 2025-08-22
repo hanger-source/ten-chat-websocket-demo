@@ -187,7 +187,7 @@ export default function VideoBlock(props: {
             setValue(selected.label);
           }
         }
-        console.log("[CAMERA_DEVICE_ENUM] Available camera devices:", videoInputDevices.map(device => ({ label: device.label, deviceId: device.deviceId }))); // 更改日志信息
+        // console.log("[CAMERA_DEVICE_ENUM] Available camera devices:", videoInputDevices.map(device => ({ label: device.label, deviceId: device.deviceId }))); // 更改日志信息
       }).catch(error => {
         console.error("[VIDEO_LOG] Error enumerating devices:", error);
       });
