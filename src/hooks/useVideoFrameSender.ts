@@ -10,67 +10,109 @@ interface UseVideoFrameSenderProps {
   destLocs: Location[];
 }
 
-export const useVideoFrameSender = ({ videoStream, intervalMs = 1000, srcLoc, destLocs }: UseVideoFrameSenderProps) => {
+export const useVideoFrameSender = ({ videoStream, intervalMs = 2000, srcLoc, destLocs }: UseVideoFrameSenderProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const intervalIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const currentConnectionState = webSocketManager.getConnectionState(); // Get current connection state
-    if (videoStream && currentConnectionState === WebSocketConnectionState.OPEN) { // Add connection state check
+    const currentConnectionState = webSocketManager.getConnectionState();
+    
+    if (videoStream && currentConnectionState === WebSocketConnectionState.OPEN) {
       if (!videoRef.current) {
         videoRef.current = document.createElement('video');
         videoRef.current.autoplay = true;
         videoRef.current.playsInline = true;
-        videoRef.current.muted = true; // Mute local video preview
+        videoRef.current.muted = true;
       }
       videoRef.current.srcObject = videoStream;
 
       const videoElement = videoRef.current;
       videoElement.onloadedmetadata = () => {
+        console.log(`[VIDEO_FRAME] 视频流已加载 - ${videoElement.videoWidth}x${videoElement.videoHeight}`);
+        
+        // 确保视频开始播放
+        videoElement.play().catch(error => {
+          console.error(`[VIDEO_FRAME] 视频播放失败:`, error);
+        });
+        
         if (canvasRef.current) {
           const canvas = canvasRef.current;
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
+            // 限制Canvas尺寸以减少数据量
+            const maxWidth = 640;
+            const maxHeight = 480;
+            
+            let targetWidth = videoElement.videoWidth;
+            let targetHeight = videoElement.videoHeight;
+            
+            // 按比例缩放以适应最大尺寸限制
+            if (targetWidth > maxWidth || targetHeight > maxHeight) {
+              const aspectRatio = targetWidth / targetHeight;
+              if (targetWidth > targetHeight) {
+                targetWidth = maxWidth;
+                targetHeight = Math.round(maxWidth / aspectRatio);
+              } else {
+                targetHeight = maxHeight;
+                targetWidth = Math.round(maxHeight * aspectRatio);
+              }
+            }
+            
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
 
             if (intervalIdRef.current) {
               clearInterval(intervalIdRef.current);
             }
 
             intervalIdRef.current = window.setInterval(() => {
-              ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-              canvas.toBlob((blob) => {
-                if (blob) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    const arrayBuffer = reader.result as ArrayBuffer;
-                    const uint8Array = new Uint8Array(arrayBuffer);
+              // 检查视频是否正在播放
+              if (videoElement.readyState >= 2 && !videoElement.paused) {
+                // 绘制视频帧
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    // 检查数据大小是否超过WebSocket帧限制
+                    if (blob.size > 900000) {
+                      console.warn(`[VIDEO_FRAME] 视频帧数据过大 (${blob.size} bytes)，跳过发送`);
+                      return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      const arrayBuffer = reader.result as ArrayBuffer;
+                      const uint8Array = new Uint8Array(arrayBuffer);
 
-                    // Replaced with sendVideoFrame
-                    webSocketManager.sendVideoFrame(
-                      uint8Array,
-                      canvas.width,
-                      canvas.height,
-                      srcLoc,
-                      destLocs,
-                      "video_frame", // name
-                      // format: "jpeg", // format (assuming image/jpeg from canvas.toBlob) - Backend expects int pixelFormat
-                      0, // Temporary placeholder for pixelFormat. Please provide the correct integer mapping for "jpeg" or other formats.
-                      false // isEof
-                    );
-
-                  };
-                  reader.readAsArrayBuffer(blob);
+                      webSocketManager.sendVideoFrame(
+                        uint8Array,
+                        canvas.width,
+                        canvas.height,
+                        srcLoc,
+                        destLocs,
+                        "video_frame",
+                        1, // JPEG格式
+                        false
+                      );
+                    };
+                    reader.readAsArrayBuffer(blob);
+                  }
+                }, 'image/jpeg', 0.8);
+              } else {
+                // 如果视频准备好但是暂停了，尝试重新播放
+                if (videoElement.readyState >= 2 && videoElement.paused) {
+                  videoElement.play().catch(error => {
+                    console.error(`[VIDEO_FRAME] 视频重新播放失败:`, error);
+                  });
                 }
-              }, 'image/jpeg'); // 可以选择其他格式，例如 'image/webp'
+              }
             }, intervalMs);
           }
         }
       };
     } else {
-      console.log(`[websocket] 停止发送视频帧: videoStream {} 或连接状态 {}`, videoStream, currentConnectionState);
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
         intervalIdRef.current = null;

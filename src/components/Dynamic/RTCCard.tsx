@@ -71,6 +71,10 @@ export default function RTCCard({
   const [videoSourceType, setVideoSourceType] = useState<VideoSourceType>(VideoSourceType.CAMERA); // 新增视频源类型状态
   // const onAudioDataCaptured = (audioData: Uint8Array) => {}; // Dummy function for Microphone
 
+  // 为 VideoBlock 准备 srcLoc 和 destLocs，与音频传输保持一致
+  const videoSrcLoc = React.useMemo(() => defaultLocation, [defaultLocation]); // Use useMemo to memoize the object
+  const videoDestLocs = React.useMemo(() => [defaultLocation], [defaultLocation]); // Use useMemo to memoize the array
+
   React.useEffect(() => {
     if (!options.channel) {
       return;
@@ -267,6 +271,9 @@ export default function RTCCard({
         <VideoBlock
           videoSourceType={videoSourceType}
           onVideoSourceChange={setVideoSourceType}
+          srcLoc={videoSrcLoc} // 传递 srcLoc
+          destLocs={videoDestLocs} // 传递 destLocs
+          isConnected={isConnected} // 传递 isConnected
         />
       </div>
     </div>

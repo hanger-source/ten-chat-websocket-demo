@@ -75,23 +75,15 @@ export function VideoDeviceWrapper(props: {
 export default function VideoBlock(props: {
   videoSourceType: VideoSourceType,
   onVideoSourceChange: (value: VideoSourceType) => void,
+  srcLoc: Location;
+  destLocs: Location[];
+  isConnected: boolean;
 }) {
-  const { videoSourceType, onVideoSourceChange } = props;
+  const { videoSourceType, onVideoSourceChange, srcLoc, destLocs, isConnected } = props;
   const [videoMute, setVideoMute] = React.useState(true);
   const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
   const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<string | undefined>(undefined);
-
-  const srcLoc: Location = {
-    app_uri: "client_app",
-    graph_id: "client_graph",
-    extension_name: MESSAGE_CONSTANTS.SYS_EXTENSION_NAME,
-  };
-  const destLocs: Location[] = [{
-    app_uri: "server_app",
-    graph_id: "server_graph",
-    extension_name: "video_extension",
-  }];
 
   const { canvasRef } = useVideoFrameSender({
     videoStream: videoMute ? null : (videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream),
@@ -107,9 +99,9 @@ export default function VideoBlock(props: {
           video: selectedDeviceId ? { deviceId: selectedDeviceId } : true,
         });
         setCameraStream(stream);
-        // console.log("[VIDEO_LOG] Camera stream obtained:", stream);
+        console.log("[VIDEO_LOG] 摄像头流获取成功");
       } catch (error) {
-        console.error("[VIDEO_LOG] Error accessing camera:", error);
+        console.error("[VIDEO_LOG] 摄像头访问失败:", error);
         setCameraStream(null);
       }
     };
@@ -118,30 +110,26 @@ export default function VideoBlock(props: {
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         setScreenStream(stream);
-        // console.log("[VIDEO_LOG] Screen stream obtained:", stream);
+        console.log("[VIDEO_LOG] 屏幕共享流获取成功");
       } catch (error) {
-        console.error("[VIDEO_LOG] Error accessing screen:", error);
+        console.error("[VIDEO_LOG] 屏幕共享访问失败:", error);
         setScreenStream(null);
       }
     };
 
     if (videoSourceType === VideoSourceType.CAMERA) {
-      // console.log("[VIDEO_LOG] Attempting to get camera stream...");
       getCameraStream();
     } else if (videoSourceType === VideoSourceType.SCREEN) {
-      // console.log("[VIDEO_LOG] Attempting to get screen stream...");
       getScreenStream();
     }
 
     return () => {
       // Clean up streams when component unmounts or videoSourceType changes
       if (cameraStream) {
-        // console.log("[VIDEO_LOG] Stopping camera stream tracks.", cameraStream);
         cameraStream.getTracks().forEach(track => track.stop());
         setCameraStream(null);
       }
       if (screenStream) {
-        // console.log("[VIDEO_LOG] Stopping screen stream tracks.", screenStream);
         screenStream.getTracks().forEach(track => track.stop());
         setScreenStream(null);
       }
