@@ -78,7 +78,7 @@ export interface VideoFrame extends Message {
     data: Uint8Array; // 对应 data
     width: number;
     height: number;
-    pixel_format: number; // Changed from format: string to pixel_format: number
+    pixel_fmt: number; // Changed from pixel_format to pixel_fmt
     is_eof?: boolean;
     frame_timestamp: number; // 对应 frameTimestamp
 }

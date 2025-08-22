@@ -10,6 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAgentSettings } from "@/hooks/useAgentSettings"; // Import useAgentSettings
 
+const SILENCE_THRESHOLD = 0.005; // 定义静音阈值，根据需要调整
+const MAX_SILENT_FRAMES = 15; // 允许通过的最大连续静音帧数，增加以避免影响 ASR 断句
+
 interface MicrophoneProps {
   isConnected: boolean;
   sessionState: SessionConnectionState;
@@ -35,6 +38,7 @@ export const Microphone: React.FC<MicrophoneProps> = ({
   const [microphone, setMicrophone] = useState<MediaStreamAudioSourceNode | null>(null);
   const [scriptProcessor, setScriptProcessor] = useState<ScriptProcessorNode | null>(null);
   const [mediaStreamTrack, setMediaStreamTrack] = useState<MediaStreamTrack | null>(null);
+  const silentFrameCountRef = useRef(0); // 将 useState 替换为 useRef
 
   const audioMuteRef = useRef(audioMute);
   const isConnectedRef = useRef(isConnected);
@@ -112,8 +116,8 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       setScriptProcessor(processor);
 
       processor.onaudioprocess = (event) => {
-        console.log('MicrophoneBlock: onaudioprocess triggered, audioMute (ref):', audioMuteRef.current, 'isConnected (ref):', isConnectedRef.current, 'sessionState (ref):', sessionStateRef.current);
-        console.log(`MicrophoneBlock: Pre-send check - audioMuteRef.current: ${audioMuteRef.current}, isConnectedRef.current: ${isConnectedRef.current}, sessionStateRef.current: ${sessionStateRef.current}, Expected: ${SessionConnectionState.SESSION_ACTIVE}`);
+        // console.log('MicrophoneBlock: onaudioprocess triggered, audioMute (ref):', audioMuteRef.current, 'isConnected (ref):', isConnectedRef.current, 'sessionState (ref):', sessionStateRef.current);
+        // console.log(`MicrophoneBlock: Pre-send check - audioMuteRef.current: ${audioMuteRef.current}, isConnectedRef.current: ${isConnectedRef.current}, sessionStateRef.current: ${sessionStateRef.current}, Expected: ${SessionConnectionState.SESSION_ACTIVE}`);
         if (!audioMuteRef.current && isConnectedRef.current && sessionStateRef.current === SessionConnectionState.SESSION_ACTIVE) { // Use refs for latest values
           const inputBuffer = event.inputBuffer.getChannelData(0);
           const pcmData = new Int16Array(inputBuffer.length);
@@ -123,7 +127,31 @@ export const Microphone: React.FC<MicrophoneProps> = ({
           }
           const pcmUint8 = new Uint8Array(pcmData.buffer);
 
-          onRawAudioDataAvailable?.(pcmUint8);
+          // 计算PCM数据的平均绝对值，用于静音检测
+          let sumAbs = 0;
+          for (let i = 0; i < pcmData.length; i++) {
+            sumAbs += Math.abs(pcmData[i]);
+          }
+          const averageAbs = sumAbs / pcmData.length;
+
+          // 如果平均绝对值低于阈值
+          if (averageAbs < SILENCE_THRESHOLD * 0x7fff) {
+            // 增加静音帧计数器
+            silentFrameCountRef.current += 1; // 直接更新 ref 的 current 值
+            // console.log(`排查日志: MicrophoneBlock: 检测到静音帧 (平均幅度: ${averageAbs.toFixed(2)})，当前连续静音帧数: ${silentFrameCountRef.current}`);
+
+            // 如果连续静音帧数超过阈值，则跳过发送
+            if (silentFrameCountRef.current >= MAX_SILENT_FRAMES) {
+              // console.log(`排查日志: MicrophoneBlock: 连续静音帧数 (${silentFrameCountRef.current}) 超过阈值 (${MAX_SILENT_FRAMES})，跳过发送。`);
+            } else {
+              // 否则，即使是静音帧也发送，以保持ASR的连续性
+              onRawAudioDataAvailable?.(pcmUint8);
+            }
+          } else {
+            // 检测到非静音帧，重置计数器并发送
+            silentFrameCountRef.current = 0; // 直接更新 ref 的 current 值
+            onRawAudioDataAvailable?.(pcmUint8);
+          }
         }
       };
 

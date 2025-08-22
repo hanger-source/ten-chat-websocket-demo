@@ -199,7 +199,7 @@ export class WebSocketManager {
         srcLoc: Location,
         destLocs: Location[] = [],
         name: string = "video_frame",
-        pixelFormat: number = 0, // Changed from format: string to pixelFormat: number
+        pixel_fmt: number = 0, // Changed from pixelFormat to pixel_fmt
         isEof: boolean = false,
     ): void {
         const videoFrameMessage: VideoFrame = {
@@ -211,7 +211,7 @@ export class WebSocketManager {
             data: videoData,
             width: width,
             height: height,
-            pixel_format: pixelFormat, // Changed from format to pixel_format
+            pixel_fmt: pixel_fmt, // Changed from pixel_format to pixel_fmt
             is_eof: isEof,
             frame_timestamp: Date.now(),
             timestamp: Date.now(),

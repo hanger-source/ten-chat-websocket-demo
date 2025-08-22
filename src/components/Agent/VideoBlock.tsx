@@ -160,7 +160,7 @@ export default function VideoBlock(props: {
   const DEFAULT_ITEM: SelectItem = {
     label: "默认",
     value: "default",
-    deviceId: "",
+    deviceId: "default-item",
   }
 
   const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId: string) => void }) => {
@@ -170,21 +170,24 @@ export default function VideoBlock(props: {
 
     React.useEffect(() => {
       navigator.mediaDevices.enumerateDevices().then((devices) => {
-        const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
+        const videoInputDevices = devices.filter(device => device.kind === 'videoinput'); // 重新引入过滤，只显示视频输入设备
+        const processedDevices = videoInputDevices.map((item, index) => ({
+          label: item.label || `摄像头 ${index + 1}`,
+          value: item.deviceId || `videoinput-${index}`,
+          deviceId: item.deviceId || `videoinput-id-${index}`,
+        }));
+
         setItems([
           DEFAULT_ITEM,
-          ...videoInputDevices.map((item) => ({
-            label: item.label,
-            value: item.label,
-            deviceId: item.deviceId,
-          })),
+          ...processedDevices,
         ]);
         if (currentDeviceId) {
-          const selected = videoInputDevices.find(d => d.deviceId === currentDeviceId);
+          const selected = processedDevices.find(d => d.deviceId === currentDeviceId);
           if (selected) {
             setValue(selected.label);
           }
         }
+        console.log("[CAMERA_DEVICE_ENUM] Available camera devices:", videoInputDevices.map(device => ({ label: device.label, deviceId: device.deviceId }))); // 更改日志信息
       }).catch(error => {
         console.error("[VIDEO_LOG] Error enumerating devices:", error);
       });
