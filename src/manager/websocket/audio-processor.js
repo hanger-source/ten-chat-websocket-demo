@@ -4,8 +4,6 @@
 // managing its own audio buffer to prevent underruns and ensure precise scheduling.
 
 class AudioPlayerProcessor extends AudioWorkletProcessor {
-  // A queue to store incoming AudioBuffers or raw PCM data.
-  // Using a queue of Float32Arrays for raw PCM is often more efficient.
   audioQueue = [];
   currentBuffer = null;
   currentBufferOffset = 0;
@@ -17,13 +15,11 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
       // Assuming event.data contains raw PCM data as Float32Array
       if (event.data instanceof Float32Array) {
         this.audioQueue.push(event.data);
-        this.port.postMessage('playing'); // Inform main thread that we are processing data
       } else if (event.data === 'clear') {
         // Handle clear command to stop and reset playback
         this.audioQueue = [];
         this.currentBuffer = null;
         this.currentBufferOffset = 0;
-        this.port.postMessage('stopped'); // Inform main thread that we have stopped
       }
     };
   }

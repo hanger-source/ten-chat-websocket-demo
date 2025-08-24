@@ -42,7 +42,7 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       // Register AudioWorklet processor
       try {
         await audioContextRef.current.audioWorklet.addModule('/src/manager/websocket/audio-processor.js'); // Correct path relative to base URL
-        // console.log('【排查无声问题】AudioStreamPlayer: AudioWorklet module added successfully.');
+        // console.log('AudioStreamPlayer: AudioWorklet module added successfully.');
       } catch (error) {
         console.error('AudioStreamPlayer: Failed to add AudioWorklet module:', error);
       }
@@ -50,12 +50,12 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
     if (audioContextRef.current.state === 'suspended') {
       try {
         await audioContextRef.current.resume();
-        // console.log('【排查无声问题】AudioStreamPlayer: AudioContext resumed successfully.');
+        // console.log('AudioStreamPlayer: AudioContext resumed successfully.');
       } catch (error) {
         console.error('AudioStreamPlayer: Failed to resume AudioContext:', error);
       }
     }
-    // console.log('【排查无声问题】AudioStreamPlayer: AudioContext initialized and state:', audioContextRef.current.state);
+    // console.log('【排查采样率】AudioStreamPlayer: AudioContext initialized with sampleRate:', audioContextRef.current.sampleRate);
     return audioContextRef.current;
   }, []);
 
@@ -63,26 +63,53 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
     if (audioContextRef.current && audioWorkletNodeRef.current) {
       // Send clear command to AudioWorkletProcessor
       audioWorkletNodeRef.current.port.postMessage('clear');
-      // console.log('【排查无声问题】AudioStreamPlayer: Sent clear command to AudioWorkletProcessor.');
+      // console.log('【排查语音重复】AudioStreamPlayer: Sent clear command to AudioWorkletProcessor.');
     }
     // Reset local state
     setIsPlaying(false);
     activeGroupTimestampRef.current = undefined;
     activeGroupIdRef.current = undefined;
-    // console.log('【排查无声问题】AudioStreamPlayer: Local playback state cleared.');
+    // console.log('【排查语音重复】AudioStreamPlayer: Local playback state cleared.');
   }, []);
 
-  // Removed processAudioBuffer as AudioWorklet will handle this
-  // const processAudioBuffer = useCallback(async (audioData: Uint8Array, sampleRate: number, numberOfChannels: number, groupTimestamp: number | undefined) => { /* ... */ }, [initAudioContext]);
+  // New: Resampling function
+  const resampleAudioData = useCallback((
+    originalAudioData: Float32Array,
+    originalSampleRate: number,
+    targetSampleRate: number
+  ): Float32Array => {
+    if (originalSampleRate === targetSampleRate) {
+      return originalAudioData; // No resampling needed
+    }
 
-  // Removed playNextBuffer as AudioWorklet will handle this
-  // const playNextBuffer = useCallback(() => { /* ... */ }, []);
+    const ratio = targetSampleRate / originalSampleRate;
+    const newLength = Math.round(originalAudioData.length * ratio);
+    const resampledData = new Float32Array(newLength);
+
+    for (let i = 0; i < newLength; i++) {
+      const originalIndex = i / ratio;
+      const indexLower = Math.floor(originalIndex);
+      const indexUpper = Math.ceil(originalIndex);
+
+      if (indexUpper >= originalAudioData.length) {
+        resampledData[i] = originalAudioData[originalAudioData.length - 1];
+      } else if (indexLower < 0) {
+        resampledData[i] = originalAudioData[0];
+      } else {
+        const weightUpper = originalIndex - indexLower;
+        const weightLower = 1 - weightUpper;
+        resampledData[i] = (
+          originalAudioData[indexLower] * weightLower +
+          originalAudioData[indexUpper] * weightUpper
+        );
+      }
+    }
+    // console.log(`【排查采样率】AudioStreamPlayer: Resampled audio from ${originalSampleRate}Hz to ${targetSampleRate}Hz. Original length: ${originalAudioData.length}, New length: ${newLength}`);
+    return resampledData;
+  }, []);
 
   // New: Function to set up AudioWorklet and subscribe to WebSocket, triggered by user gesture (now WebSocket OPEN state)
   const startAudioPlayback = useCallback(async () => {
-    // No longer check isAudioReady, as it's replaced by WebSocket connection state
-    // if (isAudioReady) return; 
-
     const audioContext = await initAudioContext();
     if (!audioContext) {
       console.error('AudioStreamPlayer: AudioContext not initialized, cannot setup AudioWorkletNode.');
@@ -113,6 +140,10 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       const lastTs = activeGroupTimestampRef.current;
       const lastId = activeGroupIdRef.current;
 
+      // Log the incoming sample rate
+      // console.log('【排查采样率】AudioStreamPlayer: Received audio frame with sample_rate:', message.sample_rate, 'and channel_count:', message.number_of_channel);
+      // console.log(`【排查语音重复】AudioStreamPlayer: Received AudioFrame. Group TS: ${currentGroupTimestamp}, Group ID: ${currentGroupId}, ByteLength: ${message.buf?.byteLength || 0}.`);
+
       let isNewGroup = false;
 
       if (typeof currentGroupTimestamp === 'number') {
@@ -126,10 +157,12 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       }
 
       if (isNewGroup) {
+        // console.log(`【排查语音重复】AudioStreamPlayer: New group (TS: ${currentGroupTimestamp}, ID: ${currentGroupId}) detected. Clearing processor queue.`);
         stopAndClearPlayback();
         activeGroupTimestampRef.current = currentGroupTimestamp;
         activeGroupIdRef.current = currentGroupId;
       } else if ((typeof currentGroupTimestamp === 'number' && currentGroupTimestamp < lastTs!) || (typeof currentGroupId === 'string' && currentGroupId !== lastId && typeof lastId !== 'undefined')) {
+        // console.log(`【排查语音重复】AudioStreamPlayer: Discarding old/mismatched group audio frame (TS: ${currentGroupTimestamp}, ID: ${currentGroupId}).`);
         return;
       }
 
@@ -141,14 +174,24 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
 
       if (message.buf && typeof message.sample_rate === 'number' && typeof message.number_of_channel === 'number' && shouldProcess) {
         if (message.buf.byteLength > 0) {
+          // Convert Uint8Array PCM to Float32Array
           const dataView = new DataView(message.buf.buffer, message.buf.byteOffset, message.buf.byteLength);
-          const float32Array = new Float32Array(message.buf.byteLength / 2);
+          let float32Array = new Float32Array(message.buf.byteLength / 2);
           for (let i = 0; i < float32Array.length; i++) {
             const int16 = dataView.getInt16(i * 2, true);
             float32Array[i] = int16 / 32768; // Normalize to -1 to 1
           }
+
+          // New: Resample audio data if sample rates don't match
+          if (message.sample_rate !== audioContext.sampleRate) {
+            float32Array = resampleAudioData(float32Array, message.sample_rate, audioContext.sampleRate);
+            // console.log(`【排查采样率】AudioStreamPlayer: Resampled audio data for AudioWorklet from ${message.sample_rate}Hz to ${audioContext.sampleRate}Hz.`);
+          }
+
+          // Send processed audio data to AudioWorkletProcessor
           if (audioWorkletNodeRef.current) {
             audioWorkletNodeRef.current.port.postMessage(float32Array);
+            // console.log(`【排查语音重复】AudioStreamPlayer: Sent Float32Array of length ${float32Array.length} to AudioWorkletProcessor.`);
             setIsPlaying(true);
           } else {
             console.warn('AudioStreamPlayer: AudioWorkletNode not initialized, cannot send audio data.');
@@ -162,20 +205,12 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
     };
 
     // Store unsubscribe function to call on unmount
-    let unsubscribeWs: (() => void) | undefined; // Declare unsubscribeWs here
-
-    // Only subscribe to WebSocket messages if AudioWorkletNode is ready
-    if (audioWorkletNodeRef.current) {
-      unsubscribeWs = webSocketManager.onMessage(MessageType.AUDIO_FRAME, handleAudioFrame);
-      console.log('AudioStreamPlayer: WebSocket message subscription established.');
-    }
-    
-    // setIsAudioReady(true); // No longer needed
+    const unsubscribeWs = webSocketManager.onMessage(MessageType.AUDIO_FRAME, handleAudioFrame);
     unsubscribeRef.current = unsubscribeWs; // Store in ref for cleanup
 
     // Return the unsubscribe function so it can be used in useEffect cleanup (although now handled by ref)
-    // return unsubscribeWs; 
-  }, [initAudioContext, stopAndClearPlayback, unsubscribeRef]); // Removed isAudioReady from dependencies
+    return unsubscribeWs; 
+  }, [initAudioContext, stopAndClearPlayback, unsubscribeRef, resampleAudioData]); // Add resampleAudioData to dependencies
 
   useEffect(() => {
     // New: Function to check both WebSocket and Session states and handle audio playback
@@ -208,15 +243,17 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
         audioWorkletNodeRef.current.port.postMessage('clear');
         audioWorkletNodeRef.current.disconnect();
         audioWorkletNodeRef.current = null;
+        // console.log('【排查语音重复】AudioStreamPlayer: AudioWorkletNode cleared and disconnected on unmount.');
       }
       // Clear AudioContext on unmount
       if (audioContextRef.current) {
         stopAndClearPlayback(); // Ensure local state is also cleared
         audioContextRef.current.close().catch(console.error);
         audioContextRef.current = null;
+        // console.log('【排查语音重复】AudioStreamPlayer: AudioContext closed on unmount.');
       }
     };
-  }, [stopAndClearPlayback, unsubscribeRef, startAudioPlayback, websocketConnectionState, agentConnected]); // Add state dependencies
+  }, [stopAndClearPlayback, unsubscribeRef, startAudioPlayback, websocketConnectionState, agentConnected, resampleAudioData]); // Add resampleAudioData to dependencies
 
   return (
     <div className="audio-stream-player">
