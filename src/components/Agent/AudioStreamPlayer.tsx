@@ -184,7 +184,8 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
 
           // New: Resample audio data if sample rates don't match
           if (message.sample_rate !== audioContext.sampleRate) {
-            float32Array = resampleAudioData(float32Array, message.sample_rate, audioContext.sampleRate);
+            const resampledData = resampleAudioData(float32Array, message.sample_rate, audioContext.sampleRate);
+            float32Array = new Float32Array(resampledData);
             // console.log(`【排查采样率】AudioStreamPlayer: Resampled audio data for AudioWorklet from ${message.sample_rate}Hz to ${audioContext.sampleRate}Hz.`);
           }
 
