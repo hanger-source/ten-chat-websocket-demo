@@ -1,3 +1,4 @@
+import audioProcessorString from '../../manager/websocket/audio-processor.js?raw';
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
 import { AudioFrame, MessageType, Message, WebSocketConnectionState, SessionConnectionState } from '@/types/websocket'; // Import WebSocketConnectionState and SessionConnectionState
@@ -41,7 +42,10 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       // Register AudioWorklet processor
       try {
-        await audioContextRef.current.audioWorklet.addModule('/src/manager/websocket/audio-processor.js'); // Correct path relative to base URL
+        const audioWorkletBlob = new Blob([audioProcessorString], { type: 'application/javascript' });
+        const audioWorkletBlobUrl = URL.createObjectURL(audioWorkletBlob);
+        await audioContextRef.current.audioWorklet.addModule(audioWorkletBlobUrl);
+        URL.revokeObjectURL(audioWorkletBlobUrl); // Clean up the Blob URL after use
         // console.log('AudioStreamPlayer: AudioWorklet module added successfully.');
       } catch (error) {
         console.error('AudioStreamPlayer: Failed to add AudioWorklet module:', error);

@@ -454,5 +454,15 @@ export class WebSocketManager {
     }
 }
 
-// 创建全局 WebSocket 管理器实例
-export const webSocketManager = new WebSocketManager((import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080').replace('http', 'ws') + '/websocket');
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+let websocketBaseUrl: string;
+
+if (backendUrl === '/') {
+    // If VITE_BACKEND_URL is '/', construct a full URL using window.location
+    websocketBaseUrl = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
+} else {
+    // Otherwise, use the VITE_BACKEND_URL and replace http with ws
+    websocketBaseUrl = backendUrl.replace('http', 'ws');
+}
+
+export const webSocketManager = new WebSocketManager(websocketBaseUrl + '/websocket');
