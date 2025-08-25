@@ -5,22 +5,14 @@ import Action from "@/components/Layout/Action";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import ChatCard from "@/components/Chat/ChatCard";
-// import ConnectionTest from "@/components/Chat/ConnectionTest";
-// import AudioVisualizer from "@/components/Agent/AudioVisualizer"; // Removed
-// import TalkingHead from "@/components/Agent/TalkingHead"; // Removed
-// import MicrophoneDeviceSelect from "@/components/Agent/MicrophoneDeviceSelect"; // Removed
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
-// import { useMicrophoneStream } from "@/hooks/useMicrophoneStream"; // Removed
-// import { useAgentSettings } from "@/hooks/useAgentSettings"; // Removed
 import { performanceMonitor } from "@/common/utils";
-// import { SessionConnectionState } from "@/types/websocket"; // Commented out import for SessionConnectionState
-// import { useAudioRecorder } from "@/hooks/useAudioRecorder"; // Commented out import for useAudioRecorder
 import AuthInitializer from "@/components/authInitializer"; // Add AuthInitializer import
-// import { ConnectionTest } from "@/components/Chat/ConnectionTest"; // Changed from default import
 import RTCCard from "@/components/Dynamic/RTCCard"; // Import RTCCard
 import { RootState } from "@/store"; // Import RootState
 import { WebSocketConnectionState } from "@/types/websocket"; // Import WebSocketConnectionState
 import { useAudioRecorder } from "@/hooks/useAudioRecorder"; // 启用 useAudioRecorder hook
+import { VoiceSelection } from "@/components/Settings/VoiceSelection"; // Import VoiceSelection
 
 function Home() {
   try {
@@ -28,20 +20,9 @@ function Home() {
       (state) => state.global.mobileActiveTab,
     );
     const websocketConnectionState = useAppSelector((state: RootState) => state.global.websocketConnectionState); // Get from Redux
-    // const [showLive2D, setShowLive2D] = React.useState(false); // Removed
-
-    // const { isConnected, sessionState, defaultLocation } = useWebSocketSession(); // Removed
-    // const { agentSettings } = useAgentSettings(); // Removed
-    // const { mediaStreamTrack, micPermission, sendAudioFrame } = useMicrophoneStream({ isConnected, sessionState, defaultLocation, settings: agentSettings }); // Pass settings and get micPermission and sendAudioFrame
-    // const [audioMute, setAudioMute] = React.useState(true);
 
     const { recordedChunksCount, onAudioDataCaptured, downloadRecordedAudio } = useAudioRecorder(); // 启用 useAudioRecorder hook
 
-    // Removed getSessionStateText function and related logging
-    // const activeTrack = audioMute ? undefined : (mediaStreamTrack || undefined);
-    // console.log('Home component: activeTrack', activeTrack);
-
-    // console.log('Home component render: isConnected =', isConnected, ', sessionState =', sessionState); // Removed
     return (
       <AuthInitializer>
         <div className="relative mx-auto flex flex-1 min-h-screen flex-col md:h-screen bg-gray-50">
@@ -61,12 +42,18 @@ function Home() {
             </div>
 
             {/* 聊天区域 */}
-            <div className="m-0 w-full rounded-b-lg bg-white shadow-lg border border-gray-200 md:rounded-lg md:flex-1">
+            <div className="m-0 w-full rounded-b-lg bg-white shadow-lg border border-gray-200 md:rounded-lg md:flex-1 relative"> {/* Add relative positioning */}
               <div className="h-full flex flex-col">
-                <div className="p-4 border-b">
+                <div className="p-4 border-b relative z-20 flex items-center justify-between"> {/* Add border-b, relative, z-20, pr-24, and pb-10 */}
+                  <div className=""> {/* Position VoiceSelection here, remove z-index as parent has it */}
+                    {/* Placeholder for other content that might be on the left */}
+                  </div>
+                  <div> {/* Wrap VoiceSelection in a div to ensure proper centering with justify-between */}
+                    <VoiceSelection />
+                  </div>
                   {/* <ConnectionTest /> */}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1"> {/* Removed border-b here */}
                   <ChatCard />
                 </div>
               </div>

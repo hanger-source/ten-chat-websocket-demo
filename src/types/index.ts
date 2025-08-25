@@ -19,12 +19,13 @@ export interface IAgentEnv {
 }
 
 export interface IAgentSettings {
-  greeting: string;
-  prompt: string;
-  env: Record<string, string>;
-  echoCancellation: boolean;
-  noiseSuppression: boolean;
-  autoGainControl: boolean;
+  greeting?: string;
+  prompt?: string;
+  env?: Record<string, string>;
+  echo_cancellation?: boolean;
+  noise_suppression?: boolean;
+  auto_gain_control?: boolean;
+  cosy_voice_name?: string;
 }
 
 export interface ITrulienceSettings {

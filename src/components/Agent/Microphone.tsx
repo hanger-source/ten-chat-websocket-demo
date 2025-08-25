@@ -223,62 +223,6 @@ export const Microphone: React.FC<MicrophoneProps> = ({
             下载录音 ({recordedChunksCount})
           </Button> */}
         </div>
-      {/* 高级音频设置 */}
-      {/* <div className="space-y-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-          className="text-xs text-gray-600 hover:text-gray-800"
-        >
-          {showAdvancedSettings ? "隐藏" : "显示"} 音频设置
-        </Button>
-
-        {showAdvancedSettings && (
-          <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
-            <div className="text-xs font-medium text-gray-700 mb-2">
-              音频处理设置 (可能影响音质)
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="disable-agc" className="text-xs">
-                启用自动增益控制 (AGC)
-              </Label>
-              <Switch
-                id="disable-agc"
-                checked={agentSettings.autoGainControl} // Bind to agentSettings
-                onCheckedChange={(checked) => updateSettings({ autoGainControl: checked })} // Update settings
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="disable-ns" className="text-xs">
-                启用噪声抑制 (NS)
-              </Label>
-              <Switch
-                id="disable-ns"
-                checked={agentSettings.noiseSuppression} // Bind to agentSettings
-                onCheckedChange={(checked) => updateSettings({ noiseSuppression: checked })} // Update settings
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="disable-aec" className="text-xs">
-                启用回声消除 (AEC)
-              </Label>
-              <Switch
-                id="disable-aec"
-                checked={agentSettings.echoCancellation} // Bind to agentSettings
-                onCheckedChange={(checked) => updateSettings({ echoCancellation: checked })} // Update settings
-              />
-            </div>
-
-            <div className="text-xs text-gray-500 mt-2">
-              提示：禁用这些功能可能获得更原始的音质，但可能包含更多噪音
-            </div>
-          </div>
-        )}
-      </div> */}
     </div>
   );
 };

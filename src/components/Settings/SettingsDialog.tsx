@@ -3,11 +3,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
+// import { VoiceSelection } from "@/components/Settings/VoiceSelection"; // Removed: VoiceSelection is moved out of here
+import { useAgentSettings, getAgentSettings } from "@/hooks/useAgentSettings";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -16,24 +21,26 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useAgentSettings } from "@/hooks/useAgentSettings"; // Import useAgentSettings
 import { IAgentSettings } from "@/types"; // Import IAgentSettings
 import { Switch } from "@/components/ui/switch";
-import { ChevronDown, ChevronUp } from "lucide-react"; // Import icons
-import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react"; // Import ExternalLink icon
+import { PlayCircle, SlidersHorizontal } from "lucide-react"
+import { Separator } from "../ui/separator"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible"
 
 const agentSettingSchema = z.object({
   greeting: z.string().optional(),
   prompt: z.string().optional(),
   env: z.record(z.string(), z.string()).optional(), // Add env to schema
-  echoCancellation: z.boolean().optional(),
-  noiseSuppression: z.boolean().optional(),
-  autoGainControl: z.boolean().optional(),
+  echo_cancellation: z.boolean().optional(),
+  noise_suppression: z.boolean().optional(),
+  auto_gain_control: z.boolean().optional(),
+  cosy_voice_name: z.string().optional(), // Add cosy_voice_name to schema
 });
 
 type AgentSettingFormValues = z.infer<typeof agentSettingSchema>;
@@ -54,7 +61,6 @@ export default function SettingsDialog({
   docUrl, // Destructure docUrl prop
 }: SettingsDialogProps) {
   const { agentSettings, saveSettings } = useAgentSettings();
-  const [showAudioSettings, setShowAudioSettings] = useState(false); // New state for collapsable section
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false); // New state for advanced settings dialog
   const [advancedEnvJson, setAdvancedEnvJson] = useState(
     JSON.stringify(agentSettings.env, null, 2), // Initialize with existing env JSON
@@ -65,9 +71,10 @@ export default function SettingsDialog({
     defaultValues: {
       greeting: agentSettings.greeting || "",
       prompt: agentSettings.prompt || "",
-      echoCancellation: agentSettings.echoCancellation,
-      noiseSuppression: agentSettings.noiseSuppression,
-      autoGainControl: agentSettings.autoGainControl,
+      echo_cancellation: agentSettings.echo_cancellation,
+      noise_suppression: agentSettings.noise_suppression,
+      auto_gain_control: agentSettings.auto_gain_control,
+      cosy_voice_name: agentSettings.cosy_voice_name || "",
     },
   });
 
@@ -76,9 +83,10 @@ export default function SettingsDialog({
       form.reset({
         greeting: agentSettings.greeting || "",
         prompt: agentSettings.prompt || "",
-        echoCancellation: agentSettings.echoCancellation,
-        noiseSuppression: agentSettings.noiseSuppression,
-        autoGainControl: agentSettings.autoGainControl,
+        echo_cancellation: agentSettings.echo_cancellation,
+        noise_suppression: agentSettings.noise_suppression,
+        auto_gain_control: agentSettings.auto_gain_control,
+        cosy_voice_name: agentSettings.cosy_voice_name || "",
       });
       // Update advancedEnvJson when the main dialog opens or agentSettings change
       setAdvancedEnvJson(JSON.stringify(agentSettings.env, null, 2));
@@ -90,9 +98,10 @@ export default function SettingsDialog({
       greeting: data.greeting || "",
       prompt: data.prompt || "",
       env: { ...agentSettings.env, ...data.env }, // Merge existing env with new env data
-      echoCancellation: data.echoCancellation ?? true,
-      noiseSuppression: data.noiseSuppression ?? true,
-      autoGainControl: data.autoGainControl ?? true,
+      echo_cancellation: data.echo_cancellation ?? true, // Changed from echoCancellation
+      noise_suppression: data.noise_suppression ?? true, // Changed from noiseSuppression
+      auto_gain_control: data.auto_gain_control ?? true, // Changed from autoGainControl
+      cosy_voice_name: data.cosy_voice_name || "", // Changed from cosyVoiceName
     };
 
     saveSettings(newSettings);
@@ -121,9 +130,12 @@ export default function SettingsDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>智能体设置</DialogTitle>
+          <DialogDescription>
+            管理您的 AI 智能体设置.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 py-4">
             <FormField
               control={form.control}
               name="greeting"
@@ -156,89 +168,96 @@ export default function SettingsDialog({
               )}
             />
 
-            <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
-              <div
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => setShowAudioSettings(!showAudioSettings)}
-              >
-                <div className="text-xs font-medium text-gray-700 mb-2">
-                  音频处理设置 (可能影响音质)
-                </div>
-                {showAudioSettings ? (
-                  <ChevronUp className="h-4 w-4 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                )}
+            <div className="grid gap-4 py-4">
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between text-sm font-medium cursor-pointer py-2">
+                    <span>音频处理设置 (可能影响音质)</span>
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
+                    <FormField
+                      control={form.control}
+                      name="auto_gain_control"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm"> 
+                          <div className="space-y-0.5">
+                            <FormLabel>启用自动增益控制 (AGC)</FormLabel>
+                            <FormDescription>
+                              自动调整麦克风输入音量，确保音量保持一致。
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="echo_cancellation"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel>启用回声消除</FormLabel>
+                            <FormDescription>
+                              减少麦克风捕捉到的扬声器回声。
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="noise_suppression"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel>启用噪音抑制</FormLabel>
+                            <FormDescription>
+                              减少背景噪音，例如风扇或键盘声。
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <Separator />
+
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAdvancedSettings(true)}
+                >
+                  高级设置
+                </Button>
               </div>
-
-              {showAudioSettings && (
-                <div className={cn("space-y-3")}> {/* Added conditional rendering for audio settings content */}
-                  <FormField
-                    control={form.control}
-                    name="autoGainControl"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>启用自动增益控制 (AGC)</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="noiseSuppression"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>启用噪声抑制 (NS)</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="echoCancellation"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>启用回声消除 (AEC)</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
             </div>
 
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowAdvancedSettings(true)}
-              >
-                高级设置
-              </Button>
-            </div>
-
-            <div className="flex justify-between items-center mt-4">
+            <DialogFooter className="mt-4">
               <Button type="submit">保存</Button>
               {docUrl && (
                 <a href={docUrl} target="_blank" rel="noopener noreferrer" title="查看说明文档">
@@ -248,39 +267,38 @@ export default function SettingsDialog({
                   </span>
                 </a>
               )}
-            </div>
+            </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
 
-      {/* Advanced Settings Dialog */}
-      <Dialog
-        open={showAdvancedSettings}
-        onOpenChange={setShowAdvancedSettings}
-      >
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>高级设置 (JSON)</DialogTitle>
-          </DialogHeader>
-          <div className="flex-grow overflow-y-auto">
-            <Textarea
-              value={advancedEnvJson}
-              onChange={(e) => setAdvancedEnvJson(e.target.value)}
-              className="h-full min-h-[300px] font-mono text-xs"
-              placeholder="请输入 JSON 格式的高级设置"
-            />
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowAdvancedSettings(false)}
-            >
-              取消
-            </Button>
-            <Button onClick={handleAdvancedSettingsSave}>保存高级设置</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        <Dialog
+          open={showAdvancedSettings}
+          onOpenChange={setShowAdvancedSettings}
+        >
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>高级设置 (JSON)</DialogTitle>
+            </DialogHeader>
+            <div className="flex-grow overflow-y-auto">
+              <Textarea
+                value={advancedEnvJson}
+                onChange={(e) => setAdvancedEnvJson(e.target.value)}
+                className="h-full min-h-[300px] font-mono text-xs"
+                placeholder="请输入 JSON 格式的高级设置"
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAdvancedSettings(false)}
+              >
+                取消
+              </Button>
+              <Button onClick={handleAdvancedSettingsSave}>保存高级设置</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </DialogContent>
     </Dialog>
   );
 }

@@ -25,6 +25,7 @@ import { TrulienceCfgSheet } from "../Chat/ChatCfgTrulienceSetting";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import SettingsDialog from "@/components/Settings/SettingsDialog";
+import { VoiceSelection } from "@/components/Settings/VoiceSelection"; // Import VoiceSelection
 import { useAgentSettings, getAgentSettings } from "@/hooks/useAgentSettings";
 import { z } from "zod";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
@@ -42,7 +43,7 @@ const agentSettingSchema = z.object({
   autoGainControl: z.boolean().optional(),
 });
 
-type AgentSettingFormValues = z.infer<typeof agentSettingSchema>;
+type AgentSettingFormValues = z.infer<typeof agentSettingSchema>; 
 
 // 导入类型
 interface IPingResponse {
@@ -146,6 +147,10 @@ export default function Action(props: { className?: string }) {
         </div>
 
         <div className="flex w-full flex-col md:flex-row md:items-center justify-between md:justify-end">
+          {/* Voice Selection moved to top right */}
+          {/* <div className="md:ml-auto md:order-last">
+            <VoiceSelection />
+          </div> */} {/* Removed: VoiceSelection moved back to SettingsDialog */}
           {/* -- Tabs Section */}
           <Tabs
             defaultValue={mobileActiveTab}
@@ -174,6 +179,7 @@ export default function Action(props: { className?: string }) {
 
             {/* -- Action Button */}
             <div className="ml-auto flex items-center gap-2">
+              {/* <VoiceSelection /> */} {/* Removed: VoiceSelection moved back to SettingsDialog */}
               <Button
                 variant="outline"
                 size="sm"

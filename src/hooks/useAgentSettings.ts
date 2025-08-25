@@ -1,87 +1,81 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { IAgentSettings } from "@/types";
+import { voiceOptions } from "@/common/voiceOptions";
+
+const STORAGE_KEY = "ten-chat-agent-settings";
 
 const DEFAULT_AGENT_SETTINGS: IAgentSettings = {
   greeting: "",
   prompt: "",
-  env: {
-    // BAILIAN_DASHSCOPE_API_KEY: "", // Removed BAILIAN_DASHSCOPE_API_KEY from default env
-    GREETING: "",
-    CHAT_PROMPT: "",
-  },
-  echoCancellation: true,
-  noiseSuppression: true,
-  autoGainControl: true,
+  env: {},
+  echo_cancellation: true, // Changed from echoCancellation
+  noise_suppression: true, // Changed from noiseSuppression
+  auto_gain_control: true, // Changed from autoGainControl
+  cosy_voice_name: voiceOptions[0]?.voiceParam || "",
 };
 
-class AgentSettingsManager {
-  private static instance: AgentSettingsManager;
-  private settings: IAgentSettings = DEFAULT_AGENT_SETTINGS;
+let settingsCache: IAgentSettings = loadSettingsFromLocalStorage();
 
-  private constructor() {
-    this.loadSettings();
+function loadSettingsFromLocalStorage(): IAgentSettings {
+  if (typeof window === "undefined") {
+    return DEFAULT_AGENT_SETTINGS;
   }
-
-  static getInstance(): AgentSettingsManager {
-    if (!AgentSettingsManager.instance) {
-      AgentSettingsManager.instance = new AgentSettingsManager();
-    }
-    return AgentSettingsManager.instance;
-  }
-
-  private loadSettings() {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("agent_settings");
-      if (saved) {
-        try {
-          this.settings = JSON.parse(saved);
-        } catch (e) {
-          console.error("Failed to parse saved settings:", e);
-        }
-      }
-    }
-  }
-
-  getSettings(): IAgentSettings {
-    return this.settings;
-  }
-
-  saveSettings(settings: IAgentSettings) {
-    this.settings = settings;
-    if (typeof window !== "undefined") {
-      localStorage.setItem("agent_settings", JSON.stringify(settings));
-    }
-  }
-
-  updateSettings(partialSettings: Partial<IAgentSettings>) {
-    this.settings = { ...this.settings, ...partialSettings };
-    this.saveSettings(this.settings);
+  const savedSettings = localStorage.getItem(STORAGE_KEY);
+  try {
+    const parsedSettings: IAgentSettings = savedSettings
+      ? JSON.parse(savedSettings)
+      : {};
+    // Merge with defaults to ensure all properties are present
+    const mergedSettings = {
+      ...DEFAULT_AGENT_SETTINGS,
+      ...parsedSettings,
+      // Ensure specific boolean flags are correctly merged (default to true if undefined in parsedSettings)
+      echo_cancellation: parsedSettings.echo_cancellation ?? DEFAULT_AGENT_SETTINGS.echo_cancellation, // Changed
+      noise_suppression: parsedSettings.noise_suppression ?? DEFAULT_AGENT_SETTINGS.noise_suppression, // Changed
+      auto_gain_control: parsedSettings.auto_gain_control ?? DEFAULT_AGENT_SETTINGS.auto_gain_control, // Changed
+    };
+    return mergedSettings;
+  } catch (e) {
+    console.error("Failed to parse agent settings from localStorage", e);
+    return DEFAULT_AGENT_SETTINGS;
   }
 }
-export const getAgentSettings = (): IAgentSettings => {
-  return AgentSettingsManager.getInstance().getSettings();
-};
 
-// React hook
-export const useAgentSettings = () => {
-  const manager = AgentSettingsManager.getInstance();
-  const [agentSettings, setAgentSettings] = useState<IAgentSettings>(
-    manager.getSettings(),
-  );
+function saveSettingsToLocalStorage(settings: IAgentSettings) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+}
 
-  const saveSettings = (settings: IAgentSettings) => {
-    manager.saveSettings(settings);
-    setAgentSettings(settings);
-  };
+export function useAgentSettings() {
+  const [agentSettings, setAgentSettings] = useState<IAgentSettings>(settingsCache);
 
-  const updateSettings = (partialSettings: Partial<IAgentSettings>) => {
-    manager.updateSettings(partialSettings);
-    setAgentSettings(manager.getSettings());
-  };
+  useEffect(() => {
+    // Ensure settingsCache is always up-to-date with the latest settings state
+    settingsCache = agentSettings;
+    saveSettingsToLocalStorage(agentSettings);
+  }, [agentSettings]);
+
+  const updateSettings = useCallback((newSettings: Partial<IAgentSettings>) => {
+    setAgentSettings((prevSettings) => {
+      const updated = { ...prevSettings, ...newSettings };
+      return updated;
+    });
+  }, []);
 
   return {
     agentSettings,
-    saveSettings,
     updateSettings,
+    saveSettings: (settings: IAgentSettings) => {
+      setAgentSettings(settings);
+      saveSettingsToLocalStorage(settings);
+    },
   };
-};
+}
+
+// Utility function to get the latest settings without re-rendering components
+export function getAgentSettings(): IAgentSettings {
+  // Ensure settingsCache is the absolute latest, considering any direct updates
+  settingsCache = loadSettingsFromLocalStorage();
+  return settingsCache;
+}
