@@ -11,31 +11,15 @@ interface AudioStreamPlayerProps {
 
 const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
-  // Remove old playback refs as AudioWorklet will manage playback
-  // const audioQueueRef = useRef<{ buffer: AudioBuffer; groupTimestamp: number | undefined }[]>([]);
-  // const isPlayingRef = useRef<boolean>(false);
-  // const nextPlaybackTimeRef = useRef<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const activeGroupTimestampRef = useRef<number | undefined>(undefined); // New ref to track the currently active group timestamp
-  // Remove currentSourceNodeRef as AudioWorklet will manage nodes
-  // const currentSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const activeGroupIdRef = useRef<string | undefined>(undefined); // New ref to track the currently active group_id
 
-  // New: State to track if audio is ready to play (after user gesture) - REMOVED, will use WebSocket connection state
-  // const [isAudioReady, setIsAudioReady] = useState(false);
-
-  // New: Ref for AudioWorkletNode
   const audioWorkletNodeRef = useRef<AudioWorkletNode | null>(null);
-  // New: Ref for unsubscribe function, moved to top-level for accessibility
   const unsubscribeRef = useRef<(() => void) | undefined>(undefined); 
 
-  // New: Get WebSocket and Session connection states from Redux
   const websocketConnectionState = useSelector((state: RootState) => state.global.websocketConnectionState);
   const agentConnected = useSelector((state: RootState) => state.global.agentConnected);
-
-  // MIN_BUFFER_LENGTH and CROSSFADE_DURATION are handled by AudioWorkletProcessor internally
-  // const MIN_BUFFER_LENGTH = 0.5; // seconds, increased to allow for cross-fade
-  // const CROSSFADE_DURATION = 0.05; // 50ms for cross-fade
 
   const initAudioContext = useCallback(async () => { // Changed to async to await addModule
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -46,7 +30,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
         const audioWorkletBlobUrl = URL.createObjectURL(audioWorkletBlob);
         await audioContextRef.current.audioWorklet.addModule(audioWorkletBlobUrl);
         URL.revokeObjectURL(audioWorkletBlobUrl); // Clean up the Blob URL after use
-        // console.log('AudioStreamPlayer: AudioWorklet module added successfully.');
       } catch (error) {
         console.error('AudioStreamPlayer: Failed to add AudioWorklet module:', error);
       }
@@ -54,7 +37,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
     if (audioContextRef.current.state === 'suspended') {
       try {
         await audioContextRef.current.resume();
-        // console.log('AudioStreamPlayer: AudioContext resumed successfully.');
       } catch (error) {
         console.error('AudioStreamPlayer: Failed to resume AudioContext:', error);
       }
@@ -119,7 +101,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
     if (!audioWorkletNodeRef.current) {
       audioWorkletNodeRef.current = new AudioWorkletNode(audioContext, 'audio-player-processor');
       audioWorkletNodeRef.current.connect(audioContext.destination);
-      // console.log('AudioStreamPlayer: AudioWorkletNode created and connected to destination.');
 
       // Listen for messages from AudioWorkletProcessor (e.g., status updates)
       audioWorkletNodeRef.current.port.onmessage = (event) => {
@@ -128,7 +109,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
         } else if (event.data === 'stopped') {
           setIsPlaying(false);
         }
-        // console.log('AudioStreamPlayer: Message from AudioWorkletProcessor:', event.data);
       };
     }
 
