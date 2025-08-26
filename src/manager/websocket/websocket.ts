@@ -1,9 +1,17 @@
-import { Message, Data, Command, StartGraphCommand, StopGraphCommand, CommandResult, AudioFrame, VideoFrame, WebSocketConnectionState, Location, MessageType, CommandType } from '@/types/websocket';
-import { encode, decode, ExtensionCodec, ExtData } from '@msgpack/msgpack';
-// import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique ids
-import { MESSAGE_CONSTANTS } from '@/common/constant'; // Import MESSAGE_CONSTANTS
-// import { WebSocketConnectionState } from './types'; // Ensure this points to correct WebSocketConnectionState
-
+import {
+    AudioFrame,
+    Command,
+    CommandType,
+    Data,
+    Location,
+    Message,
+    MessageType,
+    StartGraphCommand,
+    StopGraphCommand,
+    VideoFrame,
+    WebSocketConnectionState
+} from '@/types/websocket';
+import {decode, encode, ExtensionCodec} from '@msgpack/msgpack';
 // TEN框架自定义MsgPack扩展类型码
 const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 恢复自定义扩展类型码
 
@@ -17,8 +25,7 @@ extensionCodec.register({
         // 检查是否是Message类型的对象
         if (input && typeof input === 'object' && 'type' in input && 'name' in input) {
             // 将Message对象编码为MsgPack字节数组
-            const innerEncoded = encode(input);
-            return innerEncoded;
+            return encode(input);
         }
         return null;
     },
@@ -246,7 +253,7 @@ export class WebSocketManager {
                     ...baseCommand,
                     type: MessageType.CMD_START_GRAPH, // 覆盖为 CMD_START_GRAPH
                     long_running_mode: properties.long_running_mode,
-                    predefined_graph_name: properties.predefined_graph_name || properties[MESSAGE_CONSTANTS.PROPERTY_CLIENT_GRAPH_NAME],
+                    predefined_graph_name: properties.predefined_graph_name,
                     extension_groups_info: properties.extension_groups_info,
                     extensions_info: properties.extensions_info,
                     graph_json: properties.graph_json,
@@ -256,7 +263,7 @@ export class WebSocketManager {
                 finalCommand = {
                     ...baseCommand,
                     type: MessageType.CMD_STOP_GRAPH, // 覆盖为 CMD_STOP_GRAPH
-                    location_uri: properties.location_uri || properties[MESSAGE_CONSTANTS.PROPERTY_CLIENT_LOCATION_URI],
+                    location_uri: properties.location_uri,
                 } as StopGraphCommand; // 转换为 StopGraphCommand
                 break;
             default:

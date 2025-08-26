@@ -114,7 +114,6 @@ export enum MessageType {
     DATA = 'DATA',
     VIDEO_FRAME = 'VIDEO_FRAME',
     AUDIO_FRAME = 'AUDIO_FRAME',
-    CMD_CLOSE_APP = 'CMD_CLOSE_APP',
     CMD_START_GRAPH = 'CMD_START_GRAPH',
     CMD_STOP_GRAPH = 'CMD_STOP_GRAPH',
     CMD_TIMER = 'CMD_TIMER',
@@ -125,19 +124,4 @@ export enum MessageType {
 export enum CommandType {
     START_GRAPH = 'CMD_START_GRAPH',
     STOP_GRAPH = 'CMD_STOP_GRAPH',
-    ADD_EXTENSION_TO_GRAPH = '__add_extension_to_graph__', // This might need to be checked in Java too
-    REMOVE_EXTENSION_FROM_GRAPH = '__remove_extension_from_graph__', // This might need to be checked in Java too
 }
-
-// 消息常量 - 匹配后端的 MessageConstants
-export const MESSAGE_CONSTANTS = {
-    NOT_APPLICABLE: 'N/A',
-    SYS_EXTENSION_NAME: 'client_connection',
-    PROPERTY_CLIENT_LOCATION_URI: '__client_location_uri__',
-    PROPERTY_CLIENT_APP_URI: '__client_app_uri__',
-    PROPERTY_CLIENT_GRAPH_ID: '__client_graph_id__',
-    PROPERTY_CLIENT_GRAPH_NAME: '__client_graph_name__',
-    PROPERTY_CLIENT_CHANNEL_ID: '__channel_id__',
-    PROPERTY_MESSAGE_PRIORITY: '__message_priority__',
-    DATA_NAME_ECHO_DATA: 'echo_data',
-} as const;
