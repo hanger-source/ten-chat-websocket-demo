@@ -123,27 +123,37 @@ export default function ChatCard(props: { className?: string }) {
                 newMessages.push({ text, role, end_of_segment: true, group_timestamp: undefined, image_url }); // Include image_url
                 lastGroupTimestampRef.current = undefined; // Reset AI group tracker when user speaks
             } else { // role is 'agent' or 'assistant'
-              // Conditions for appending to the last message (streaming within the same group or same group_id)
-              const shouldAppend = (
-                lastMessage &&
-                lastMessage.role === role && // Must be the same role
-                lastMessage.end_of_segment === false && // Last message was an ongoing stream
-                (lastMessage.group_id === group_id || (typeof lastMessage.group_timestamp === 'number' && lastMessage.group_timestamp === currentGroupTimestamp)) // Same group by group_id or groupTimestamp
-              );
+              // 查找同一group的未完成AI消息（不只是最后一条消息）
+              let targetMessageIndex = -1;
+              for (let i = newMessages.length - 1; i >= 0; i--) {
+                const msg = newMessages[i];
+                if (msg.role === role && msg.end_of_segment === false) {
+                  // 检查是否是同一个group
+                  const isSameGroup = (
+                    (group_id && msg.group_id === group_id) ||
+                    (typeof currentGroupTimestamp === 'number' && msg.group_timestamp === currentGroupTimestamp)
+                  );
+                  if (isSameGroup) {
+                    targetMessageIndex = i;
+                    break;
+                  }
+                }
+              }
 
-              if (shouldAppend) {
-                // Append text and update end_of_segment status
-                newMessages[newMessages.length - 1] = {
-                  ...lastMessage,
-                  text: (lastMessage.text || '') + (text || ''), // Ensure text is string for concatenation
+              if (targetMessageIndex >= 0) {
+                // 找到同一group的未完成消息，进行追加
+                const targetMessage = newMessages[targetMessageIndex];
+                newMessages[targetMessageIndex] = {
+                  ...targetMessage,
+                  text: (targetMessage.text || '') + (text || ''), // Ensure text is string for concatenation
                   end_of_segment: end_of_segment,
-                  image_url: image_url || lastMessage.image_url // Prioritize new image, or keep old one
+                  image_url: image_url || targetMessage.image_url // Prioritize new image, or keep old one
                 };
-                // console.log(`排查日志: 消息追加，group_id: ${group_id}, text: ${newMessages[newMessages.length - 1].text}`);
+                console.log(`【聊天分组】找到同一group未完成消息进行追加，group_id: ${group_id}, group_timestamp: ${currentGroupTimestamp}`);
               } else {
-                // Start a new message
+                // 没有找到同一group的未完成消息，创建新消息
                 newMessages.push({ text, role, end_of_segment, group_timestamp: currentGroupTimestamp, group_id: group_id, image_url });
-                // console.log(`排查日志: 新消息，group_id: ${group_id}, text: ${text}`);
+                console.log(`【聊天分组】创建新AI消息，group_id: ${group_id}, group_timestamp: ${currentGroupTimestamp}`);
                 // If it's a new AI message bubble, update the lastGroupTimestampRef
                 // This is already handled by the group_timestamp logic above, but ensure it's consistent
                 if (typeof currentGroupTimestamp === 'number') {
