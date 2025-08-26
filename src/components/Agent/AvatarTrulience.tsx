@@ -17,8 +17,6 @@ export default function Avatar({ audioTrack }: AvatarProps) {
   const trulienceSettings = useAppSelector(
     (state) => state.global.trulienceSettings,
   );
-  // const trulienceAvatarRef = useRef<TrulienceAvatar>(null); // 注释掉 ref
-  const trulienceAvatarRef = useRef<any>(null); // 替换为 any 类型以避免类型错误
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Track loading progress
@@ -29,8 +27,6 @@ export default function Avatar({ audioTrack }: AvatarProps) {
 
   // State for toggling fullscreen
   const [fullscreen, setFullscreen] = useState(false);
-
-  // 移除 createMediaStreamFromUint8Array 函数，因为不再需要转换
 
   // Safely read URL param on the client
   useEffect(() => {
@@ -61,46 +57,6 @@ export default function Avatar({ audioTrack }: AvatarProps) {
     };
   }, []);
 
-  // Only create TrulienceAvatar instance once we have a final avatar ID
-  const trulienceAvatarInstance = useMemo(() => {
-    // if (!finalAvatarId) return null;
-    // return (
-    //   <TrulienceAvatar
-    //     url={trulienceSettings.trulienceSDK}
-    //     ref={trulienceAvatarRef}
-    //     avatarId={finalAvatarId}
-    //     token={trulienceSettings.avatarToken}
-    //     eventCallbacks={eventCallbacks}
-    //     width="100%"
-    //     height="100%"
-    //   />
-    // );
-    return null; // 替换为 null 或一个占位符
-  }, [finalAvatarId, eventCallbacks]);
-
-  // Update the Avatar’s audio stream whenever audioTrack or agentConnected changes
-  useEffect(() => {
-    // if (trulienceAvatarRef.current) {
-    //   if (audioTrack && agentConnected) {
-    //     // 直接将 MediaStreamTrack 传递给 TrulienceAvatar
-    //     trulienceAvatarRef.current?.setMediaStream(new MediaStream([audioTrack]));
-    //   } else if (!agentConnected) {
-    //     const trulienceObj = trulienceAvatarRef.current.getTrulienceObject();
-    //     trulienceObj?.sendMessageToAvatar(
-    //       "<trl-stop-background-audio immediate='true' />",
-    //     );
-    //     trulienceObj?.sendMessageToAvatar(
-    //       "<trl-content position='DefaultCenter' />",
-    //     );
-    //   }
-    // }
-
-    // Cleanup: unset media stream
-    // return () => {
-    //   trulienceAvatarRef.current?.setMediaStream(null);
-    // };
-  }, [audioTrack, agentConnected]);
-
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden rounded-lg", {
@@ -118,9 +74,6 @@ export default function Avatar({ audioTrack }: AvatarProps) {
         )}
       </button>
 
-      {/* Render the TrulienceAvatar */}
-      {/* {trulienceAvatarInstance} */}
-      {/* Placeholder for TrulienceAvatar */}
       <div className="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500">
         Trulience Avatar Placeholder
       </div>

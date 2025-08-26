@@ -7,10 +7,6 @@ import { useAppSelector, EMobileActiveTab, useIsCompactLayout } from "@/common";
 import Header from "@/components/Layout/Header";
 import Action from "@/components/Layout/Action";
 import { cn } from "@/lib/utils";
-import Avatar from "@/components/Agent/AvatarTrulience";
-import React from "react";
-import { IRtcUser, IUserTracks } from "@/manager";
-import { IMicrophoneAudioTrack } from "agora-rtc-sdk-ng";
 
 const DynamicRTCCard = dynamic(() => import("@/components/Dynamic/RTCCard"), {
   ssr: false,
@@ -28,24 +24,6 @@ export default function Home() {
   const isCompactLayout = useIsCompactLayout();
   const useTrulienceAvatar = trulienceSettings.enabled;
   const avatarInLargeWindow = trulienceSettings.avatarDesktopLargeWindow;
-  const [remoteuser, setRemoteUser] = React.useState<IRtcUser>()
-
-  React.useEffect(() => {
-    const { rtcManager } = require("../manager/rtc/rtc");
-    rtcManager.on("remoteUserChanged", onRemoteUserChanged);
-    return () => {
-      rtcManager.off("remoteUserChanged", onRemoteUserChanged);
-    };
-  }, []);
-
-  const onRemoteUserChanged = (user: IRtcUser) => {
-    if (useTrulienceAvatar) {
-      user.audioTrack?.stop();
-    }
-    if (user.audioTrack) {
-      setRemoteUser(user)
-    } 
-  }
 
   return (
     <AuthInitializer>
@@ -76,18 +54,6 @@ export default function Home() {
                 }
               )}
             />
-          )}
-
-          {(useTrulienceAvatar && avatarInLargeWindow) && (
-            <div className={cn(
-              "w-full",
-              {
-                ["h-60 flex-auto p-1 bg-white rounded-lg shadow-lg border border-gray-200"]: isCompactLayout,
-                ["hidden md:block"]: mobileActiveTab === EMobileActiveTab.CHAT,
-              }
-            )}>
-              <Avatar audioTrack={remoteuser?.audioTrack} />
-            </div>
           )}
 
         </div>

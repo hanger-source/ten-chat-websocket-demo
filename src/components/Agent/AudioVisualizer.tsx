@@ -12,7 +12,6 @@ export interface AudioVisualizerProps {
 
 export default function AudioVisualizer(props: AudioVisualizerProps) {
   const {
-    // frequencies,
     track,
     gap,
     barWidth,
@@ -36,8 +35,7 @@ export default function AudioVisualizer(props: AudioVisualizerProps) {
           borderRadius: borderRadius + "px",
           width: barWidth + "px",
           transition:
-            "background-color 0.35s ease-out, transform 0.25s ease-out, height 0.1s ease-out", // 添加 height 过渡
-          // transform: transform,
+            "background-color 0.35s ease-out, transform 0.25s ease-out, height 0.1s ease-out",
           backgroundColor: type === "agent" ? "#0888FF" : "#3B82F6",
           boxShadow: type === "agent" ? "0 0 10px #EAECF0" : "0 0 5px #3B82F6",
         };

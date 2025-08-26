@@ -59,7 +59,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
         console.error('AudioStreamPlayer: Failed to resume AudioContext:', error);
       }
     }
-    // console.log('【排查采样率】AudioStreamPlayer: AudioContext initialized with sampleRate:', audioContextRef.current.sampleRate);
     return audioContextRef.current;
   }, []);
 
@@ -67,13 +66,11 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
     if (audioContextRef.current && audioWorkletNodeRef.current) {
       // Send clear command to AudioWorkletProcessor
       audioWorkletNodeRef.current.port.postMessage('clear');
-      // console.log('【排查语音重复】AudioStreamPlayer: Sent clear command to AudioWorkletProcessor.');
     }
     // Reset local state
     setIsPlaying(false);
     activeGroupTimestampRef.current = undefined;
     activeGroupIdRef.current = undefined;
-    // console.log('【排查语音重复】AudioStreamPlayer: Local playback state cleared.');
   }, []);
 
   // New: Resampling function
@@ -108,7 +105,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
         );
       }
     }
-    // console.log(`【排查采样率】AudioStreamPlayer: Resampled audio from ${originalSampleRate}Hz to ${targetSampleRate}Hz. Original length: ${originalAudioData.length}, New length: ${newLength}`);
     return resampledData;
   }, []);
 
@@ -145,8 +141,6 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       const lastId = activeGroupIdRef.current;
 
       // Log the incoming sample rate
-      // console.log('【排查采样率】AudioStreamPlayer: Received audio frame with sample_rate:', message.sample_rate, 'and channel_count:', message.number_of_channel);
-      // console.log(`【排查语音重复】AudioStreamPlayer: Received AudioFrame. Group TS: ${currentGroupTimestamp}, Group ID: ${currentGroupId}, ByteLength: ${message.buf?.byteLength || 0}.`);
 
       let isNewGroup = false;
 
@@ -161,12 +155,10 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
       }
 
       if (isNewGroup) {
-        // console.log(`【排查语音重复】AudioStreamPlayer: New group (TS: ${currentGroupTimestamp}, ID: ${currentGroupId}) detected. Clearing processor queue.`);
         stopAndClearPlayback();
         activeGroupTimestampRef.current = currentGroupTimestamp;
         activeGroupIdRef.current = currentGroupId;
       } else if ((typeof currentGroupTimestamp === 'number' && currentGroupTimestamp < lastTs!) || (typeof currentGroupId === 'string' && currentGroupId !== lastId && typeof lastId !== 'undefined')) {
-        // console.log(`【排查语音重复】AudioStreamPlayer: Discarding old/mismatched group audio frame (TS: ${currentGroupTimestamp}, ID: ${currentGroupId}).`);
         return;
       }
 
@@ -190,13 +182,11 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
           if (message.sample_rate !== audioContext.sampleRate) {
             const resampledData = resampleAudioData(float32Array, message.sample_rate, audioContext.sampleRate);
             float32Array = new Float32Array(resampledData);
-            // console.log(`【排查采样率】AudioStreamPlayer: Resampled audio data for AudioWorklet from ${message.sample_rate}Hz to ${audioContext.sampleRate}Hz.`);
           }
 
           // Send processed audio data to AudioWorkletProcessor
           if (audioWorkletNodeRef.current) {
             audioWorkletNodeRef.current.port.postMessage(float32Array);
-            // console.log(`【排查语音重复】AudioStreamPlayer: Sent Float32Array of length ${float32Array.length} to AudioWorkletProcessor.`);
             setIsPlaying(true);
           } else {
             console.warn('AudioStreamPlayer: AudioWorkletNode not initialized, cannot send audio data.');
@@ -248,22 +238,18 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = () => {
         audioWorkletNodeRef.current.port.postMessage('clear');
         audioWorkletNodeRef.current.disconnect();
         audioWorkletNodeRef.current = null;
-        // console.log('【排查语音重复】AudioStreamPlayer: AudioWorkletNode cleared and disconnected on unmount.');
       }
       // Clear AudioContext on unmount
       if (audioContextRef.current) {
         stopAndClearPlayback(); // Ensure local state is also cleared
         audioContextRef.current.close().catch(console.error);
         audioContextRef.current = null;
-        // console.log('【排查语音重复】AudioStreamPlayer: AudioContext closed on unmount.');
       }
     };
   }, [stopAndClearPlayback, unsubscribeRef, startAudioPlayback, websocketConnectionState, agentConnected, resampleAudioData]); // Add resampleAudioData to dependencies
 
   return (
     <div className="audio-stream-player">
-      {/* Removed the '点击开始音频' button */}
-      {/* {isPlaying ? <p>Playing audio...</p> : <p>Audio stopped.</p>} */}
     </div>
   );
 };

@@ -14,8 +14,6 @@ function calcMouthOpenByRMS(dataArray: Uint8Array): number {
   let sum = 0;
   let count = 0;
 
-  // console.log(`calcMouthOpenByRMS: dataArray length = ${dataArray.length}`); // Add logging for dataArray length
-
   // 分析更精确的频段范围，专注于语音频率
   const startIndex = Math.floor(dataArray.length * 0.2); // 20% 开始
   const endIndex = Math.floor(dataArray.length * 0.8);   // 80% 结束

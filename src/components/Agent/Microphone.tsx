@@ -66,22 +66,17 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       stopMicrophone();
     }
     return () => {
-      // Removed: On cleanup, clear recorded audio as well
-      // recordedAudioChunksRef.current = [];
-      // setRecordedChunksCount(0);
     };
-  }, [audioMute, isConnected, sessionState, agentSettings.autoGainControl, agentSettings.noiseSuppression, agentSettings.echoCancellation, onMuteChange]); // Add agentSettings to dependencies
-
-  // console.log('AGENT_TRACE: Microphone Component rendered.', { isConnected, sessionState, defaultLocation, onMuteChange, onRawAudioDataAvailable, recordedChunksCount, downloadRecordedAudio });
+  }, [audioMute, isConnected, sessionState, agentSettings.auto_gain_control, agentSettings.noise_suppression, agentSettings.echo_cancellation, onMuteChange]); 
 
   const startMicrophone = async () => {
     console.log('MicrophoneBlock: startMicrophone called');
     try {
       // 配置音频约束，禁用音频处理
       const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: agentSettings.echoCancellation,
-        noiseSuppression: agentSettings.noiseSuppression,
-        autoGainControl: agentSettings.autoGainControl,
+        echoCancellation: agentSettings.echo_cancellation,
+        noiseSuppression: agentSettings.noise_suppression,
+        autoGainControl: agentSettings.auto_gain_control,
         // 设置较高的采样率以获得更好的音质
         sampleRate: 16000,
         channelCount: 1,
