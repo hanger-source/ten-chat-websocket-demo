@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux'; // Revert to direct import
 import { setCurrentScene } from '@/store/reducers/global';
 import { ISceneCard } from '@/types';
@@ -14,6 +14,12 @@ const EditAIPersonaScenes: React.FC<EditAIPersonaScenesProps> = ({ onCapsuleClic
   const { currentScene } = useSelector((state: RootState) => state.global); // Use useSelector with RootState
 
   const capsuleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  useEffect(() => {
+    if (currentScene && capsuleRefs.current[currentScene.text]) {
+      onCapsuleClick(currentScene, capsuleRefs.current[currentScene.text]);
+    }
+  }, [currentScene, onCapsuleClick]); // Depend on currentScene and onCapsuleClick
 
   return (
     <div className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-px-6">

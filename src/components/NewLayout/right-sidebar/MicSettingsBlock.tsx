@@ -70,14 +70,14 @@ const MicSettingsBlock = () => {
   const [selectedMicDeviceId, setSelectedMicDeviceId] = React.useState<string | undefined>(undefined);
 
   // 处理麦克风权限请求和状态显示 (不涉及实际的媒体流传输)
-  const [micPermission, setMicPermission] = React.useState<'granted' | 'denied' | 'pending'>('pending');
+  const [micPermission, setMicPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt');
   React.useEffect(() => {
     const checkMicPermission = async () => {
       try {
         const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-        setMicPermission(permissionStatus.state);
+        setMicPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         permissionStatus.onchange = () => {
-          setMicPermission(permissionStatus.state);
+          setMicPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         };
       } catch (error) {
         console.error("Error querying microphone permission:", error);
@@ -87,13 +87,13 @@ const MicSettingsBlock = () => {
     checkMicPermission();
   }, []);
 
-  const getPermissionStatusText = (status: 'granted' | 'denied' | 'pending') => {
+  const getPermissionStatusText = (status: 'granted' | 'denied' | 'prompt') => {
     switch (status) {
       case 'granted':
         return '已授权';
       case 'denied':
         return '已拒绝';
-      case 'pending':
+      case 'prompt':
         return '待授权';
       default:
         return '未知';
@@ -117,7 +117,9 @@ const MicSettingsBlock = () => {
         </Button>
       </div>
       <MicSelect currentDeviceId={selectedMicDeviceId} onDeviceChange={setSelectedMicDeviceId} />
-      <p className="text-xs text-right text-gray-400 mt-2">权限状态: {getPermissionStatusText(micPermission)}</p>
+      {micPermission === 'denied' && (
+        <p className="text-xs text-right mt-2 text-red-500">无权限</p>
+      )}
     </div>
   );
 };

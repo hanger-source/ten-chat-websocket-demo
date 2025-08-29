@@ -233,7 +233,9 @@ const CamSettingsBlock = () => {
           />
         )}
       </div>
-      <p className="text-xs text-right text-gray-400 mt-2">权限状态: {getPermissionStatusText(camPermission)}</p>
+      {camPermission === 'denied' && (
+        <p className="text-xs text-right mt-2 text-red-500">无权限</p>
+      )}
     </div>
   );
 };
