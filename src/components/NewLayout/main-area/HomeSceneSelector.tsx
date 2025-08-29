@@ -51,7 +51,7 @@ const HomeSceneSelector = () => {
       {sceneCards.map((card, index) => (
         <div
           key={index}
-          className="relative p-[1px] rounded-full text-center cursor-pointer transition-all duration-200
+          className="group relative p-[1px] rounded-full text-center cursor-pointer transition-all duration-200
                      border border-gray-200 /* Default grey border */
                      hover:border-transparent /* Make border transparent on hover */
                      hover:bg-gradient-to-br hover:from-blue-400 hover:to-pink-400 hover:via-purple-400 /* Gradient background on hover */
@@ -64,7 +64,11 @@ const HomeSceneSelector = () => {
               <div className={`absolute top-[-1rem] right-[-0.5rem] ${card.bgColor} text-white text-xs px-2 py-1 rounded-full rounded-bl-none`}>{card.tag}</div>
             )}
             <img className="w-8 h-8" src={card.iconSrc} alt="icon" />
-            <div className="text-xs font-medium text-gray-700 truncate">{card.text}</div>
+            <div className="text-sm font-light text-gray-500 truncate
+                        group-hover:bg-gradient-to-br group-hover:from-blue-400 group-hover:to-pink-400 group-hover:via-purple-400
+                        group-hover:bg-clip-text group-hover:text-transparent">
+              {card.text}
+            </div>
           </div>
         </div>
       ))}
