@@ -11,7 +11,7 @@ const HomeAvatarCard = () => {
       </div>
       <div className="text-center">
         <div className="text-2xl font-bold text-gray-800 mb-4">{currentScene?.uiGreeting || 'Hi，欢迎体验实时对话式 AI'}</div>
-        <div className="text-base text-gray-500">{currentScene?.welcomeSubText || '支持豆包 Vision 模型和 深度思考模型，超多对话场景等你开启'}</div>
+        <div className="text-base text-gray-500">{currentScene?.welcomeSubText}</div>
       </div>
     </div>
   );

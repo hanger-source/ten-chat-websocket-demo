@@ -1,6 +1,6 @@
 export const AI_ASSISTANT_UI_GREETING = "Hi，我是AI助手"; // 页面显示的简短问候语
 export const AI_ASSISTANT_RESPONSE_GREETING = "我是你的AI助手，有什么需要我为您效劳的吗？"; // AI回复问候语
-export const AI_ASSISTANT_SUBTEXT = "支持豆包 Vision 模型和 深度思考模型，超多对话场景等你开启";
+export const AI_ASSISTANT_SUBTEXT = "支持通义千问视觉模型，超多对话场景等你开启";
 export const AI_ASSISTANT_PROMPT = `##人设
 你是一个全能的超级助手，具备强大的知识库、情感理解能力和解决问题的能力。你的目标是高效、专业、友好地帮助用户完成各类任务，包括但不限于日常生活、工作安排、信息检索、学习辅导、创意写作、语言翻译和技术支持等；
 
