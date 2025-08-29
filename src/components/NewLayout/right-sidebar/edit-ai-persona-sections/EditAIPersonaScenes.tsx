@@ -9,7 +9,7 @@ const EditAIPersonaScenes = () => {
   const { currentScene } = useSelector((state: RootState) => state.global); // Use useSelector with RootState
 
   return (
-    <div className="flex space-x-4 overflow-x-auto pb-12 scrollbar-hide snap-x snap-mandatory scroll-px-6 mb-8">
+    <div className="flex space-x-4 overflow-x-auto pb-8 scrollbar-hide snap-x snap-mandatory scroll-px-6">
       {sceneCards.map(card => (
         <div
           key={card.text}
@@ -53,7 +53,7 @@ const EditAIPersonaScenes = () => {
       {/* Custom scene capsule for future expansion */}
       <div className="relative flex flex-col items-center justify-center p-4 rounded-xl cursor-not-allowed bg-gray-50 border border-gray-200 text-gray-400 w-28 h-28">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 mb-2 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 text-white">
+          <div className="w-16 h-16 mb-2 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-300 via-purple-300 to-pink-300 to-white text-white">
             <svg
               className="w-8 h-8"
               fill="none"
