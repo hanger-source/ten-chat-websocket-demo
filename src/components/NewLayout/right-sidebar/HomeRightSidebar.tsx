@@ -1,6 +1,7 @@
 import React from 'react';
 import HomeAVSettingsBlock from "./HomeAVSettingsBlock"; // Updated import path
 import { useAppSelector } from "@/common/hooks";
+import EditAIPersonaSheet from "./EditAIPersonaSheet"; // Import EditAIPersonaSheet
 // import { VideoSourceType } from "@/common/constant"; // Removed
 
 interface HomeRightSidebarProps {
@@ -9,6 +10,7 @@ interface HomeRightSidebarProps {
 
 const HomeRightSidebar = () => {
   const currentScene = useAppSelector((state) => state.global.currentScene);
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false); // State to control drawer visibility
 
   const aiPersonaName = currentScene?.aiPersonaName || "AI助手";
   const aiCapabilities = currentScene?.aiCapabilities || [
@@ -36,7 +38,10 @@ const HomeRightSidebar = () => {
         </div>
         <div className="text-sm text-gray-700 mb-4">音色：标准女声</div>
         <div className="mt-auto p-0.5 rounded-md bg-gradient-to-r from-blue-100 to-pink-100">
-          <button className="w-full h-full px-4 py-2 text-sm bg-gradient-to-r from-blue-50 to-pink-50 rounded-md hover:from-blue-100 hover:to-pink-100 transition-colors duration-200">
+          <button 
+            className="w-full h-full px-4 py-2 text-sm bg-gradient-to-r from-blue-50 to-pink-50 rounded-md hover:from-blue-100 hover:to-pink-100 transition-colors duration-200"
+            onClick={() => setIsDrawerOpen(true)} // Open the drawer on click
+          >
             <span className="bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
               修改 AI 人设
             </span>
@@ -61,6 +66,9 @@ const HomeRightSidebar = () => {
 
       {/* 音视频设置模块 */}
       <HomeAVSettingsBlock />
+
+      {/* 编辑 AI 人设抽屉 */}
+      <EditAIPersonaSheet isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
     </aside>
   );
 };
