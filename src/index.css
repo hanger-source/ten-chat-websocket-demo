@@ -113,3 +113,16 @@ a {
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
 }
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0px 0px rgba(173, 216, 230, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(255, 192, 203, 0.4), 0 0 20px 10px rgba(186, 85, 211, 0.4);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s infinite ease-in-out;
+}

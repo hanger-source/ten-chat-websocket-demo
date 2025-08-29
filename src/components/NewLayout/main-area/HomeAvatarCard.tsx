@@ -1,0 +1,17 @@
+import React from 'react';
+
+const HomeAvatarCard = () => {
+  return (
+    <div className="flex flex-col items-center mb-6">
+      <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-blue-500">
+        <img id="avatar-card" src="//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/TEACHING_ASSISTANT.a9b7ab5c.png" alt="Avatar" className="w-full h-full object-cover" />
+      </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold text-gray-800 mb-1">Hi，欢迎体验实时对话式 AI</div>
+        <div className="text-sm text-gray-500">支持豆包 Vision 模型和 深度思考模型，超多对话场景等你开启</div>
+      </div>
+    </div>
+  );
+};
+
+export default HomeAvatarCard;
