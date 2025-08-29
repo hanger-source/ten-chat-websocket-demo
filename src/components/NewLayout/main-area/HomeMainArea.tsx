@@ -11,7 +11,7 @@ interface HomeMainAreaProps {
 
 const HomeMainArea = ({ className }: HomeMainAreaProps) => {
   return (
-    <main className={cn("flex-1 bg-white shadow-lg rounded-[16px] flex flex-col items-center justify-center px-4", className)}>
+    <main className={cn("flex-1 bg-white shadow-none rounded-[16px] flex flex-col items-center justify-center px-4", className)}>
       {/* Main Card Content (now with padding and vertical centering) */}
       <div className="flex flex-col items-center justify-center max-w-5xl mx-auto">
         <HomeAvatarCard />

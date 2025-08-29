@@ -1,0 +1,95 @@
+import { ISceneCard } from "@/types";
+import { AI_ASSISTANT_UI_GREETING, AI_ASSISTANT_RESPONSE_GREETING, AI_ASSISTANT_SUBTEXT, AI_ASSISTANT_PROMPT } from "./scenePrompts/aiAssistant";
+import { SMART_TOY_UI_GREETING, SMART_TOY_RESPONSE_GREETING, SMART_TOY_SUBTEXT, SMART_TOY_PROMPT } from "./scenePrompts/smartToy";
+import { VIRTUAL_GIRL_FRIEND_UI_GREETING, VIRTUAL_GIRL_FRIEND_RESPONSE_GREETING, VIRTUAL_GIRL_FRIEND_SUBTEXT, VIRTUAL_GIRL_FRIEND_PROMPT } from "./scenePrompts/virtualGirlFriend";
+import { SCREEN_READER_UI_GREETING, SCREEN_READER_RESPONSE_GREETING, SCREEN_READER_SUBTEXT, SCREEN_READER_PROMPT } from "./scenePrompts/screenReader";
+import { CHILDREN_ENCYCLOPEDIA_UI_GREETING, CHILDREN_ENCYCLOPEDIA_RESPONSE_GREETING, CHILDREN_ENCYCLOPEDIA_SUBTEXT, CHILDREN_ENCYCLOPEDIA_PROMPT } from "./scenePrompts/childrenEncyclopedia";
+import { SIMULTANEOUS_INTERPRETATION_UI_GREETING, SIMULTANEOUS_INTERPRETATION_RESPONSE_GREETING, SIMULTANEOUS_INTERPRETATION_SUBTEXT, SIMULTANEOUS_INTERPRETATION_PROMPT } from "./scenePrompts/simultaneousInterpretation";
+import { SMART_CUSTOMER_SERVICE_UI_GREETING, SMART_CUSTOMER_SERVICE_RESPONSE_GREETING, SMART_CUSTOMER_SERVICE_SUBTEXT, SMART_CUSTOMER_SERVICE_PROMPT } from "./scenePrompts/smartCustomerService";
+
+export const sceneCards: ISceneCard[] = [
+  {
+    tag: '视觉理解',
+    bgColor: 'bg-blue-500',
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/TEACHING_ASSISTANT.a9b7ab5c.png',
+    text: 'AI助手',
+    aiPersonaName: "AI助手",
+    aiCapabilities: ["视觉理解", "时间感知", "图片生成", "行程规划"],
+    uiGreeting: AI_ASSISTANT_UI_GREETING,
+    aiResponseGreeting: AI_ASSISTANT_RESPONSE_GREETING,
+    welcomeSubText: AI_ASSISTANT_SUBTEXT,
+    prompt: AI_ASSISTANT_PROMPT,
+  },
+  {
+    tag: '联网查询',
+    bgColor: 'bg-green-500',
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/ToyAvatar.8c3d6ff5.png',
+    text: '智能玩具',
+    aiPersonaName: "智能玩具",
+    aiCapabilities: ["联网查询", "百科知识", "实时互动"],
+    uiGreeting: SMART_TOY_UI_GREETING,
+    aiResponseGreeting: SMART_TOY_RESPONSE_GREETING,
+    welcomeSubText: SMART_TOY_SUBTEXT,
+    prompt: SMART_TOY_PROMPT,
+  },
+  {
+    tag: null,
+    bgColor: null,
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/VIRTUAL_GIRL_FRIEND.06549a31.png',
+    text: '情感陪伴',
+    aiPersonaName: "虚拟女友",
+    aiCapabilities: ["情感交流", "倾听", "陪伴"],
+    uiGreeting: VIRTUAL_GIRL_FRIEND_UI_GREETING,
+    aiResponseGreeting: VIRTUAL_GIRL_FRIEND_RESPONSE_GREETING,
+    welcomeSubText: VIRTUAL_GIRL_FRIEND_SUBTEXT,
+    prompt: VIRTUAL_GIRL_FRIEND_PROMPT,
+  },
+  {
+    tag: '屏幕识别',
+    bgColor: 'bg-yellow-500',
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/SCREEN_READER.d17a401c.png',
+    text: '读屏助手',
+    aiPersonaName: "读屏助手",
+    aiCapabilities: ["屏幕识别", "文本朗读", "辅助操作"],
+    uiGreeting: SCREEN_READER_UI_GREETING,
+    aiResponseGreeting: SCREEN_READER_RESPONSE_GREETING,
+    welcomeSubText: SCREEN_READER_SUBTEXT,
+    prompt: SCREEN_READER_PROMPT,
+  },
+  {
+    tag: null,
+    bgColor: null,
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/CHILDREN_ENCYCLOPEDIA.c67b59b8.png',
+    text: '儿童百科',
+    aiPersonaName: "儿童百科",
+    aiCapabilities: ["科普知识", "故事讲解", "互动学习"],
+    uiGreeting: CHILDREN_ENCYCLOPEDIA_UI_GREETING,
+    aiResponseGreeting: CHILDREN_ENCYCLOPEDIA_RESPONSE_GREETING,
+    welcomeSubText: CHILDREN_ENCYCLOPEDIA_SUBTEXT,
+    prompt: CHILDREN_ENCYCLOPEDIA_PROMPT,
+  },
+  {
+    tag: null,
+    bgColor: null,
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/TRANSLATE.37b522cd.png',
+    text: '同声传译',
+    aiPersonaName: "同声传译",
+    aiCapabilities: ["多语言翻译", "实时语音识别"],
+    uiGreeting: SIMULTANEOUS_INTERPRETATION_UI_GREETING,
+    aiResponseGreeting: SIMULTANEOUS_INTERPRETATION_RESPONSE_GREETING,
+    welcomeSubText: SIMULTANEOUS_INTERPRETATION_SUBTEXT,
+    prompt: SIMULTANEOUS_INTERPRETATION_PROMPT,
+  },
+  {
+    tag: null,
+    bgColor: null,
+    iconSrc: '//mediaservice-fe.volccdn.com/obj/vcloud-fe/aigc/static/image/CUSTOMER_SERVICE.26318f78.png',
+    text: '智能客服',
+    aiPersonaName: "智能客服",
+    aiCapabilities: ["客户咨询", "问题解答", "业务办理"],
+    uiGreeting: SMART_CUSTOMER_SERVICE_UI_GREETING,
+    aiResponseGreeting: SMART_CUSTOMER_SERVICE_RESPONSE_GREETING,
+    welcomeSubText: SMART_CUSTOMER_SERVICE_SUBTEXT,
+    prompt: SMART_CUSTOMER_SERVICE_PROMPT,
+  },
+];

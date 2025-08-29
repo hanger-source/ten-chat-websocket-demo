@@ -49,7 +49,21 @@ export enum EMessageDataType {
   OTHER = "other",
 }
 
+export interface ISceneCard {
+  tag: string | null;
+  bgColor: string | null;
+  iconSrc: string;
+  text: string;
+  aiPersonaName: string;
+  aiCapabilities: string[];
+  uiGreeting: string; // New: Short greeting for UI display
+  aiResponseGreeting: string; // New: Longer greeting for AI response
+  welcomeSubText: string;
+  prompt: string; // New: To store the prompt for the AI
+}
+
 export interface IChatItem {
+  id: string;
   userId: number | string;
   userName?: string;
   text: string;

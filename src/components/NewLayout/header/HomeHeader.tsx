@@ -17,7 +17,7 @@ const HomeHeader = () => {
         {/* Logo Placeholder */}
         {/* <LogoIcon className="hidden h-5 md:block" />
         <SmallLogoIcon className="block h-4 md:hidden" /> */}
-        <h1 className="text-sm font-bold md:text-xl text-gray-800">
+        <h1 className="text-sm font-medium md:text-xl bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
           实时对话
         </h1>
       </div>

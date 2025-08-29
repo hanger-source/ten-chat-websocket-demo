@@ -4,6 +4,7 @@ import {
   Language,
   VoiceType,
   ITrulienceSettings,
+  ISceneCard, // Import ISceneCard
 } from "@/types";
 import { WebSocketConnectionState } from "@/types/websocket"; // Corrected import path for WebSocketConnectionState
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -46,6 +47,7 @@ export interface InitialState {
   trulienceSettings: ITrulienceSettings;
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
+  currentScene: ISceneCard | null; // New: To store the currently selected scene
 }
 
 const getInitialState = (): InitialState => {
@@ -66,6 +68,7 @@ const getInitialState = (): InitialState => {
     trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
+    currentScene: null, // Initialize currentScene as null
   };
 };
 
@@ -225,6 +228,11 @@ export const globalSlice = createSlice({
       state.activeAppUri = action.payload;
       console.log('Redux: activeAppUri set to', action.payload);
     },
+    // New: Reducer to set the current selected scene
+    setCurrentScene: (state, action: PayloadAction<ISceneCard>) => {
+      state.currentScene = action.payload;
+      console.log('Redux: currentScene set to', action.payload.text);
+    },
   },
 });
 
@@ -301,6 +309,7 @@ export const {
   setWebsocketConnectionState, // ducer
   setActiveGraphId, // Add setActiveGraphId to exports
   setActiveAppUri, // Add setActiveAppUri to exports
+  setCurrentScene, // Export the new setCurrentScene reducer
 } = globalSlice.actions;
 
 export { initializeGraphData, fetchGraphDetails };

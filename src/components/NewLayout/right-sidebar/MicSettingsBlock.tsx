@@ -66,7 +66,7 @@ const MicSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 
 // MicSettingsBlock 主组件
 const MicSettingsBlock = () => {
-  const [audioMute, setAudioMute] = React.useState(true);
+  const [audioMute, setAudioMute] = React.useState(false); // Default to microphone on
   const [selectedMicDeviceId, setSelectedMicDeviceId] = React.useState<string | undefined>(undefined);
 
   // 处理麦克风权限请求和状态显示 (不涉及实际的媒体流传输)

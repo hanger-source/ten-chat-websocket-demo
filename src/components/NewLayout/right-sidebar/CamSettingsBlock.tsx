@@ -87,21 +87,21 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 
 // CamSettingsBlock 主组件
 const CamSettingsBlock = () => {
-  const [videoMute, setVideoMute] = React.useState(true);
+  const [videoMute, setVideoMute] = React.useState(false); // Default to camera on
   const [selectedCamDeviceId, setSelectedCamDeviceId] = React.useState<string | undefined>(undefined);
   const [videoSourceType, setVideoSourceType] = React.useState<VideoSourceType>(VideoSourceType.CAMERA);
   const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
   const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
 
   // 处理摄像头权限请求和状态显示
-  const [camPermission, setCamPermission] = React.useState<'granted' | 'denied' | 'pending'>('pending');
+  const [camPermission, setCamPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt'); // Include 'prompt' state
   React.useEffect(() => {
     const checkCamPermission = async () => {
       try {
         const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
-        setCamPermission(permissionStatus.state);
+        setCamPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         permissionStatus.onchange = () => {
-          setCamPermission(permissionStatus.state);
+          setCamPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         };
       } catch (error) {
         console.error("Error querying camera permission:", error);
@@ -173,13 +173,13 @@ const CamSettingsBlock = () => {
     }
   }, [videoMute, cameraStream, screenStream, videoSourceType]);
 
-  const getPermissionStatusText = (status: 'granted' | 'denied' | 'pending') => {
+  const getPermissionStatusText = (status: 'granted' | 'denied' | 'prompt') => { // Update status type
     switch (status) {
       case 'granted':
         return '已授权';
       case 'denied':
         return '已拒绝';
-      case 'pending':
+      case 'prompt': // Handle 'prompt' state
         return '待授权';
       default:
         return '未知';

@@ -1,5 +1,6 @@
 import React from 'react';
 import HomeAVSettingsBlock from "./HomeAVSettingsBlock"; // Updated import path
+import { useAppSelector } from "@/common/hooks";
 // import { VideoSourceType } from "@/common/constant"; // Removed
 
 interface HomeRightSidebarProps {
@@ -7,8 +8,10 @@ interface HomeRightSidebarProps {
 }
 
 const HomeRightSidebar = () => {
-  const aiPersonaName = "AI助手";
-  const aiCapabilities = [
+  const currentScene = useAppSelector((state) => state.global.currentScene);
+
+  const aiPersonaName = currentScene?.aiPersonaName || "AI助手";
+  const aiCapabilities = currentScene?.aiCapabilities || [
     "视觉理解",
     "时间感知",
     "图片生成",
