@@ -1,12 +1,13 @@
 import React from 'react';
-import HomeAVSettingsBlock from "./HomeAVSettingsBlock";
+import HomeAVSettingsBlock from "./HomeAVSettingsBlock"; // Updated import path
+// import { VideoSourceType } from "@/common/constant"; // Removed
+
+interface HomeRightSidebarProps {
+  // No audio/video related props here
+}
 
 const HomeRightSidebar = () => {
-  // Placeholder for AI persona name, as useScene() is from another project
-  const aiPersonaName = "AI助手"; 
-  const demoVersion = "1.0.0"; // Placeholder for demo version
-  const sdkVersion = "1.0.0"; // Placeholder for SDK version
-
+  const aiPersonaName = "AI助手";
   const aiCapabilities = [
     "视觉理解",
     "时间感知",
@@ -24,7 +25,7 @@ const HomeRightSidebar = () => {
   ];
 
   return (
-    <aside className="w-64 p-4 bg-white shadow-md rounded-[16px] ml-4">
+    <aside className="w-80 p-4 bg-white shadow-md rounded-[16px] ml-4">
       {/* AI 人设模块 */}
       <div className="mb-4 p-4 rounded-lg border border-gray-200 bg-gray-50 flex flex-col">
         <div className="flex items-center justify-between mb-2">

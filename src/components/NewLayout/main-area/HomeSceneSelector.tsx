@@ -49,11 +49,20 @@ const HomeSceneSelector = () => {
   return (
     <div className="grid grid-cols-6 gap-2 mx-auto">
       {sceneCards.map((card, index) => (
-        <div key={index} className="relative py-3 px-4 border border-gray-200 rounded-full text-center cursor-pointer hover:shadow-md transition-shadow">
-          {card.tag && (
-            <div className={`absolute top-[-0.5rem] right-[-0.5rem] ${card.bgColor} text-white text-xs px-2 py-1 rounded-bl-lg`}>{card.tag}</div>
-          )}
-          <div className="flex items-center justify-center space-x-2">
+        <div
+          key={index}
+          className="relative p-[1px] rounded-full text-center cursor-pointer transition-all duration-200
+                     border border-gray-200 /* Default grey border */
+                     hover:border-transparent /* Make border transparent on hover */
+                     hover:bg-gradient-to-br hover:from-blue-400 hover:to-pink-400 hover:via-purple-400 /* Gradient background on hover */
+                     hover:bg-origin-border hover:bg-clip-border /* Clip background to border box for gradient border effect */
+                     hover:shadow-md /* Keep hover shadow */
+                    "
+        >
+          <div className="flex items-center justify-center space-x-2 py-3 px-4 bg-white rounded-full h-full">
+            {card.tag && (
+              <div className={`absolute top-[-1rem] right-[-0.5rem] ${card.bgColor} text-white text-xs px-2 py-1 rounded-full rounded-bl-none`}>{card.tag}</div>
+            )}
             <img className="w-8 h-8" src={card.iconSrc} alt="icon" />
             <div className="text-xs font-medium text-gray-700 truncate">{card.text}</div>
           </div>
