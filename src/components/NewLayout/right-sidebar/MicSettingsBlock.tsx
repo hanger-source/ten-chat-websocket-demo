@@ -14,8 +14,8 @@ interface SelectItem {
 }
 
 // MicSelect 组件
-const MicSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId: string) => void }) => {
-  const { currentDeviceId, onDeviceChange } = props;
+const MicSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId: string) => void, disabled?: boolean }) => {
+  const { currentDeviceId, onDeviceChange, disabled } = props;
   const [items, setItems] = React.useState<SelectItem[]>([]); // 初始化为空数组
   const [value, setValue] = React.useState(""); // 初始化为空字符串
 
@@ -52,7 +52,7 @@ const MicSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
   };
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={items.length === 0}> {/* 禁用选择器如果无设备 */}
+    <Select value={value} onValueChange={onChange} disabled={disabled || items.length === 0}> {/* 禁用选择器如果无设备 */}
       <SelectTrigger className="w-full">
         <SelectValue placeholder="选择麦克风" />
       </SelectTrigger>
@@ -68,7 +68,8 @@ const MicSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 };
 
 // MicSettingsBlock 主组件
-const MicSettingsBlock = () => {
+const MicSettingsBlock = (props: { disabled?: boolean }) => {
+  const { disabled } = props;
   const dispatch = useAppDispatch();
   const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted);
   const selectedMicDeviceId = useAppSelector(state => state.global.selectedMicDeviceId); // 从 Redux 获取 selectedMicDeviceId
@@ -116,6 +117,7 @@ const MicSettingsBlock = () => {
           size="icon"
           className="border-secondary bg-transparent"
           onClick={() => dispatch(setMicrophoneMuted(!isMicrophoneMuted))}
+          disabled={disabled}
         >
           <MicIconByStatus active={!isMicrophoneMuted} color="purple"/>
         </Button>
@@ -123,6 +125,7 @@ const MicSettingsBlock = () => {
       <MicSelect
         currentDeviceId={selectedMicDeviceId} // 使用 Redux 状态
         onDeviceChange={(deviceId) => dispatch(setSelectedMicDeviceId(deviceId))} // dispatch action
+        disabled={disabled}
       />
       {micPermission === 'denied' && (
         <p className="text-xs text-right mt-2 text-red-500">无权限</p>

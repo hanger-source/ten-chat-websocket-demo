@@ -14,13 +14,13 @@ const HomeAVSettingsBlock = () => {
       <div className="text-base font-semibold mb-2">音视频设置</div>
 
       {/* 麦克风设置 */}
-      <MicSettingsBlock />
+      <MicSettingsBlock disabled={isConnected} />
 
       {/* 分隔线 */}
       <div className="border-b border-gray-200 my-4"></div>
 
       {/* 摄像头设置 */}
-      <CamSettingsBlock />
+      <CamSettingsBlock disabled={isConnected} />
     </div>
   );
 };

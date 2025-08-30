@@ -33,8 +33,8 @@ const ScreenIconByStatus = React.memo((props: React.SVGProps<SVGSVGElement> & { 
 });
 
 // CamSelect 组件
-const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId: string) => void }) => {
-  const { currentDeviceId, onDeviceChange } = props;
+const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId: string) => void, disabled?: boolean }) => {
+  const { currentDeviceId, onDeviceChange, disabled } = props;
   const [items, setItems] = React.useState<SelectItem[]>([DEFAULT_CAM_ITEM]);
   const [value, setValue] = React.useState("default");
 
@@ -73,7 +73,7 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
   };
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder="选择摄像头" />
       </SelectTrigger>
@@ -89,7 +89,8 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 };
 
 // CamSettingsBlock 主组件
-const CamSettingsBlock = () => {
+const CamSettingsBlock = (props: { disabled?: boolean }) => {
+  const { disabled } = props;
   const dispatch = useAppDispatch();
   const selectedCamDeviceId = useAppSelector(state => state.global.selectedCamDeviceId);
   const isCameraMuted = useAppSelector(state => state.global.isCameraMuted); // 从 Redux 获取 isCameraMuted 状态
@@ -203,6 +204,7 @@ const CamSettingsBlock = () => {
           size="icon"
           className="border-secondary bg-transparent"
           onClick={() => dispatch(setCameraMuted(!isCameraMuted))}
+          disabled={disabled}
         >
           {videoSourceType === VideoSourceType.CAMERA ? (
             <CamIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
@@ -212,7 +214,7 @@ const CamSettingsBlock = () => {
         </Button>
       </div>
       <div className="flex items-center gap-2 mb-2">
-        <Select value={videoSourceType} onValueChange={(value: VideoSourceType) => setVideoSourceType(value)}>
+        <Select value={videoSourceType} onValueChange={(value: VideoSourceType) => setVideoSourceType(value)} disabled={disabled}>
           <SelectTrigger className="w-[120px]">
             <SelectValue />
           </SelectTrigger>
@@ -225,7 +227,7 @@ const CamSettingsBlock = () => {
           </SelectContent>
         </Select>
         {videoSourceType === VideoSourceType.CAMERA && (
-          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={(deviceId) => dispatch(setSelectedCamDeviceId(deviceId))} />
+          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={(deviceId) => dispatch(setSelectedCamDeviceId(deviceId))} disabled={disabled} />
         )}
       </div>
       {!isConnected && (
