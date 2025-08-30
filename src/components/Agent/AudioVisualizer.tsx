@@ -1,4 +1,5 @@
 import { useMultibandTrackVolume } from "@/common/hooks";
+import { useAppSelector } from "@/common/hooks"; // 导入 useAppSelector
 
 export interface AudioVisualizerProps {
   type: "agent" | "user";
@@ -21,7 +22,13 @@ export default function AudioVisualizer(props: AudioVisualizerProps) {
     type,
   } = props;
 
-  const frequencies = useMultibandTrackVolume(track, 20);
+  const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted);
+
+  // 如果麦克风静音，则强制频率为0，使可视化条保持在最小高度
+  const frequencies = useMultibandTrackVolume(track, 20).map(freq => {
+    // console.log(`[AUDIO_VISUALIZER_LOG] isMicrophoneMuted: ${isMicrophoneMuted}, original frequency: ${freq}`);
+    return isMicrophoneMuted ? 0 : freq;
+  });
 
   return (
     <div

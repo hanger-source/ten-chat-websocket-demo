@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { MicIcon } from "@/components/icons/mic";
 import MicrophoneDeviceSelect from "@/components/Agent/MicrophoneDeviceSelect"; // Import MicrophoneDeviceSelect
 import { SessionConnectionState } from "@/types/websocket";
-// import { useMicrophoneStream } from "@/hooks/useMicrophoneStream"; // Removed
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import {Location} from "@/types/message"; // Import useAgentSettings
+import { useAppDispatch, useAppSelector } from "@/common/hooks"; // 导入 useAppDispatch 和 useAppSelector
+import { setMicrophoneMuted } from "@/store/reducers/global"; // 导入 setMicrophoneMuted action
 
 const SILENCE_THRESHOLD = 0.005; // 定义静音阈值，根据需要调整
 const MAX_SILENT_FRAMES = 15; // 允许通过的最大连续静音帧数，增加以避免影响 ASR 断句
@@ -18,60 +17,52 @@ interface MicrophoneProps {
   isConnected: boolean;
   sessionState: SessionConnectionState;
   defaultLocation: Location;
-  onMuteChange: (isMuted: boolean) => void;
   onRawAudioDataAvailable?: (audioData: Uint8Array) => void; // New prop for raw audio data
-  recordedChunksCount: number; // Add prop for recordedChunksCount
-  downloadRecordedAudio: () => void; // Add prop for downloadRecordedAudio
 }
 
 export const Microphone: React.FC<MicrophoneProps> = ({
   isConnected,
   sessionState,
-  defaultLocation,
-  onMuteChange,
   onRawAudioDataAvailable, // Destructure new prop
-  recordedChunksCount, // Destructure recordedChunksCount
-  downloadRecordedAudio, // Destructure downloadRecordedAudio
 }) => {
-  const [audioMute, setAudioMute] = useState(true); // Changed initial state to true
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const dispatch = useAppDispatch();
+  const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted);
+  const selectedMicDeviceId = useAppSelector(state => state.global.selectedMicDeviceId); // 从 Redux 获取 selectedMicDeviceId
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [microphone, setMicrophone] = useState<MediaStreamAudioSourceNode | null>(null);
   const [scriptProcessor, setScriptProcessor] = useState<ScriptProcessorNode | null>(null);
   const [mediaStreamTrack, setMediaStreamTrack] = useState<MediaStreamTrack | null>(null);
   const silentFrameCountRef = useRef(0); // 将 useState 替换为 useRef
 
-  const audioMuteRef = useRef(audioMute);
+  // 移除 audioMuteRef 及其相关的 useEffect
   const isConnectedRef = useRef(isConnected);
-  const sessionStateRef = useRef(sessionState);
 
   useEffect(() => {
-    audioMuteRef.current = audioMute;
     isConnectedRef.current = isConnected;
-    sessionStateRef.current = sessionState;
-  }, [audioMute, isConnected, sessionState]);
+  }, [isConnected]); // 依赖 Redux 状态
 
   const { agentSettings, updateSettings } = useAgentSettings(); // Use agent settings
 
-  // const { sendAudioFrame } = useMicrophoneStream({
-  //   isConnected,
-  //   sessionState,
-  //   defaultLocation,
-  //   settings: agentSettings, // Pass agent settings to useMicrophoneStream
-  // });
-
   useEffect(() => {
-    if (!audioMute && isConnected && sessionState === SessionConnectionState.SESSION_ACTIVE) {
+    // console.log(`[MICROPHONE_LOG] useEffect triggered. isMicrophoneMuted: ${isMicrophoneMuted}, isConnected: ${isConnected}, sessionState: ${sessionState}`);
+    if (!isMicrophoneMuted && isConnected && sessionState === SessionConnectionState.SESSION_ACTIVE) { // 使用 Redux 状态
       startMicrophone();
     } else {
       stopMicrophone();
     }
     return () => {
     };
-  }, [audioMute, isConnected, sessionState, agentSettings.auto_gain_control, agentSettings.noise_suppression, agentSettings.echo_cancellation, onMuteChange]); 
+  }, [isMicrophoneMuted, isConnected, sessionState, agentSettings.auto_gain_control, agentSettings.noise_suppression, agentSettings.echo_cancellation, selectedMicDeviceId]); // 添加 selectedMicDeviceId 依赖
+
+  // 新增 useEffect，直接控制 mediaStreamTrack 的 enabled 属性
+  useEffect(() => {
+    if (mediaStreamTrack) {
+      // console.log(`[MICROPHONE_LOG] mediaStreamTrack enabled status changed to: ${!isMicrophoneMuted}`);
+      mediaStreamTrack.enabled = !isMicrophoneMuted;
+    }
+  }, [isMicrophoneMuted, mediaStreamTrack]);
 
   const startMicrophone = async () => {
-    console.log('MicrophoneBlock: startMicrophone called');
     try {
       // 配置音频约束，禁用音频处理
       const audioConstraints: MediaTrackConstraints = {
@@ -84,7 +75,7 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       };
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: audioConstraints
+        audio: selectedMicDeviceId ? { deviceId: selectedMicDeviceId, ...audioConstraints } : audioConstraints // 使用 selectedMicDeviceId
       });
 
       const track = stream.getAudioTracks()[0];
@@ -112,9 +103,8 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       setScriptProcessor(processor);
 
       processor.onaudioprocess = (event) => {
-        // console.log('MicrophoneBlock: onaudioprocess triggered, audioMute (ref):', audioMuteRef.current, 'isConnected (ref):', isConnectedRef.current, 'sessionState (ref):', sessionStateRef.current);
-        // console.log(`MicrophoneBlock: Pre-send check - audioMuteRef.current: ${audioMuteRef.current}, isConnectedRef.current: ${isConnectedRef.current}, sessionStateRef.current: ${sessionStateRef.current}, Expected: ${SessionConnectionState.SESSION_ACTIVE}`);
-        if (!audioMuteRef.current && isConnectedRef.current && sessionStateRef.current === SessionConnectionState.SESSION_ACTIVE) { // Use refs for latest values
+        // console.log(`[MICROPHONE_LOG] onaudioprocess triggered. isMicrophoneMuted: ${isMicrophoneMuted}`);
+        if (!isMicrophoneMuted && isConnectedRef.current && sessionState === SessionConnectionState.SESSION_ACTIVE) { // 直接使用 isMicrophoneMuted
           const inputBuffer = event.inputBuffer.getChannelData(0);
           const pcmData = new Int16Array(inputBuffer.length);
           for (let i = 0; i < inputBuffer.length; i++) {
@@ -138,7 +128,7 @@ export const Microphone: React.FC<MicrophoneProps> = ({
 
             // 如果连续静音帧数超过阈值，则跳过发送
             if (silentFrameCountRef.current >= MAX_SILENT_FRAMES) {
-              // console.log(`排查日志: MicrophoneBlock: 连续静音帧数 (${silentFrameCountRef.current}) 超过阈值 (${MAX_SILENT_FRAMES})，跳过发送。`);
+              // console.log(`排查日志: MicrophoneBlock: 连续静音帧数 (${silentFrameCountRef.current}) 超过阈值 (${MAX_SILENCE_THRESHOLD})，跳过发送。`); // 修正日志中的阈值名称
             } else {
               // 否则，即使是静音帧也发送，以保持ASR的连续性
               onRawAudioDataAvailable?.(pcmUint8);
@@ -155,46 +145,37 @@ export const Microphone: React.FC<MicrophoneProps> = ({
       processor.connect(context.destination);
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      setAudioMute(true); // 如果出错，静音麦克风
+      dispatch(setMicrophoneMuted(true)); // 如果出错，静音麦克风，更新 Redux 状态
     }
   };
 
   const stopMicrophone = () => {
-    console.log('MicrophoneBlock: stopMicrophone called');
+    // console.log('MicrophoneBlock: stopMicrophone called');
     if (microphone) {
       microphone.disconnect();
-      console.log('MicrophoneBlock: microphone disconnected');
+      // console.log('MicrophoneBlock: microphone disconnected');
       setMicrophone(null); // Ensure state is updated to null
     }
     if (scriptProcessor) {
       scriptProcessor.onaudioprocess = null; // Explicitly stop processing
       scriptProcessor.disconnect();
-      console.log('MicrophoneBlock: scriptProcessor disconnected and onaudioprocess set to null');
+      // console.log('MicrophoneBlock: scriptProcessor disconnected and onaudioprocess set to null');
       setScriptProcessor(null); // Ensure state is updated to null
     }
     if (audioContext) {
       audioContext.close().then(() => {
-        console.log('MicrophoneBlock: audioContext closed');
+        // console.log('MicrophoneBlock: audioContext closed');
         setAudioContext(null);
       }).catch(error => {
-        console.error('MicrophoneBlock: Failed to close audioContext', error);
+        // console.error('MicrophoneBlock: Failed to close audioContext', error);
       });
     }
     if (mediaStreamTrack) {
       mediaStreamTrack.stop();
       setMediaStreamTrack(null);
-      console.log('MicrophoneBlock: mediaStreamTrack stopped');
+      // console.log('MicrophoneBlock: mediaStreamTrack stopped');
     }
   };
-
-  const onClickMute = () => {
-    const newMuteState = !audioMute;
-    setAudioMute(newMuteState);
-    onMuteChange?.(newMuteState); // Call onMuteChange here
-  };
-
-  // Removed: downloadRecordedAudio function
-  // const downloadRecordedAudio = () => { ... };
 
   return (
     <div className="flex flex-col space-y-3">
@@ -205,9 +186,9 @@ export const Microphone: React.FC<MicrophoneProps> = ({
           variant="outline"
           size="icon"
           className="border-secondary bg-transparent"
-          onClick={onClickMute}
+          onClick={() => dispatch(setMicrophoneMuted(!isMicrophoneMuted))} // 直接 dispatch action
         >
-          <MicIcon className="h-5 w-5" active={!audioMute} />
+          <MicIcon className="h-5 w-5" active={!isMicrophoneMuted} />
         </Button>
           {/* Removed: Download Button */}
           {/* <Button

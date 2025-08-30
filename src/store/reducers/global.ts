@@ -4,7 +4,7 @@ import {
   Language,
   VoiceType,
 } from "@/types";
-import { WebSocketConnectionState } from "@/types/websocket"; // Corrected import path for WebSocketConnectionState
+import { WebSocketConnectionState, SessionConnectionState } from "@/types/websocket"; // Corrected import path for WebSocketConnectionState
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   EMobileActiveTab,
@@ -28,6 +28,7 @@ export interface InitialState {
   roomConnected: boolean;
   agentConnected: boolean;
   websocketConnectionState: WebSocketConnectionState;
+  sessionConnectionState: SessionConnectionState; // 添加新的会话连接状态
   themeColor: string;
   language: Language;
   voiceType: VoiceType;
@@ -39,6 +40,10 @@ export interface InitialState {
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
   modeOptions: IModeOption[]; // 添加 modeOptions 字段
+  selectedCamDeviceId: string | undefined; // Add this line
+  isMicrophoneMuted: boolean; // 新增：麦克风是否静音
+  isCameraMuted: boolean; // 新增：摄像头是否静音
+  selectedMicDeviceId: string | undefined; // 新增：选定的麦克风设备 ID
 }
 
 const getInitialState = (): InitialState => {
@@ -49,6 +54,7 @@ const getInitialState = (): InitialState => {
     roomConnected: false,
     agentConnected: false,
     websocketConnectionState: WebSocketConnectionState.CLOSED, // ocket连接状态, changed from "closed"
+    sessionConnectionState: SessionConnectionState.IDLE, // 初始化 sessionConnectionState
     language: "en-US",
     voiceType: "male",
     chatItems: [],
@@ -59,6 +65,10 @@ const getInitialState = (): InitialState => {
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
     modeOptions: [], // 初始化 modeOptions 为空数组
+    selectedCamDeviceId: undefined, // Initialize selectedCamDeviceId
+    isMicrophoneMuted: false, // 初始化麦克风为非静音
+    isCameraMuted: false, // 初始化摄像头为非静音
+    selectedMicDeviceId: undefined, // 初始化选定的麦克风设备 ID
   };
 };
 
@@ -148,23 +158,23 @@ export const globalSlice = createSlice({
     },
     setGraphList: (state, action: PayloadAction<GraphInfo[]>) => {
       state.graphList = action.payload;
-      console.log('Redux: graphList updated', action.payload);
+      // console.log('Redux: graphList updated', action.payload);
 
       // Also populate graphMap with all fetched graphs
       action.payload.forEach(graph => {
         state.graphMap[graph.uuid] = graph;
       });
-      console.log('Redux: graphMap populated with all graphs from list', state.graphMap);
+      // console.log('Redux: graphMap populated with all graphs from list', state.graphMap);
 
       // If selectedGraphId is empty OR existing selectedGraphId is not in the new graphList, set to the first graph's UUID
       const currentSelectedGraphExists = action.payload.some(graph => graph.uuid === state.selectedGraphId);
       if (!state.selectedGraphId || !currentSelectedGraphExists) {
         if (action.payload.length > 0) {
           state.selectedGraphId = action.payload[0].uuid;
-          console.log('Redux: selectedGraphId auto-set/reset to first graph', state.selectedGraphId);
+          // console.log('Redux: selectedGraphId auto-set/reset to first graph', state.selectedGraphId);
         } else {
           state.selectedGraphId = ""; // No graphs available, clear selected ID
-          console.log('Redux: No graphs available, selectedGraphId cleared.');
+          // console.log('Redux: No graphs available, selectedGraphId cleared.');
         }
       }
     },
@@ -201,7 +211,22 @@ export const globalSlice = createSlice({
     },
     setModeOptions: (state, action: PayloadAction<IModeOption[]>) => {
       state.modeOptions = action.payload;
-      console.log('Redux: modeOptions updated', action.payload);
+      // console.log('Redux: modeOptions updated', action.payload);
+    },
+    setSelectedCamDeviceId: (state, action: PayloadAction<string | undefined>) => {
+      state.selectedCamDeviceId = action.payload;
+    },
+    setSessionConnectionState: (state, action: PayloadAction<SessionConnectionState>) => {
+      state.sessionConnectionState = action.payload;
+    },
+    setMicrophoneMuted: (state, action: PayloadAction<boolean>) => { // 新增 reducer
+      state.isMicrophoneMuted = action.payload;
+    },
+    setCameraMuted: (state, action: PayloadAction<boolean>) => { // 新增 reducer
+      state.isCameraMuted = action.payload;
+    },
+    setSelectedMicDeviceId: (state, action: PayloadAction<string | undefined>) => { // 新增 reducer
+      state.selectedMicDeviceId = action.payload;
     },
   },
 });
@@ -215,7 +240,7 @@ const initializeGraphData = createAsyncThunk(
       await apiReloadPackage();
       await apiLoadApp();
       const graphInfos = await apiFetchGraphs(); // 获取 graphInfos
-      console.log("initializeGraphData: fetchedGraphInfos (dev mode):", graphInfos); // 排查日志
+      // console.log("initializeGraphData: fetchedGraphInfos (dev mode):", graphInfos); // 排查日志
       
       const modeOptions: IModeOption[] = graphInfos.map(graphInfo => ({
         value: graphInfo.name,
@@ -236,7 +261,7 @@ const initializeGraphData = createAsyncThunk(
 
     } else {
       const graphInfos = await apiFetchGraphs(); // 获取 graphInfos
-      console.log("initializeGraphData: fetchedGraphInfos (prod mode):", graphInfos); // 排查日志
+      // console.log("initializeGraphData: fetchedGraphInfos (prod mode):", graphInfos); // 排查日志
       
       const modeOptions: IModeOption[] = graphInfos.map(graphInfo => ({
         value: graphInfo.name,
@@ -273,6 +298,11 @@ export const {
   setActiveGraphId,
   setActiveAppUri,
   setModeOptions,
+  setSelectedCamDeviceId, // Add this line
+  setSessionConnectionState,
+  setMicrophoneMuted, // 新增导出
+  setCameraMuted, // 新增导出
+  setSelectedMicDeviceId, // 新增导出
 } = globalSlice.actions;
 
 export { initializeGraphData };

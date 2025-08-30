@@ -6,11 +6,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAppDispatch, useAppSelector } from "@/common/hooks"; // 导入 useAppDispatch 和 useAppSelector
+import { setSelectedMicDeviceId } from "@/store/reducers/global"; // 导入 setSelectedMicDeviceId action
 
 // 设备选择组件
 function MicrophoneDeviceSelect() {
+  const dispatch = useAppDispatch();
+  const selectedMicDeviceId = useAppSelector(state => state.global.selectedMicDeviceId);
   const [devices, setDevices] = React.useState<Array<{label: string, value: string, deviceId: string}>>([]);
-  const [selectedDevice, setSelectedDevice] = React.useState("default");
+  // const [selectedDevice, setSelectedDevice] = React.useState("default"); // 移除本地 selectedDevice
 
   React.useEffect(() => {
     // 获取麦克风设备列表
@@ -26,21 +30,24 @@ function MicrophoneDeviceSelect() {
 
         if (audioDevices.length > 0) {
           setDevices(audioDevices);
-          setSelectedDevice(audioDevices[0].value);
+          // 如果 Redux 中没有选中的麦克风，则默认选中第一个
+          if (!selectedMicDeviceId) {
+            dispatch(setSelectedMicDeviceId(audioDevices[0].deviceId));
+          }
         }
       })
       .catch(error => {
         console.error('获取设备列表失败:', error);
       });
-  }, []);
+  }, [dispatch, selectedMicDeviceId]); // 添加 dispatch 和 selectedMicDeviceId 依赖
 
   const handleDeviceChange = (deviceId: string) => {
-    setSelectedDevice(deviceId);
+    dispatch(setSelectedMicDeviceId(deviceId)); // dispatch action 更新 Redux 状态
     console.log('切换到设备:', deviceId);
   };
 
   return (
-    <Select value={selectedDevice} onValueChange={handleDeviceChange}>
+    <Select value={selectedMicDeviceId || ""} onValueChange={handleDeviceChange}> {/* 使用 Redux 状态 */}
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="选择麦克风" />
       </SelectTrigger>

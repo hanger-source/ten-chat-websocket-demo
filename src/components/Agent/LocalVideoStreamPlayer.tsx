@@ -26,7 +26,7 @@ export const LocalVideoStreamPlayer = React.forwardRef(
         autoPlay
         playsInline
         muted={muted}
-        className="h-full w-full bg-black rounded-lg"
+        className="h-full w-full"
         style={{ objectFit: fit }}
         onClick={onClick}
       />

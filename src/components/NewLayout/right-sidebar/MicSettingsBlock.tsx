@@ -2,6 +2,8 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { MicIcon } from "@/components/icons/mic";
+import { useAppDispatch, useAppSelector } from "@/common/hooks"; // 导入 useAppDispatch 和 useAppSelector
+import { setMicrophoneMuted } from "@/store/reducers/global"; // 导入 setMicrophoneMuted action
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -66,8 +68,9 @@ const MicSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 
 // MicSettingsBlock 主组件
 const MicSettingsBlock = () => {
-  const [audioMute, setAudioMute] = React.useState(false); // Default to microphone on
-  const [selectedMicDeviceId, setSelectedMicDeviceId] = React.useState<string | undefined>(undefined);
+  const dispatch = useAppDispatch();
+  const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted);
+  const selectedMicDeviceId = useAppSelector(state => state.global.selectedMicDeviceId); // 从 Redux 获取 selectedMicDeviceId
 
   // 处理麦克风权限请求和状态显示 (不涉及实际的媒体流传输)
   const [micPermission, setMicPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt');
@@ -80,7 +83,7 @@ const MicSettingsBlock = () => {
           setMicPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         };
       } catch (error) {
-        console.error("Error querying microphone permission:", error);
+        console.error("[AUDIO_LOG] Error querying microphone permission:", error);
         setMicPermission('denied');
       }
     };
@@ -105,18 +108,21 @@ const MicSettingsBlock = () => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">麦克风</div>
-          <div className={`w-2 h-2 rounded-full ${audioMute ? 'bg-red-500' : 'bg-green-500'}`}></div>
+          <div className={`w-2 h-2 rounded-full ${isMicrophoneMuted ? 'bg-red-500' : 'bg-green-500'}`}></div>
         </div>
         <Button
           variant="outline"
           size="icon"
           className="border-secondary bg-transparent"
-          onClick={() => setAudioMute(!audioMute)}
+          onClick={() => dispatch(setMicrophoneMuted(!isMicrophoneMuted))}
         >
-          <MicIcon className="h-5 w-5" active={!audioMute} />
+          <MicIcon className="h-5 w-5" active={!isMicrophoneMuted} />
         </Button>
       </div>
-      <MicSelect currentDeviceId={selectedMicDeviceId} onDeviceChange={setSelectedMicDeviceId} />
+      <MicSelect
+        currentDeviceId={selectedMicDeviceId} // 使用 Redux 状态
+        onDeviceChange={(deviceId) => dispatch(setSelectedMicDeviceId(deviceId))} // dispatch action
+      />
       {micPermission === 'denied' && (
         <p className="text-xs text-right mt-2 text-red-500">无权限</p>
       )}

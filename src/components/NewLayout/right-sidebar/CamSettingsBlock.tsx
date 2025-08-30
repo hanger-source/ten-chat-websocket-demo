@@ -5,6 +5,9 @@ import { VideoSourceType, VIDEO_SOURCE_OPTIONS } from "@/common/constant";
 import { CamIconByStatus } from "@/components/Icon";
 import { MonitorIcon, MonitorXIcon } from "lucide-react";
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
+import { useAppDispatch, useAppSelector } from "@/common/hooks";
+import { setSelectedCamDeviceId, setCameraMuted } from "@/store/reducers/global"; // 导入 setCameraMuted action
+import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // 导入 useWebSocketSession
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -87,11 +90,13 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 
 // CamSettingsBlock 主组件
 const CamSettingsBlock = () => {
-  const [videoMute, setVideoMute] = React.useState(false); // Default to camera on
-  const [selectedCamDeviceId, setSelectedCamDeviceId] = React.useState<string | undefined>(undefined);
+  const dispatch = useAppDispatch();
+  const selectedCamDeviceId = useAppSelector(state => state.global.selectedCamDeviceId);
+  const isCameraMuted = useAppSelector(state => state.global.isCameraMuted); // 从 Redux 获取 isCameraMuted 状态
   const [videoSourceType, setVideoSourceType] = React.useState<VideoSourceType>(VideoSourceType.CAMERA);
   const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
   const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
+  const { isConnected } = useWebSocketSession(); // 获取连接状态
 
   // 处理摄像头权限请求和状态显示
   const [camPermission, setCamPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt'); // Include 'prompt' state
@@ -160,18 +165,18 @@ const CamSettingsBlock = () => {
     return () => {
       cleanupStreams(); // 组件卸载时清理
     };
-  }, [videoSourceType, selectedCamDeviceId]);
+  }, [videoSourceType, selectedCamDeviceId, dispatch]);
 
   // 静音/取消静音逻辑
   React.useEffect(() => {
     if (videoSourceType === VideoSourceType.CAMERA && cameraStream) {
-      console.log(`[VIDEO_LOG] Camera mute status changed to: ${videoMute}`);
-      cameraStream.getVideoTracks().forEach(track => (track.enabled = !videoMute));
+      console.log(`[VIDEO_LOG] Camera mute status changed to: ${isCameraMuted}`);
+      cameraStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
     } else if (videoSourceType === VideoSourceType.SCREEN && screenStream) {
-      console.log(`[VIDEO_LOG] Screen mute status changed to: ${videoMute}`);
-      screenStream.getVideoTracks().forEach(track => (track.enabled = !videoMute));
+      console.log(`[VIDEO_LOG] Screen mute status changed to: ${isCameraMuted}`);
+      screenStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
     }
-  }, [videoMute, cameraStream, screenStream, videoSourceType]);
+  }, [isCameraMuted, cameraStream, screenStream, videoSourceType]);
 
   const getPermissionStatusText = (status: 'granted' | 'denied' | 'prompt') => { // Update status type
     switch (status) {
@@ -191,18 +196,18 @@ const CamSettingsBlock = () => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">摄像头</div>
-          <div className={`w-2 h-2 rounded-full ${videoMute ? 'bg-red-500' : 'bg-green-500'}`}></div>
+          <div className={`w-2 h-2 rounded-full ${isCameraMuted ? 'bg-red-500' : 'bg-green-500'}`}></div>
         </div>
         <Button
           variant="outline"
           size="icon"
           className="border-secondary bg-transparent"
-          onClick={() => setVideoMute(!videoMute)}
+          onClick={() => dispatch(setCameraMuted(!isCameraMuted))}
         >
           {videoSourceType === VideoSourceType.CAMERA ? (
-            <CamIconByStatus className="h-5 w-5" active={!videoMute} />
+            <CamIconByStatus className="h-5 w-5" active={!isCameraMuted} />
           ) : (
-            <ScreenIconByStatus className="h-5 w-5" active={!videoMute} />
+            <ScreenIconByStatus className="h-5 w-5" active={!isCameraMuted} />
           )}
         </Button>
       </div>
@@ -220,19 +225,21 @@ const CamSettingsBlock = () => {
           </SelectContent>
         </Select>
         {videoSourceType === VideoSourceType.CAMERA && (
-          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={setSelectedCamDeviceId} />
+          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={(deviceId) => dispatch(setSelectedCamDeviceId(deviceId))} />
         )}
       </div>
-      <div className="my-3 h-40 w-full overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg">
-        {videoMute || (!cameraStream && !screenStream) ? (
-          <p className="text-white text-sm">视频已关闭或无可用视频源</p>
-        ) : (
-          <LocalVideoStreamPlayer
-            stream={videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream}
-            muted={true}
-          />
-        )}
-      </div>
+      {!isConnected && (
+        <div className="my-3 h-40 w-full overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg">
+          {isCameraMuted || (!cameraStream && !screenStream) ? (
+            <p className="text-white text-sm">视频已关闭或无可用视频源</p>
+          ) : (
+            <LocalVideoStreamPlayer
+              stream={videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream}
+              muted={true}
+            />
+          )}
+        </div>
+      )}
       {camPermission === 'denied' && (
         <p className="text-xs text-right mt-2 text-red-500">无权限</p>
       )}

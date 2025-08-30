@@ -4,6 +4,7 @@ import { useSelectedScene } from "@/hooks/useSelectedScene";
 import { webSocketManager } from "@/manager/websocket/websocket";
 import { toast } from 'sonner';
 import { useAppSelector } from "@/common";
+import { SessionConnectionState } from "@/types/websocket";
 
 const HomeInvokeButton = () => {
   const { isConnected, startSession, stopSession, sessionState } = useWebSocketSession();
@@ -16,11 +17,11 @@ const HomeInvokeButton = () => {
   const { getSceneSetting } = useSelectedScene();
 
   // Use isConnected from useWebSocketSession for the button's connecting state
-  const isConnecting = loading || isConnected; // Button is 'connecting' if actively loading or already connected
+  // const isConnecting = loading || isConnected; // Button is 'connecting' if actively loading or already connected
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
-    if (isConnecting) {
+    if (loading) { // Only show dots when actively loading
       interval = setInterval(() => {
         setDots(prev => (prev.length < 3 ? prev + '.' : ''));
       }, 500);
@@ -32,12 +33,30 @@ const HomeInvokeButton = () => {
         clearInterval(interval);
       }
     };
-  }, [isConnecting]);
+  }, [loading]); // Depend on loading only for dots
+
+  // Add an effect to reset loading when connection status changes
+  useEffect(() => {
+    // console.log("HomeInvokeButton: useEffect triggered. Current loading:", loading, "isConnected:", isConnected, "sessionState:", sessionState);
+    if (loading && isConnected) {
+      setLoading(false);
+      // toast.success("AI 连接成功！"); // Removed: Handled by useWebSocketSession
+    } else if (loading && !isConnected && sessionState === SessionConnectionState.IDLE) {
+      // This means a start attempt failed, and session is back to IDLE
+      setLoading(false);
+      // A specific error toast for connection failure is handled in useWebSocketSession
+    }
+  }, [isConnected, loading, sessionState]);
 
   const handleClick = async () => {
+    // console.log("HomeInvokeButton: handleClick called. Current loading:", loading, "isConnected:", isConnected);
     if (loading) return; // Prevent multiple clicks while loading
 
-    setLoading(true);
+    // Only set loading to true when trying to connect
+    if (!isConnected) {
+      setLoading(true);
+    }
+
     if (isConnected) {
       // Already connected, so disconnect
       try {
@@ -65,19 +84,21 @@ const HomeInvokeButton = () => {
       try {
         await webSocketManager.connect(); // Ensure WebSocket is connected
         await startSession(latestSettings);
+        // setLoading(false); // Removed: Handled by useEffect now
       } catch (error) {
         console.error("Error starting session:", error);
         toast.error("AI 连接或启动失败");
+        setLoading(false); // Keep this here for immediate errors before session state update
       }
     }
-    setLoading(false);
+    // setLoading(false); // Removed: Handled by useEffect now
   };
 
   return (
     <div className="mt-8 flex flex-col items-center">
       <button
         className={`w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-red-500 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow 
-          ${isConnecting ? 'animate-glow-pulse' : 'hover:animate-glow-pulse'}`}
+          ${isConnected || loading ? 'animate-glow-pulse' : 'hover:animate-glow-pulse'}`}
         onClick={handleClick}
       >
         {/* SVG Icon */}
@@ -88,7 +109,7 @@ const HomeInvokeButton = () => {
         </svg>
       </button>
       <span className="mt-2 text-lg font-semibold text-gray-800">
-        {isConnecting ? `连接中${dots}` : '开始通话'}
+        {isConnected ? '停止通话' : loading ? `连接中${dots}` : '开始通话'}
       </span>
     </div>
   );

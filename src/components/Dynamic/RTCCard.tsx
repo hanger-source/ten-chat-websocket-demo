@@ -37,7 +37,6 @@ let hasInit: boolean = false;
 
 export default function RTCCard({
   className,
-  recordedChunksCount,
   downloadRecordedAudio,
 }: {
   className?: string;
@@ -47,20 +46,11 @@ export default function RTCCard({
 }) {
   const dispatch = useAppDispatch();
   const options = useAppSelector((state: RootState) => state.global.options);
-  const trulienceSettings = useAppSelector(
-    (state: RootState) => state.global.trulienceSettings,
-  );
-  const websocketConnectionState = useAppSelector(
-    (state: RootState) => state.global.websocketConnectionState,
-  );
-  const { userId, channel } = options;
+  const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted); // 从 Redux 获取 isMicrophoneMuted
   const [remoteAudioData, setRemoteAudioData] = React.useState<Uint8Array>();
-
-  const isCompactLayout = useIsCompactLayout();
   const { isConnected, sessionState, defaultLocation } = useWebSocketSession();
   const { agentSettings } = useAgentSettings();
   const { mediaStreamTrack, micPermission, sendAudioFrame } = useMicrophoneStream({ isConnected, sessionState, defaultLocation, settings: agentSettings }); // Pass settings and get micPermission and sendAudioFrame
-  const [audioMute, setAudioMute] = React.useState(true);
   // Live2D 控制
   const [showLive2D, setShowLive2D] = useState(false);
   const [videoSourceType, setVideoSourceType] = useState<VideoSourceType>(VideoSourceType.CAMERA); // 新增视频源类型状态
@@ -207,12 +197,9 @@ export default function RTCCard({
       <div className="w-full space-y-2 px-2 py-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-y-auto"> {/* Added overflow-y-auto */}
         {/* Microphone control area */}
         <Microphone
-          onMuteChange={setAudioMute}
           isConnected={isConnected}
           sessionState={sessionState}
           defaultLocation={defaultLocation}
-          recordedChunksCount={recordedChunksCount}
-          downloadRecordedAudio={downloadRecordedAudio}
           onRawAudioDataAvailable={(audioData) => {
             sendAudioFrame(audioData);
             // onAudioDataCaptured(audioData);
@@ -222,10 +209,10 @@ export default function RTCCard({
         {/* Audio Visualizer area */}
         <div>
           <div className="text-sm font-medium text-gray-700 mb-2">
-            音频可视化 {audioMute ? '(已静音)' : '(录音中)'}
+            音频可视化 {isMicrophoneMuted ? '(已静音)' : '(录音中)'}
           </div>
           <div className="flex h-10 flex-col items-center justify-center gap-2 self-stretch rounded-md border border-gray-200 bg-gray-50 p-2">
-            {micPermission === 'granted' && !audioMute ? (
+            {micPermission === 'granted' && !isMicrophoneMuted ? (
               <AudioVisualizer
                 type="user"
                 barWidth={3}
@@ -233,13 +220,13 @@ export default function RTCCard({
                 maxBarHeight={16} // Added missing prop
                 borderRadius={2}
                 gap={3}
-                track={audioMute ? undefined : mediaStreamTrack}
+                track={isMicrophoneMuted ? undefined : mediaStreamTrack} // 使用 isMicrophoneMuted
               />
             ) : micPermission === 'denied' ? (
               <div className="h-full flex items-center justify-center">
                 <p className="text-xs text-center text-gray-500">麦克风权限被拒绝</p>
               </div>
-            ) : audioMute ? (
+            ) : isMicrophoneMuted ? (
               <div className="h-full flex items-center justify-center">
                 <p className="text-xs text-center text-gray-500">麦克风已静音</p>
               </div>
