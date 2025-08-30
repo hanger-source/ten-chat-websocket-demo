@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
-import { MessageType, Location, WebSocketConnectionState } from '@/types/websocket'; // Import WebSocketConnectionState
+import { WebSocketConnectionState } from '@/types/websocket'; // Import WebSocketConnectionState
 import { MESSAGE_CONSTANTS } from '@/common/constant';
+import {Location, MessageType} from "@/types/message";
 
 interface UseVideoFrameSenderProps {
   videoStream: MediaStream | null;

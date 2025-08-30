@@ -66,7 +66,14 @@ export function useAgentSettings() {
   return {
     agentSettings,
     updateSettings,
-    saveSettings: (settings: IAgentSettings) => {
+    saveSettings: (settings: {
+        echoCancellation: boolean;
+        autoGainControl: boolean;
+        noiseSuppression: boolean;
+        greeting: string;
+        env: Record<string, string>;
+        prompt: string
+    }) => {
       setAgentSettings(settings);
       saveSettingsToLocalStorage(settings);
     },

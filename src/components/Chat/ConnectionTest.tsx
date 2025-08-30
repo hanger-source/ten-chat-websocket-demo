@@ -1,10 +1,11 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CommandType, SessionConnectionState, MessageType } from "@/types/websocket";
+import { SessionConnectionState } from "@/types/websocket";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Import useWebSocketSession
 import { MESSAGE_CONSTANTS } from "@/common/constant";
-import { Location } from "@/types/websocket"; // Ensure Location is imported from websocket types
+
+import {CommandType, Location, MessageType} from "@/types/message"; // Ensure Location is imported from websocket types
 
 export function ConnectionTest() {
   const { isConnected, sessionState, sendMessage, sendCommand, defaultLocation, activeAppUri, activeGraphId } = useWebSocketSession(); // Destructure sendCommand and defaultLocation

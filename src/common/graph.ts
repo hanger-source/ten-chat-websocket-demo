@@ -70,7 +70,7 @@ type GraphConnectionCommand = {
 };
 
 type Data = {
-  name: string; // Data type name
+  name: string; // Message type name
   dest: Array<Destination>; // Destination connections
 };
 
@@ -85,7 +85,7 @@ type VideoFrame = {
 };
 
 type MsgConversionRule = { // 移除 export
-  name: string; // Data type name
+  name: string; // Message type name
   dest: Array<Destination>; // Destination connections
 };
 

@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MicIcon } from "@/components/icons/mic";
 import MicrophoneDeviceSelect from "@/components/Agent/MicrophoneDeviceSelect"; // Import MicrophoneDeviceSelect
-import { SessionConnectionState, Location } from "@/types/websocket";
+import { SessionConnectionState } from "@/types/websocket";
 // import { useMicrophoneStream } from "@/hooks/useMicrophoneStream"; // Removed
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useAgentSettings } from "@/hooks/useAgentSettings"; // Import useAgentSettings
+import { useAgentSettings } from "@/hooks/useAgentSettings";
+import {Location} from "@/types/message"; // Import useAgentSettings
 
 const SILENCE_THRESHOLD = 0.005; // 定义静音阈值，根据需要调整
 const MAX_SILENT_FRAMES = 15; // 允许通过的最大连续静音帧数，增加以避免影响 ASR 断句

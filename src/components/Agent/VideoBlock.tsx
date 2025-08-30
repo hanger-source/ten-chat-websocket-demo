@@ -8,7 +8,8 @@ import { VIDEO_SOURCE_OPTIONS, VideoSourceType, MESSAGE_CONSTANTS } from "@/comm
 import { MonitorIcon, MonitorXIcon } from "lucide-react";
 import { LocalVideoStreamPlayer } from "./LocalVideoStreamPlayer";
 import { useVideoFrameSender } from "@/hooks/useVideoFrameSender";
-import { Location } from "@/types/websocket";
+
+import {Location} from "@/types/message";
 
 
 export const ScreenIconByStatus = (

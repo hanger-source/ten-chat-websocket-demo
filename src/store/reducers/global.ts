@@ -19,20 +19,12 @@ import {
   apiReloadPackage,
   apiFetchGraphs,
   apiFetchInstalledAddons,
-  apiFetchGraphDetails,
-  apiUpdateGraph,
-  apiSaveProperty,
   apiLoadApp,
 } from "@/common/request";
 import {
   setOptionsToLocal,
-  setTrulienceSettingsToLocal,
-  loadSceneFromLocal, // Import loadSceneFromLocal
-  saveSceneToLocal, // Import saveSceneToLocal
 } from "@/common/storage";
-import { AddonDef, Graph } from "@/common/graph";
-import { modeOptions } from "@/common/mockModeOptionsData"; // Only import modeOptions from here
-import { sceneCards } from "@/common/sceneData"; // Import sceneCards
+import { Graph } from "@/common/graph";
 
 export interface InitialState {
   options: IOptions;
@@ -46,32 +38,13 @@ export interface InitialState {
   selectedGraphId: string;
   graphList: Graph[];
   graphMap: Record<string, Graph>;
-  addonModules: AddonDef[]; // Corrected type: AddonDef.Module[] -> AddonDef[]
   mobileActiveTab: EMobileActiveTab;
   trulienceSettings: ITrulienceSettings;
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
-  allScenes: ISceneCard[]; // New: To store all initialized scenes
 }
 
 const getInitialState = (): InitialState => {
-  let initialScene: ISceneCard | null = null;
-
-  const initializedScenes: ISceneCard[] = sceneCards.map(sceneCard => {
-    const loadedScene = typeof window !== "undefined" ? loadSceneFromLocal(sceneCard.aiPersonaName) : null;
-    if (loadedScene) {
-      return loadedScene;
-    } else {
-      // If no loaded scene, use a deep copy of the sceneCard from sceneData.ts
-      return { ...sceneCard };
-    }
-  });
-
-  if (initializedScenes.length > 0) {
-    initialScene = initializedScenes[0]; // Set currentScene to the first initialized scene
-  }
-
-  const initialGlobalMode: string = initialScene?.defaultModeValue || modeOptions[0].value; // Initialize globalMode based on currentScene or fallback
 
   return {
     options: DEFAULT_OPTIONS,
@@ -85,12 +58,10 @@ const getInitialState = (): InitialState => {
     selectedGraphId: "",
     graphList: [],
     graphMap: {},
-    addonModules: [],
     mobileActiveTab: EMobileActiveTab.AGENT,
     trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
-    allScenes: initializedScenes, // Initialize allScenes with the processed scenes
   };
 };
 
@@ -101,16 +72,6 @@ export const globalSlice = createSlice({
     setOptions: (state, action: PayloadAction<Partial<IOptions>>) => {
       state.options = { ...state.options, ...action.payload };
       setOptionsToLocal(state.options);
-    },
-    setTrulienceSettings: (
-      state,
-      action: PayloadAction<ITrulienceSettings>,
-    ) => {
-      state.trulienceSettings = {
-        ...state.trulienceSettings,
-        ...action.payload,
-      };
-      setTrulienceSettingsToLocal(state.trulienceSettings);
     },
     setThemeColor: (state, action: PayloadAction<string>) => {
       state.themeColor = action.payload;
@@ -233,14 +194,6 @@ export const globalSlice = createSlice({
         COLOR_LIST[0].active,
       );
     },
-    setGraph: (state, action: PayloadAction<Graph>) => {
-      const graphMap = JSON.parse(JSON.stringify(state.graphMap));
-      graphMap[action.payload.uuid] = action.payload;
-      state.graphMap = graphMap;
-    },
-    setAddonModules: (state, action: PayloadAction<AddonDef[]>) => { // Corrected type: AddonDef.Module[] -> AddonDef[]
-      state.addonModules = JSON.parse(JSON.stringify(action.payload));
-    },
     // Add setActiveGraphId reducer
     setActiveGraphId: (state, action: PayloadAction<string>) => {
       state.activeGraphId = action.payload;
@@ -265,45 +218,9 @@ const initializeGraphData = createAsyncThunk(
         apiFetchGraphs(),
         apiFetchInstalledAddons(),
       ]);
-      dispatch(setGraphList(Array.isArray(fetchedGraphs) ? fetchedGraphs.map((graph) => graph) : []));
-      dispatch(setAddonModules(modules));
     } else {
       const fetchedGraphs = await apiFetchGraphs();
       dispatch(setGraphList(Array.isArray(fetchedGraphs) ? fetchedGraphs.map((graph) => graph) : []));
-    }
-  },
-);
-// Fetch graph details
-const fetchGraphDetails = createAsyncThunk(
-  "global/fetchGraphDetails",
-  async (graph: Graph, { dispatch }) => {
-    if (isEditModeOn) {
-      const updatedGraph = await apiFetchGraphDetails(graph);
-      dispatch(setGraph(updatedGraph));
-    } else {
-      // Do nothing in production
-      return;
-    }
-  },
-);
-
-// Update a graph
-export const updateGraph = createAsyncThunk(
-  "global/updateGraph",
-  async (
-    { graph, updates }: { graph: Graph; updates: Partial<Graph> },
-    { dispatch, rejectWithValue },
-  ) => {
-    try {
-      await apiUpdateGraph(graph.uuid, updates);
-      // await apiSaveProperty();
-      const updatedGraph = await apiFetchGraphDetails(graph);
-      dispatch(setGraph(updatedGraph));
-      return updatedGraph; // Optionally return the updated graph
-    } catch (error: unknown) {
-      // Handle error gracefully
-      console.error("Error updating graph:", error);
-      return rejectWithValue((error as { response?: { data: unknown }; message: string }).response?.data || (error as { message: string }).message);
     }
   },
 );
@@ -320,14 +237,11 @@ export const {
   setSelectedGraphId,
   setGraphList,
   setMobileActiveTab,
-  setGraph,
-  setAddonModules,
-  setTrulienceSettings,
   setWebsocketConnectionState, // ducer
   setActiveGraphId, // Add setActiveGraphId to exports
   setActiveAppUri, // Add setActiveAppUri to exports
 } = globalSlice.actions;
 
-export { initializeGraphData, fetchGraphDetails };
+export { initializeGraphData };
 
 export default globalSlice.reducer;

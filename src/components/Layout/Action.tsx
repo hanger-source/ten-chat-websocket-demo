@@ -3,35 +3,26 @@
 import * as React from "react";
 
 import { LoadingButton } from "@/components/Button/LoadingButton";
-import { setAgentConnected, setMobileActiveTab } from "@/store/reducers/global";
+import { setMobileActiveTab } from "@/store/reducers/global";
 import {
   useAppDispatch,
   useAppSelector,
-  apiPing,
-  apiStartService,
-  apiStopService,
   MOBILE_ACTIVE_TAB_MAP,
   EMobileActiveTab,
   isEditModeOn,
-  useGraphs,
 } from "@/common";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { RemotePropertyCfgSheet } from "@/components/Chat/ChatCfgPropertySelect";
 import { RemoteGraphSelect } from "@/components/Chat/ChatCfgGraphSelect";
-import { RemoteModuleCfgSheet } from "@/components/Chat/ChatCfgModuleSelect";
-import { TrulienceCfgSheet } from "../Chat/ChatCfgTrulienceSetting";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import SettingsDialog from "@/components/Settings/SettingsDialog";
-import { VoiceSelection } from "@/components/Settings/VoiceSelection"; // Import VoiceSelection
 import { useAgentSettings, getAgentSettings } from "@/hooks/useAgentSettings";
 import { z } from "zod";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
-import { SessionConnectionState } from "@/types/websocket";
-import { webSocketManager } from "@/manager/websocket/websocket"; // Corrected import path
-import { CommandType } from "@/types/websocket";
+import {webSocketManager} from "@/manager/websocket/websocket";
 
 // 定义 agentSettingSchema 的类型
 const agentSettingSchema = z.object({
@@ -171,8 +162,6 @@ export default function Action(props: { className?: string }) {
             <RemoteGraphSelect />
             {isEditModeOn && (
               <>
-                <TrulienceCfgSheet />
-                <RemoteModuleCfgSheet />
                 <RemotePropertyCfgSheet />
               </>
             )}

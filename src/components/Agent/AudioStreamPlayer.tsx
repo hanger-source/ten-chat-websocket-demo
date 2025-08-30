@@ -1,9 +1,10 @@
 import audioProcessorString from '../../manager/websocket/audio-processor.js?raw';
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
-import { AudioFrame, MessageType, Message, WebSocketConnectionState, SessionConnectionState } from '@/types/websocket'; // Import WebSocketConnectionState and SessionConnectionState
+import { WebSocketConnectionState, SessionConnectionState } from '@/types/websocket'; // Import WebSocketConnectionState and SessionConnectionState
 import { useSelector } from 'react-redux'; // Import useSelector
-import { RootState } from '@/store'; // Import RootState
+import { RootState } from '@/store';
+import {AudioFrame, Message, MessageType} from "@/types/message"; // Import RootState
 
 interface AudioStreamPlayerProps {
   // 可以根据需要添加 props，例如音量控制等

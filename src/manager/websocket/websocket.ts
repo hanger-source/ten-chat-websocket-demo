@@ -1,17 +1,16 @@
 import {
-    AudioFrame,
-    Command,
-    CommandType,
-    Data,
-    Location,
-    Message,
-    MessageType,
-    StartGraphCommand,
-    StopGraphCommand,
-    VideoFrame,
     WebSocketConnectionState
 } from '@/types/websocket';
 import {decode, encode, ExtensionCodec} from '@msgpack/msgpack';
+import {
+    AudioFrame, Command,
+    CommandType, Message,
+    Location,
+    MessageType,
+    StartGraphCommand,
+    StopGraphCommand,
+    VideoFrame
+} from "@/types/message";
 // TEN框架自定义MsgPack扩展类型码
 const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 恢复自定义扩展类型码
 
@@ -138,7 +137,7 @@ export class WebSocketManager {
 
     // 发送文本数据
     public sendTextData(name: string, text: string, srcLoc: Location, destLocs: Location[] = []): void {
-        const dataMessage: Data = {
+        const dataMessage: Message = {
             id: this.generateMessageId(),
             type: MessageType.DATA,
             name: name,
@@ -155,7 +154,7 @@ export class WebSocketManager {
 
     // 发送 JSON 数据
     public sendJsonData(name: string, jsonData: any, srcLoc: Location, destLocs: Location[] = []): void {
-        const dataMessage: Data = {
+        const dataMessage: Message = {
             id: this.generateMessageId(),
             type: MessageType.DATA,
             name: name, // name 字段直接放在这里
@@ -442,8 +441,8 @@ export class WebSocketManager {
     // 解码消息
     private decodeMessage(data: ArrayBuffer): Message {
         console.log('Attempting to decode MsgPack data.');
-        console.log('Data to decode (Uint8Array length):', new Uint8Array(data).length);
-        console.log('Data to decode (first 20 bytes):', new Uint8Array(data).slice(0, 20)); // 打印前20个字节
+        console.log('Message to decode (Uint8Array length):', new Uint8Array(data).length);
+        console.log('Message to decode (first 20 bytes):', new Uint8Array(data).slice(0, 20)); // 打印前20个字节
         try {
             const decoded = decode(new Uint8Array(data), { extensionCodec });
             console.log('MsgPack decoded object:', decoded); // Add log to inspect decoded object

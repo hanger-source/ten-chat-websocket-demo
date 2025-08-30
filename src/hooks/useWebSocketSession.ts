@@ -1,14 +1,13 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { webSocketManager } from "@/manager/websocket/websocket";
-import { WebSocketConnectionState, SessionConnectionState, Message, CommandResult, CommandType, MessageType, Location } from "@/types/websocket";
+import { WebSocketConnectionState, SessionConnectionState } from "@/types/websocket";
 import { MESSAGE_CONSTANTS } from '@/common/constant';
 import { useAppDispatch, useAppSelector } from "@/common/hooks";
 import { setWebsocketConnectionState, setAgentConnected, setSelectedGraphId, setActiveGraphId, setActiveAppUri } from "@/store/reducers/global"; // Import setActiveAppUri
-import { Graph } from "@/common/graph";
 import { toast } from 'sonner';
 import { RootState } from "@/store";
-import { useAgentSettings } from "./useAgentSettings"; // Import useAgentSettings
-import { IAgentSettings } from "@/types"; // Add this import
+import { IAgentSettings } from "@/types";
+import {CommandResult, CommandType, Location, Message, MessageType} from "@/types/message"; // Add this import
 
 const FRONTEND_APP_URI = "mock_front://test_app"; // Define fixed frontend URI
 

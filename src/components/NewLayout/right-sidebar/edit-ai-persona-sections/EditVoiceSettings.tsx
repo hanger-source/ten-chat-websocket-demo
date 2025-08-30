@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'; // Import useState, useEffect, and useMemo
 import { cn } from '@/lib/utils'; // Import cn utility
 import { IModeOption, IReplaceableVoiceOption, ISelectedVoiceOption } from '@/types/modeOptions';
-import { modeOptions } from '@/common/mockModeOptionsData';
 import { Button } from '@/components/ui/button'; // Import Button
 import ChangeVoiceDialog from "./ChangeVoiceDialog"; // Import the new component
 import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';

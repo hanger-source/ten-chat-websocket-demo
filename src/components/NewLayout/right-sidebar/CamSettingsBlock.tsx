@@ -223,7 +223,7 @@ const CamSettingsBlock = () => {
           <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={setSelectedCamDeviceId} />
         )}
       </div>
-      <div className="my-3 h-40 w-full overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center">
+      <div className="my-3 h-40 w-full overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg">
         {videoMute || (!cameraStream && !screenStream) ? (
           <p className="text-white text-sm">视频已关闭或无可用视频源</p>
         ) : (

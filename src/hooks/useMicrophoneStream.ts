@@ -1,7 +1,8 @@
 import React, { useRef } from "react";
 import { webSocketManager } from "@/manager/websocket/websocket";
-import { Location, WebSocketConnectionState, SessionConnectionState } from "@/types/websocket";
+import { WebSocketConnectionState, SessionConnectionState } from "@/types/websocket";
 import { IAgentSettings } from "@/types";
+import {Location} from "@/types/message";
 
 interface UseMicrophoneStreamProps {
   isConnected: boolean;

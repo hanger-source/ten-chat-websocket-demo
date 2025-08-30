@@ -19,11 +19,7 @@ export default function Home() {
   const mobileActiveTab = useAppSelector(
     (state) => state.global.mobileActiveTab
   );
-  const trulienceSettings = useAppSelector((state) => state.global.trulienceSettings);
-
   const isCompactLayout = useIsCompactLayout();
-  const useTrulienceAvatar = trulienceSettings.enabled;
-  const avatarInLargeWindow = trulienceSettings.avatarDesktopLargeWindow;
 
   return (
     <AuthInitializer>
@@ -33,7 +29,7 @@ export default function Home() {
         <div className={cn(
           "mx-2 mb-2 flex h-full max-h-[calc(100vh-108px-24px)] flex-col md:flex-row md:gap-2 flex-1",
           {
-            ["flex-col-reverse"]: avatarInLargeWindow && isCompactLayout
+            ["flex-col-reverse"]: isCompactLayout
           }
         )}>
           <DynamicRTCCard
@@ -45,7 +41,7 @@ export default function Home() {
             )}
           />
 
-          {(!useTrulienceAvatar || isCompactLayout || !avatarInLargeWindow) && (
+          {(
             <DynamicChatCard
               className={cn(
                 "m-0 w-full rounded-b-lg bg-white shadow-lg border border-gray-200 md:rounded-lg flex-1 min-h-0",

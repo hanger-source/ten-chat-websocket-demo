@@ -6,10 +6,11 @@ import MessageList from "@/components/Chat/MessageList";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { webSocketManager } from "@/manager/websocket/websocket"; // Uncommented
-import { SessionConnectionState, MessageType, CommandType, CommandResult, Message } from "@/types/websocket"; // Added Message type
+import { SessionConnectionState } from "@/types/websocket"; // Added Message type
 import AudioStreamPlayer from "@/components/Agent/AudioStreamPlayer";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
 import { toast } from "sonner";
+import {CommandResult, CommandType, Message, MessageType} from "@/types/message";
 
 export default function ChatCard(props: { className?: string }) {
   const { className } = props;

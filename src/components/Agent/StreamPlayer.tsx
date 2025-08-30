@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { webSocketManager } from "@/manager/websocket/websocket"; // cketManager
-import { AudioFrame } from "@/types/websocket"; // oFrame类型
-import { MessageType } from "@/types/websocket"; // MessageType类型
-import { Message } from "@/types/websocket"; // Message类型
+// oFrame类型
+// MessageType类型
+import {AudioFrame, Message, MessageType} from "@/types/message"; // Message类型
 
 export interface StreamPlayerProps {
   style?: React.CSSProperties;

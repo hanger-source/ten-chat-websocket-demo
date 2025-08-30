@@ -7,13 +7,10 @@ import {
   getRandomChannel,
   getRandomUserId,
   useAppSelector,
-  getTrulienceSettingsFromLocal,
 } from "@/common";
 import {
   setOptions,
   reset,
-  fetchGraphDetails,
-  setTrulienceSettings,
 } from "@/store/reducers/global";
 import { useGraphs } from "@/common/hooks";
 
@@ -33,12 +30,10 @@ const AuthInitializer = (props: AuthInitializerProps) => {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const options = getOptionsFromLocal();
-      const trulienceSettings = getTrulienceSettingsFromLocal();
       initialize();
       if (options && options.channel) {
         dispatch(reset());
         dispatch(setOptions(options));
-        dispatch(setTrulienceSettings(trulienceSettings));
       } else {
         dispatch(reset());
         dispatch(
@@ -57,7 +52,7 @@ const AuthInitializer = (props: AuthInitializerProps) => {
       if (!graph) {
         return;
       }
-      dispatch(fetchGraphDetails(graph));
+      // dispatch(fetchGraphDetails(graph));
     }
   }, [selectedGraphId, graphList, dispatch]); // Automatically fetch details when `selectedGraphId` changes
 

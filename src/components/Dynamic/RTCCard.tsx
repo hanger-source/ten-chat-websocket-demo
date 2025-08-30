@@ -21,7 +21,7 @@ import {
 } from "@/types";
 // import NetworkIndicator from "@/components/Dynamic/NetworkIndicator"; // Removed
 import DynamicChatCard from "@/components/Chat/ChatCard";
-import { Message, MessageType, WebSocketConnectionState, AudioFrame, Data } from "@/types/websocket"; // Added AudioFrame, Data
+import { WebSocketConnectionState } from "@/types/websocket"; // Added AudioFrame, Message
 import { useMicrophoneStream } from "@/hooks/useMicrophoneStream"; // Import useMicrophoneStream
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Import useWebSocketSession
 import { useAgentSettings } from "@/hooks/useAgentSettings"; // Import useAgentSettings
@@ -30,7 +30,8 @@ import AudioVisualizer from "@/components/Agent/AudioVisualizer"; // Import Audi
 import { Button } from "@/components/ui/button"; // Import Button
 import { useState } from "react"; // Import useState
 import VideoBlock from "@/components/Agent/VideoBlock"; // 引入 VideoBlock 组件
-import { VideoSourceType } from "@/common/constant"; // 新增：导入 VideoSourceType
+import { VideoSourceType } from "@/common/constant";
+import {AudioFrame, Message, MessageType} from "@/types/message"; // 新增：导入 VideoSourceType
 
 let hasInit: boolean = false;
 
@@ -38,7 +39,6 @@ export default function RTCCard({
   className,
   recordedChunksCount,
   downloadRecordedAudio,
-  onAudioDataCaptured, // Destructure onAudioDataCaptured
 }: {
   className?: string;
   recordedChunksCount: number; // Add prop
@@ -55,11 +55,6 @@ export default function RTCCard({
   );
   const { userId, channel } = options;
   const [remoteAudioData, setRemoteAudioData] = React.useState<Uint8Array>();
-  const useTrulienceAvatar = false; // Temporarily force to false for debugging
-  const avatarInLargeWindow = trulienceSettings.avatarDesktopLargeWindow;
-  const selectedGraphId = useAppSelector(
-    (state: RootState) => state.global.selectedGraphId,
-  );
 
   const isCompactLayout = useIsCompactLayout();
   const { isConnected, sessionState, defaultLocation } = useWebSocketSession();
@@ -129,7 +124,7 @@ export default function RTCCard({
     let chatItem: IChatItem | undefined;
 
     if (message.type === MessageType.DATA) {
-      const dataMessage = message as Data; // Changed to Data
+      const dataMessage = message as Message; // Changed to Message
       if (dataMessage.content_type === "application/json" && dataMessage.data) { // Check if data exists
         try {
           const payload = JSON.parse(new TextDecoder().decode(dataMessage.data)); // Parse data as JSON
@@ -160,7 +155,7 @@ export default function RTCCard({
           userName: dataMessage.name || "Agent", // Use dataMessage.name
         };
       } else {
-        // console.warn(`[${new Date().toISOString()}] RTCCard: Received unexpected Data message content type: ${dataMessage.content_type || 'N/A'}`, dataMessage);
+        // console.warn(`[${new Date().toISOString()}] RTCCard: Received unexpected Message message content type: ${dataMessage.content_type || 'N/A'}`, dataMessage);
       }
     }
      else {
@@ -181,18 +176,7 @@ export default function RTCCard({
 
   return (
     <div className={cn("flex h-full flex-col min-h-0 bg-gray-50 flex-1 min-w-[400px]", className)}> {/* Added min-w-[400px] */}
-      {/* Scrollable top region (Avatar or ChatCard or Talkinghead) */}
-      {useTrulienceAvatar ? (
-        !avatarInLargeWindow ? (
-          <div className="h-60 w-full p-1">
-            <Avatar audioTrack={mediaStreamTrack || undefined} />
-          </div>
-        ) : (
-          !isCompactLayout && (
-            <DynamicChatCard className="m-0 w-full h-full rounded-b-lg bg-white shadow-lg border border-gray-200 md:rounded-lg" />
-          )
-        )
-      ) : (
+      {(
         <div className="flex-1 min-h-[500px] z-10 relative bg-white rounded-lg shadow-lg border border-gray-200"> {/* Combined classes */}
           {/* TalkingHead 区域 */}
           <div className="h-full w-full">
