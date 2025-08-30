@@ -14,26 +14,24 @@ interface HomeMainAreaProps {
 const HomeMainArea = ({ className }: HomeMainAreaProps) => {
   const { isConnected } = useWebSocketSession();
 
-  if (isConnected) {
-    return (
-      <main className={cn("flex-1 bg-white shadow-none rounded-[16px] flex flex-col items-center justify-center md:px-4 relative", className)}>
-        {/* Placeholder for the connected session page */}
-        <HomeMainChat className="flex-1 w-full h-full" />
-      </main>
-    );
-  }
-
   return (
     <main className={cn("flex-1 bg-white shadow-none rounded-[16px] flex flex-col items-center justify-center md:px-4 relative", className)}>
-      {/* Main Card Content (now with padding and vertical centering) */}
-      <div className="flex flex-col items-center justify-center max-w-5xl mx-auto">
-        <HomeAvatarCard />
-        <HomeSceneSelector />
+      {/* 连接状态下的聊天区域 */}
+      <div className={cn("flex-1 w-full h-full", {
+        "hidden": !isConnected, // 根据 isConnected 控制可见性
+      })}>
+        <HomeMainChat className="flex-1 w-full h-full" />
       </div>
 
-      <HomeInvokeButton />
-
-      <HomeBottomDeclaration />
+      {/* 未连接状态下的初始界面 */}
+      <div className={cn("flex flex-col items-center justify-center max-w-5xl mx-auto", {
+        "hidden": isConnected, // 根据 isConnected 控制可见性
+      })}>
+        <HomeAvatarCard />
+        <HomeSceneSelector />
+        <HomeInvokeButton />
+        <HomeBottomDeclaration />
+      </div>
     </main>
   );
 };

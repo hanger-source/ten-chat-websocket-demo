@@ -302,7 +302,6 @@ export class WebSocketManager {
             this.messageHandlers.set(type, []);
         }
         this.messageHandlers.get(type)?.push(handler);
-        // console.log(`Registered handler for type: ${type}. Total handlers: ${this.messageHandlers.get(type)?.length}`);
 
         // 返回一个取消订阅函数
         return () => {

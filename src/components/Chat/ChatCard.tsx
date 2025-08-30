@@ -197,6 +197,8 @@ export default function ChatCard(props: { className?: string }) {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
+    return () => {
+    };
   }, [chatMessages]); // Dependency on chatMessages to trigger scroll
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
