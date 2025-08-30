@@ -61,6 +61,7 @@ export interface ISceneCard {
   welcomeSubText: string;
   prompt: string; // New: To store the prompt for the AI
   selectedModels?: Record<string, string>; // New: To store dynamically selected models for the scene
+  selectedVoices?: Record<string, string>; // New: To store dynamically selected voices for the scene
   defaultModeValue?: string; // New: To store the default mode associated with this scene
 }
 

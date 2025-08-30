@@ -6,9 +6,8 @@ import { SCREEN_READER_UI_GREETING, SCREEN_READER_RESPONSE_GREETING, SCREEN_READ
 import { CHILDREN_ENCYCLOPEDIA_UI_GREETING, CHILDREN_ENCYCLOPEDIA_RESPONSE_GREETING, CHILDREN_ENCYCLOPEDIA_SUBTEXT, CHILDREN_ENCYCLOPEDIA_PROMPT } from "./scenePrompts/childrenEncyclopedia";
 import { SIMULTANEOUS_INTERPRETATION_UI_GREETING, SIMULTANEOUS_INTERPRETATION_RESPONSE_GREETING, SIMULTANEOUS_INTERPRETATION_SUBTEXT, SIMULTANEOUS_INTERPRETATION_PROMPT } from "./scenePrompts/simultaneousInterpretation";
 import { SMART_CUSTOMER_SERVICE_UI_GREETING, SMART_CUSTOMER_SERVICE_RESPONSE_GREETING, SMART_CUSTOMER_SERVICE_SUBTEXT, SMART_CUSTOMER_SERVICE_PROMPT } from "./scenePrompts/smartCustomerService";
-import { STANDARD_DIALOGUE_MODE_VALUE } from "./modeData"; // Import STANDARD_DIALOGUE_MODE_VALUE
 
-// Removed getInitialSelectedModels function
+export const STANDARD_DIALOGUE_MODE_VALUE = "standard_dialogue";
 
 export const sceneCards: ISceneCard[] = [
   {
@@ -25,6 +24,9 @@ export const sceneCards: ISceneCard[] = [
     selectedModels: {
       textModel: 'qwen-turbo',
       visionModel: 'qwen-vl-max',
+    },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -43,6 +45,9 @@ export const sceneCards: ISceneCard[] = [
       textModel: 'qwen-max',
       visionModel: 'qwen-vl-max',
     },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
+    },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
@@ -59,6 +64,9 @@ export const sceneCards: ISceneCard[] = [
     selectedModels: {
       textModel: 'qwen-plus-character',
       visionModel: 'qwen-vl-max',
+    },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -77,6 +85,9 @@ export const sceneCards: ISceneCard[] = [
       textModel: 'qwen-max',
       visionModel: 'qwen-vl-max',
     },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
+    },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
@@ -93,6 +104,9 @@ export const sceneCards: ISceneCard[] = [
     selectedModels: {
       textModel: 'qwen-max',
       visionModel: 'qwen-vl-max',
+    },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -111,6 +125,9 @@ export const sceneCards: ISceneCard[] = [
       textModel: 'qwen-max',
       visionModel: 'qwen-vl-max',
     },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
+    },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
@@ -127,6 +144,9 @@ export const sceneCards: ISceneCard[] = [
     selectedModels: {
       textModel: 'qwen-max',
       visionModel: 'qwen-vl-max',
+    },
+    selectedVoices: {
+      cosy_voice_name: 'longhuohuo',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },

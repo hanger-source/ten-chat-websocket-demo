@@ -1,3 +1,5 @@
+import { IVideoResourceOptions } from "pixi.js";
+
 export interface IModeOption {
   value: string;
   label: string;
@@ -5,11 +7,11 @@ export interface IModeOption {
   metadata?: IModeMetadata; // New: To store mode-specific metadata
 }
 
-export const STANDARD_DIALOGUE_MODE_VALUE = "standard_dialogue";
-
 export interface IModeMetadata {
   replaceableModels?: IReplaceableModelOption[];
+  replaceableVoices?: IReplaceableVoiceOption[];
   models?: ISelectedModelOption[];
+  voices?: ISelectedVoiceOption[];
 }
 
 export interface ISelectedModelOption {
@@ -24,6 +26,19 @@ export interface ISelectedModelOption {
 export interface IReplaceableModelOption {
   type: ModelCategory;
   model: string;
+  key: string;
+}
+
+export interface ISelectedVoiceOption {
+  name: string;
+  voice: string;
+  tag: string[];
+  previewAudioUrl: string;
+  feature?: string;
+}
+
+export interface IReplaceableVoiceOption {
+  voice: string;
   key: string;
 }
 

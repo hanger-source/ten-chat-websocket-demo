@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { IModeOption, ISelectedModelOption, IReplaceableModelOption, ModelCategory } from '@/common/modeData';
-import { modeOptions } from '@/common/modeOptionsData';
+import { IModeOption, ISelectedModelOption, IReplaceableModelOption, ModelCategory } from '@/types/modeOptions';
 import { RootState } from '../../../../store';
 import { setCurrentScene } from '@/store/reducers/global';
-import { modelLibrary, IModel } from '@/common/modelLibrary';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -93,10 +91,6 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
   };
 
   const modelDescription = (modelName: string) => {
-    const libraryModel = modelLibrary.find(m => m.name === modelName);
-    if (libraryModel) {
-      return libraryModel.description;
-    }
     const metadataModel = currentMode?.metadata?.models?.find(m => m.model === modelName);
     if (metadataModel) {
       return metadataModel.description;
@@ -136,7 +130,7 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
                 value={tag} 
                 className={`flex-grow-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200 
                   ${activeTab === tag 
-                    ? `bg-white shadow !${BORDER_GRADIENT_CLASSES} !bg-clip-text !text-transparent` // Adjusted for abstraction
+                    ? `bg-white shadow ${BASE_TEXT_GRADIENT} !text-transparent`
                     : 'bg-transparent text-gray-600 hover:bg-gray-50 border-b-2 border-transparent'} 
                 `}
               >{tag}</TabsTrigger>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { IModeOption, IReplaceableModelOption } from '@/common/modeData'; // Only import necessary types
-import { modeOptions } from '@/common/modeOptionsData';
+import { IModeOption, IReplaceableModelOption } from '@/types/modeOptions'; // Only import necessary types
+import { modeOptions } from '@/common/mockModeOptionsData';
 import { RootState } from '../../../../store';
 import { setGlobalMode, setCurrentScene } from '@/store/reducers/global';
 import { cn } from '@/lib/utils';

@@ -31,8 +31,7 @@ import {
   saveSceneToLocal, // Import saveSceneToLocal
 } from "@/common/storage";
 import { AddonDef, Graph } from "@/common/graph";
-import { modeOptions } from "@/common/modeOptionsData"; // Only import modeOptions from here
-import { IReplaceableModelOption, STANDARD_DIALOGUE_MODE_VALUE } from "@/common/modeData"; // Import types and constants from modeData
+import { modeOptions } from "@/common/mockModeOptionsData"; // Only import modeOptions from here
 import { sceneCards } from "@/common/sceneData"; // Import sceneCards
 
 export interface InitialState {
