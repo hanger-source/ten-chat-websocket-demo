@@ -22,11 +22,11 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: AI_ASSISTANT_SUBTEXT,
     prompt: AI_ASSISTANT_PROMPT,
     selectedModels: {
-      text_model: 'qwen-turbo',
+      text_model: 'qwen-max',
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longxiaochun_v2',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -46,7 +46,7 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longjielidou_v2',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -63,7 +63,7 @@ export const sceneCards: ISceneCard[] = [
     prompt: VIRTUAL_GIRL_FRIEND_PROMPT,
     selectedModels: {
       text_model: 'qwen-plus-character',
-      vision_model: 'qwen-vl-max',
+      vision_model: 'longxian_v2',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -82,8 +82,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SCREEN_READER_SUBTEXT,
     prompt: SCREEN_READER_PROMPT,
     selectedModels: {
-      text_model: 'qwen-max',
-      vision_model: 'qwen-vl-max',
+      text_model: 'qwen3',
+      vision_model: 'longjin_v2',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -122,11 +122,11 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SIMULTANEOUS_INTERPRETATION_SUBTEXT,
     prompt: SIMULTANEOUS_INTERPRETATION_PROMPT,
     selectedModels: {
-      text_model: 'qwen-max',
+      text_model: 'qwen3',
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longshuo_v2',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -146,7 +146,7 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longyingyan',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
