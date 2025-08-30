@@ -19,27 +19,21 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
   const { editingScene, saveEditingScene } = useAiPersonalEdit(); // 引入 useAiPersionalEdit Hook
   const { switchSelectedScene } = useSelectedScene(); // 引入 useSelectedScene Hook
   const [triangleLeft, setTriangleLeft] = useState<string>('50%');
-  const [selectedCapsuleRef, setSelectedCapsuleRef] = useState<HTMLDivElement | null>(null);
+  const [scenePositions, setScenePositions] = useState<{ [key: string]: number }>({}); // 新增状态来存储场景位置
 
   const handleCapsuleClick = useCallback((card: ISceneCard, ref: HTMLDivElement | null) => {
-    setSelectedCapsuleRef(ref);
-    // 只调用一个函数即可，因为两者现在共享同一个 localStorage key
+    // 不再需要 setSelectedCapsuleRef
     switchSelectedScene(card.aiPersonaName);
-  }, [switchSelectedScene]); // 只需要 switchSelectedScene 作为依赖项
+  }, [switchSelectedScene]);
 
   useEffect(() => {
-    if (selectedCapsuleRef) {
-      const capsuleRect = selectedCapsuleRef.getBoundingClientRect();
-      const parentContainer = selectedCapsuleRef.closest('.flex-1.py-6.pr-6.pl-0');
-      if (parentContainer) {
-        const parentRect = parentContainer.getBoundingClientRect();
-        const relativeLeft = (capsuleRect.left + (capsuleRect.width / 2)) - parentRect.left;
-        setTriangleLeft(`${relativeLeft}px`);
-      } else {
-        setTriangleLeft('50%');
-      }
+    if (editingScene && scenePositions[editingScene.aiPersonaName] !== undefined) {
+      const position = scenePositions[editingScene.aiPersonaName];
+      setTriangleLeft(`${position}px`);
+    } else {
+      setTriangleLeft('50%'); // 如果没有选中的场景或位置信息，则居中显示
     }
-  }, [selectedCapsuleRef, editingScene, handleCapsuleClick]);
+  }, [editingScene, scenePositions]); // 依赖 editingScene 和 scenePositions
 
   const handleSave = useCallback(() => {
     saveEditingScene();
@@ -54,7 +48,7 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
           <SheetDescription>我们已经为您配置好对应人设的 基本参数，您也可以根据自己的需求 进行自定义设置</SheetDescription>
         </SheetHeader>
         <div className="flex-1 py-6 pr-6 pl-0">
-          <EditAIPersonaScenes onCapsuleClick={handleCapsuleClick} />
+          <EditAIPersonaScenes onCapsuleClick={handleCapsuleClick} onScenePositionsChange={setScenePositions} /> {/* 传递 onScenePositionsChange */}
 
           {/* New container for all settings */}
           <div className="relative mt-4 bg-white p-6 rounded-lg shadow-md">

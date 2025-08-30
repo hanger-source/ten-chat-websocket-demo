@@ -5,18 +5,36 @@ import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 
 interface EditAIPersonaScenesProps {
   onCapsuleClick: (card: ISceneCard, ref: HTMLDivElement | null) => void;
+  onScenePositionsChange: (positions: { [key: string]: number }) => void; // 新增 prop
 }
 
-const EditAIPersonaScenes: React.FC<EditAIPersonaScenesProps> = ({ onCapsuleClick }) => {
-  const { allScenes } = useSelectedScene(); // 重新引入 useSelectedScene 并获取 allScenes
+const EditAIPersonaScenes: React.FC<EditAIPersonaScenesProps> = ({ onCapsuleClick, onScenePositionsChange }) => {
+  const { allScenes } = useSelectedScene();
   const { editingScene, switchEditingScene } = useAiPersonalEdit();
 
   const capsuleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const containerRef = useRef<HTMLDivElement>(null); // 用于获取父容器的引用
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const positions: { [key: string]: number } = {};
+      const parentRect = containerRef.current.getBoundingClientRect();
+
+      allScenes.forEach(card => {
+        const capsule = capsuleRefs.current[card.aiPersonaName];
+        if (capsule) {
+          const capsuleRect = capsule.getBoundingClientRect();
+          // 计算胶囊中心相对于父容器的左侧偏移量
+          positions[card.aiPersonaName] = (capsuleRect.left + (capsuleRect.width / 2)) - parentRect.left;
+        }
+      });
+      onScenePositionsChange(positions);
+    }
+  }, [allScenes, onScenePositionsChange]); // 依赖 allScenes 和 onScenePositionsChange
 
   return (
-    <div className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-px-6">
+    <div ref={containerRef} className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-px-6">
       {allScenes.map((card: ISceneCard) => {
-        const ref = (capsuleRefs.current[card.aiPersonaName] = capsuleRefs.current[card.aiPersonaName] || null);
         return (
           <div
             key={card.aiPersonaName}
