@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
+import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 import { IModeOption, ISelectedVoiceOption, IReplaceableVoiceOption } from '@/types/modeOptions';
 
 const BASE_TEXT_GRADIENT = "bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text";
@@ -24,7 +24,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
     setShowModal,
     voiceKeyToSelect,
   } = props;
-  const { editingScene, updateEditingSelectedVoice, getSelectedVoiceId, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName } = useAiPersionalEdit();
+  const { editingScene, updateEditingSelectedVoice, getSelectedVoiceId, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName } = useAiPersonalEdit();
   const [activeTab, setActiveTab] = useState<string>('');
   const [hoveredVoiceId, setHoveredVoiceId] = useState<string | null>(null);
   const [tempSelectedVoiceId, setTempSelectedVoiceId] = useState<string | null>(null);

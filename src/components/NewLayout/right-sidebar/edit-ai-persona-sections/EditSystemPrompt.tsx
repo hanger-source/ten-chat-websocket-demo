@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit'; // Import the new hook
+import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit'; // Import the new hook
 import { Textarea } from '@/components/ui/textarea'; // 导入 Textarea 组件
 
 interface EditSystemPromptProps {
@@ -8,7 +8,7 @@ interface EditSystemPromptProps {
 }
 
 const EditSystemPrompt: React.FC<EditSystemPromptProps> = ({ className }) => {
-  const { editingScene, updateEditingSceneField } = useAiPersionalEdit();
+  const { editingScene, updateEditingSceneField } = useAiPersonalEdit();
   const [systemPrompt, setSystemPrompt] = useState(editingScene.prompt || '');
 
   useEffect(() => {

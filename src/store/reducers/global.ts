@@ -4,7 +4,6 @@ import {
   Language,
   VoiceType,
   ITrulienceSettings,
-  ISceneCard, // Import ISceneCard
 } from "@/types";
 import { WebSocketConnectionState } from "@/types/websocket"; // Corrected import path for WebSocketConnectionState
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -18,13 +17,14 @@ import {
 import {
   apiReloadPackage,
   apiFetchGraphs,
-  apiFetchInstalledAddons,
   apiLoadApp,
+  GraphInfo, // 添加 GraphInfo 导入
 } from "@/common/request";
 import {
   setOptionsToLocal,
 } from "@/common/storage";
 import { Graph } from "@/common/graph";
+import { IModeOption } from "@/types/modeOptions"; // 添加 IModeOption 导入
 
 export interface InitialState {
   options: IOptions;
@@ -36,12 +36,13 @@ export interface InitialState {
   voiceType: VoiceType;
   chatItems: IChatItem[];
   selectedGraphId: string;
-  graphList: Graph[];
-  graphMap: Record<string, Graph>;
+  graphList: GraphInfo[];
+  graphMap: Record<string, GraphInfo>;
   mobileActiveTab: EMobileActiveTab;
   trulienceSettings: ITrulienceSettings;
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
+  modeOptions: IModeOption[]; // 添加 modeOptions 字段
 }
 
 const getInitialState = (): InitialState => {
@@ -62,6 +63,7 @@ const getInitialState = (): InitialState => {
     trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
+    modeOptions: [], // 初始化 modeOptions 为空数组
   };
 };
 
@@ -149,7 +151,7 @@ export const globalSlice = createSlice({
     setSelectedGraphId: (state, action: PayloadAction<string>) => {
       state.selectedGraphId = action.payload;
     },
-    setGraphList: (state, action: PayloadAction<Graph[]>) => {
+    setGraphList: (state, action: PayloadAction<GraphInfo[]>) => {
       state.graphList = action.payload;
       console.log('Redux: graphList updated', action.payload);
 
@@ -194,14 +196,17 @@ export const globalSlice = createSlice({
         COLOR_LIST[0].active,
       );
     },
-    // Add setActiveGraphId reducer
     setActiveGraphId: (state, action: PayloadAction<string>) => {
       state.activeGraphId = action.payload;
       console.log('Redux: activeGraphId set to', action.payload);
     },
-    setActiveAppUri: (state, action: PayloadAction<string>) => { // New reducer for activeAppUri
+    setActiveAppUri: (state, action: PayloadAction<string>) => {
       state.activeAppUri = action.payload;
       console.log('Redux: activeAppUri set to', action.payload);
+    },
+    setModeOptions: (state, action: PayloadAction<IModeOption[]>) => {
+      state.modeOptions = action.payload;
+      console.log('Redux: modeOptions updated', action.payload);
     },
   },
 });
@@ -214,13 +219,46 @@ const initializeGraphData = createAsyncThunk(
       // only for development, below requests depend on dev-server
       await apiReloadPackage();
       await apiLoadApp();
-      const [fetchedGraphs, modules] = await Promise.all([
-        apiFetchGraphs(),
-        apiFetchInstalledAddons(),
-      ]);
+      const graphInfos = await apiFetchGraphs(); // 获取 graphInfos
+      console.log("initializeGraphData: fetchedGraphInfos (dev mode):", graphInfos); // 排查日志
+      
+      const modeOptions: IModeOption[] = graphInfos.map(graphInfo => ({
+        value: graphInfo.name,
+        label: graphInfo.name,
+        name: graphInfo.name, // 确保添加 name 属性
+        description: "", // Or extract from graphInfo.metadata if available
+        metadata: graphInfo.metadata || {},
+      }));
+      dispatch(setModeOptions(modeOptions));
+
+      const graphs: GraphInfo[] = graphInfos.map(graphInfo => ({
+        uuid: graphInfo.uuid,
+        name: graphInfo.name,
+        autoStart: graphInfo.autoStart,
+        docUrl: graphInfo.docUrl,
+      }));
+      dispatch(setGraphList(graphs));
+
     } else {
-      const fetchedGraphs = await apiFetchGraphs();
-      dispatch(setGraphList(Array.isArray(fetchedGraphs) ? fetchedGraphs.map((graph) => graph) : []));
+      const graphInfos = await apiFetchGraphs(); // 获取 graphInfos
+      console.log("initializeGraphData: fetchedGraphInfos (prod mode):", graphInfos); // 排查日志
+      
+      const modeOptions: IModeOption[] = graphInfos.map(graphInfo => ({
+        value: graphInfo.name,
+        label: graphInfo.name,
+        name: graphInfo.name, // 确保添加 name 属性
+        description: "", // Or extract from graphInfo.metadata if available
+        metadata: graphInfo.metadata || {},
+      }));
+      dispatch(setModeOptions(modeOptions));
+
+      const graphs: GraphInfo[] = graphInfos.map(graphInfo => ({
+        uuid: graphInfo.uuid,
+        name: graphInfo.name,
+        autoStart: graphInfo.autoStart,
+        docUrl: graphInfo.docUrl,
+      }));
+      dispatch(setGraphList(graphs));
     }
   },
 );
@@ -228,7 +266,6 @@ const initializeGraphData = createAsyncThunk(
 export const {
   reset,
   setOptions,
-  setRoomConnected,
   setAgentConnected,
   setVoiceType,
   addChatItem,
@@ -238,8 +275,9 @@ export const {
   setGraphList,
   setMobileActiveTab,
   setWebsocketConnectionState, // ducer
-  setActiveGraphId, // Add setActiveGraphId to exports
-  setActiveAppUri, // Add setActiveAppUri to exports
+  setActiveGraphId,
+  setActiveAppUri,
+  setModeOptions,
 } = globalSlice.actions;
 
 export { initializeGraphData };

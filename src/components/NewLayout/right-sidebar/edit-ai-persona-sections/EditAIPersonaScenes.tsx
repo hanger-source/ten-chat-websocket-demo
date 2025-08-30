@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ISceneCard } from '@/types';
 import { useSelectedScene } from '../../../../hooks/useSelectedScene';
-import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
+import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 
 interface EditAIPersonaScenesProps {
   onCapsuleClick: (card: ISceneCard, ref: HTMLDivElement | null) => void;
@@ -9,7 +9,7 @@ interface EditAIPersonaScenesProps {
 
 const EditAIPersonaScenes: React.FC<EditAIPersonaScenesProps> = ({ onCapsuleClick }) => {
   const { allScenes } = useSelectedScene(); // 重新引入 useSelectedScene 并获取 allScenes
-  const { editingScene, switchEditingScene } = useAiPersionalEdit();
+  const { editingScene, switchEditingScene } = useAiPersonalEdit();
 
   const capsuleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 

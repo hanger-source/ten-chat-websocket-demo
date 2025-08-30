@@ -2,7 +2,7 @@ import { IVideoResourceOptions } from "pixi.js";
 
 export interface IModeOption {
   value: string;
-  label: string;
+  name: string;
   description: string;
   metadata?: IModeMetadata; // New: To store mode-specific metadata
 }

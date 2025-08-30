@@ -20,7 +20,7 @@ import { modeOptions } from '@/common/mockModeOptionsData'; // 导入模式选�
  * which is loaded from and saved to local storage directly, based on an internally managed aiPersonaName.
  * It also derives mode configurations based on editingScene's defaultModeValue.
  */
-export const useAiPersionalEdit = () => {
+export const useAiPersonalEdit = () => {
   // 直接使用 useSelectedScene 的值，避免重复的 localStorage 管理
   const { selectedSceneAiPersonaName, switchSelectedScene } = useSelectedScene();
   const editingSceneAiPersonaName = selectedSceneAiPersonaName;

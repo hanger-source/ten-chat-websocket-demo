@@ -1,6 +1,16 @@
 import axios from "axios";
 import { Graph, AddonDef } from "./graph";
 
+// 定义 GraphInfo 接口，对应后端返回的结构
+export interface GraphInfo {
+  uuid: string;
+  name: string;
+  index?: number; // Optional as per the Java code screenshot, default to Integer
+  autoStart: boolean;
+  docUrl?: string;
+  metadata?: any; // Object to store mode-specific metadata, using 'any' for now to match Object in Java
+}
+
 // 从 window 对象获取动态注入的环境变量，如果没有则回退到 /api
 const agentUrl = import.meta.env.VITE_BACKEND_URL; // 从环境变量获取后端URL
 const api = axios.create({
@@ -38,7 +48,7 @@ export const apiReloadPackage = () => {
   });
 };
 
-export const apiFetchGraphs = (): Promise<Graph[]> => {
+export const apiFetchGraphs = (): Promise<GraphInfo[]> => {
   return commonRequest({
     url: "/graphs",
     method: "get",

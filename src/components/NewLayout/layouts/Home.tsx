@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import HomeHeader from "../header/HomeHeader";
 import HomeMainArea from "../main-area/HomeMainArea";
 import HomeRightSidebar from "../right-sidebar/HomeRightSidebar";
-// import { VideoSourceType } from "@/common/constant"; // Removed
+import {useAppDispatch} from "@/common";
+import {initializeGraphData} from "@/store/reducers/global";
 
 const Home = () => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    console.log("NewLayout/layouts/Home: Dispatching initializeGraphData...");
+    dispatch(initializeGraphData());
+  }, [dispatch]);
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-pink-50">
       <HomeHeader />

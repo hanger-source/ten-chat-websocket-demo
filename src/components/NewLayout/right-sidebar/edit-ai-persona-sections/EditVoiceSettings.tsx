@@ -3,14 +3,14 @@ import { cn } from '@/lib/utils'; // Import cn utility
 import { IModeOption, IReplaceableVoiceOption, ISelectedVoiceOption } from '@/types/modeOptions';
 import { Button } from '@/components/ui/button'; // Import Button
 import ChangeVoiceDialog from "./ChangeVoiceDialog"; // Import the new component
-import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
+import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 
 interface EditVoiceSettingsProps {
   className?: string;
 }
 
 const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
-  const { editingScene, getEditingDefaultModeValue, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersionalEdit();
+  const { editingScene, getEditingDefaultModeValue, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersonalEdit();
 
   // 添加 useEffect 来监听 editingScene 的变化
   useEffect(() => {

@@ -2,8 +2,8 @@ import { IModeOption, ISelectedModelOption, IModeMetadata, ModelCategory } from 
 
 export const modeOptions: IModeOption[] = [
   {
-    value: "standard_dialogue",
-    label: "标准对话",
+    value: "标准对话",
+    name: "标准对话",
     description: "基于标准组件构建的对话能力。",
     metadata: {
       replaceableVoices: [{
@@ -465,14 +465,14 @@ export const modeOptions: IModeOption[] = [
     },
   },
   {
-    value: "instant_response",
-    label: "即时响应",
+    value: "即时响应",
+    name: "即时响应",
     description: "基于实时api构建的实时对话，追求自然流畅的对话体验。",
     metadata: {},
   },
   {
-    value: "fai_workflow",
-    label: "FAI工作流",
+    value: "FAI工作流",
+    name: "FAI工作流",
     description: "专为FAI工作流设计，支持复杂的任务协作和自动化处理。",
     metadata: {},
   },

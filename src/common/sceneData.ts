@@ -7,7 +7,7 @@ import { CHILDREN_ENCYCLOPEDIA_UI_GREETING, CHILDREN_ENCYCLOPEDIA_RESPONSE_GREET
 import { SIMULTANEOUS_INTERPRETATION_UI_GREETING, SIMULTANEOUS_INTERPRETATION_RESPONSE_GREETING, SIMULTANEOUS_INTERPRETATION_SUBTEXT, SIMULTANEOUS_INTERPRETATION_PROMPT } from "./scenePrompts/simultaneousInterpretation";
 import { SMART_CUSTOMER_SERVICE_UI_GREETING, SMART_CUSTOMER_SERVICE_RESPONSE_GREETING, SMART_CUSTOMER_SERVICE_SUBTEXT, SMART_CUSTOMER_SERVICE_PROMPT } from "./scenePrompts/smartCustomerService";
 
-export const STANDARD_DIALOGUE_MODE_VALUE = "standard_dialogue";
+export const STANDARD_DIALOGUE_MODE_VALUE = "标准对话";
 
 export const sceneCards: ISceneCard[] = [
   {
@@ -63,10 +63,10 @@ export const sceneCards: ISceneCard[] = [
     prompt: VIRTUAL_GIRL_FRIEND_PROMPT,
     selectedModels: {
       text_model: 'qwen-plus-character',
-      vision_model: 'longxian_v2',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longxian_v2',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -83,10 +83,10 @@ export const sceneCards: ISceneCard[] = [
     prompt: SCREEN_READER_PROMPT,
     selectedModels: {
       text_model: 'qwen3',
-      vision_model: 'longjin_v2',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longjin_v2',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },

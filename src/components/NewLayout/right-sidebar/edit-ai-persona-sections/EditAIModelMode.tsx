@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { IModeOption, IReplaceableModelOption } from '@/types/modeOptions'; // Only import necessary types
-import { modeOptions } from '@/common/mockModeOptionsData';
+import { useAppSelector } from '@/common'; // 导入 useAppSelector
+import { RootState } from '../../../../store'; // 导入 RootState
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button'; // Only import Button here
 import ChangeModelDialog from "./ChangeModelDialog"; // Import the new component
-import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
+import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 
 interface EditAIModelModeProps {
   className?: string;
 }
 
 const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
-  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelConfig, getPersonaModelDescription, derivedModeConfiguration } = useAiPersionalEdit();
+  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelConfig, getPersonaModelDescription, derivedModeConfiguration } = useAiPersonalEdit();
 
   const [showModal, setShowModal] = useState(false);
   const [modelKeyToSelect, setModelKeyToSelect] = useState<string | null>(null);
+
+  // 从 Redux store 获取 modeOptions
+  const modeOptions = useAppSelector((state: RootState) => state.global.modeOptions);
 
   // 添加 useEffect 来监听 editingScene 的变化
   useEffect(() => {
@@ -52,7 +56,7 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
                 }`
               }
             >
-              {mode.label}
+              {mode.name}
             </div>
           ))}
         </div>

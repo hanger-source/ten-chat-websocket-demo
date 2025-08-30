@@ -7,7 +7,7 @@ import EditSystemPrompt from "./edit-ai-persona-sections/EditSystemPrompt";
 import EditWelcomeMessage from "./edit-ai-persona-sections/EditWelcomeMessage";
 import { ISceneCard } from '@/types'; // Import ISceneCard
 import EditAIModelMode from "./edit-ai-persona-sections/EditAIModelMode";
-import { useAiPersionalEdit } from '../../../hooks/useAiPersionalEdit';
+import { useAiPersonalEdit } from '../../../hooks/useAiPersonalEdit';
 import { useSelectedScene } from '../../../hooks/useSelectedScene'; // 导入 useSelectedScene
 
 interface EditAIPersonaSheetProps {
@@ -16,7 +16,7 @@ interface EditAIPersonaSheetProps {
 }
 
 const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose }) => {
-  const { editingScene, saveEditingScene } = useAiPersionalEdit(); // 引入 useAiPersionalEdit Hook
+  const { editingScene, saveEditingScene } = useAiPersonalEdit(); // 引入 useAiPersionalEdit Hook
   const { switchSelectedScene } = useSelectedScene(); // 引入 useSelectedScene Hook
   const [triangleLeft, setTriangleLeft] = useState<string>('50%');
   const [selectedCapsuleRef, setSelectedCapsuleRef] = useState<HTMLDivElement | null>(null);
