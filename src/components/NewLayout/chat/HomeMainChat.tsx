@@ -25,14 +25,6 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
 
       {/* 顶部 AI 形象和会话消息列表区域的容器 */}
       <div className="flex flex-1 flex-col w-full">
-        {/* AI 形象卡片 */}
-        <div className="flex w-full justify-between items-start mb-4">
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full bg-blue-300 flex items-center justify-center text-white text-4xl font-bold mb-2">AI</div>
-            <span className="text-lg font-semibold">情感陪伴</span>
-          </div>
-        </div>
-
         {/* 会话消息列表区域 */}
         <ChatCard className="flex-1 w-full mb-4" />
       </div>

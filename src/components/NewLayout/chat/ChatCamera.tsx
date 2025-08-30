@@ -12,6 +12,7 @@ interface ChatCameraProps {
 const ChatCamera = ({ className }: ChatCameraProps) => {
   const { isConnected } = useWebSocketSession(); // 只保留 isConnected，如果ChatCamera仅用于显示，其他props可能不需要
   const selectedCamDeviceId = useAppSelector(state => state.global.selectedCamDeviceId);
+  const isCameraMuted = useAppSelector(state => state.global.isCameraMuted); // 从 Redux 获取 isCameraMuted
 
   const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
 
@@ -21,23 +22,37 @@ const ChatCamera = ({ className }: ChatCameraProps) => {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: selectedCamDeviceId ? { deviceId: selectedCamDeviceId } : true,
         });
+        // 确保获取到的流处于启用状态
+        stream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted)); // 根据 isCameraMuted 设置 track.enabled
         setCameraStream(stream);
       } catch (error) {
+        console.error("[CHAT_CAMERA_LOG] 摄像头访问失败:", error);
         setCameraStream(null);
       }
     };
 
-    // 在组件挂载或 selectedCamDeviceId 变化时获取流
-    getCameraStream();
-
-    return () => {
-      // 在组件卸载或依赖项变化时清理流
+    // 清理旧的媒体流
+    const cleanupStream = () => {
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         setCameraStream(null);
       }
     };
-  }, [selectedCamDeviceId]); // 依赖 selectedCamDeviceId
+
+    if (!isCameraMuted) { // 只有在摄像头未静音时才获取流
+      getCameraStream();
+    } else {
+      cleanupStream(); // 如果摄像头静音，则清理当前流
+    }
+
+    return () => {
+      cleanupStream(); // 组件卸载或依赖项变化时清理流
+    };
+  }, [selectedCamDeviceId, isCameraMuted]); // 依赖 selectedCamDeviceId 和 isCameraMuted
+
+  if (isCameraMuted) {
+    return null; // Don't render anything if camera is muted
+  }
 
   return (
     <div className={cn("flex flex-col items-center w-full h-full border border-gray-300 rounded-lg", className)}> {/* 最外层容器 */}
@@ -45,12 +60,14 @@ const ChatCamera = ({ className }: ChatCameraProps) => {
       <div className="flex flex-col items-center justify-between w-full text-white text-sm"> {/* 视频和文字的共同容器 */}
         {/* Video stream or placeholder */}
         <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden bg-gray-800 rounded-t-lg"> {/* 视频流容器 */}
-          {cameraStream ? (
+          {isCameraMuted ? (
+            <p>摄像头已静音</p>
+          ) : cameraStream ? (
             <div className="w-full h-full object-cover flex items-center justify-center"> {/* 包裹 LocalVideoStreamPlayer，并应用样式 */}
               <LocalVideoStreamPlayer stream={cameraStream} muted={true} />
             </div>
           ) : (
-            <p >正在加载视频流...</p>
+            <p>正在加载视频流...</p>
           )}
         </div>
         {/* Text display block */}

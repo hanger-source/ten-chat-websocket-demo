@@ -3,7 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { MicIcon } from "@/components/icons/mic";
 import { useAppDispatch, useAppSelector } from "@/common/hooks"; // 导入 useAppDispatch 和 useAppSelector
-import { setMicrophoneMuted } from "@/store/reducers/global"; // 导入 setMicrophoneMuted action
+import {setMicrophoneMuted, setSelectedMicDeviceId} from "@/store/reducers/global";
+import {MicIconByStatus} from "@/components/Icon"; // 导入 setMicrophoneMuted action
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -116,7 +117,7 @@ const MicSettingsBlock = () => {
           className="border-secondary bg-transparent"
           onClick={() => dispatch(setMicrophoneMuted(!isMicrophoneMuted))}
         >
-          <MicIcon className="h-5 w-5" active={!isMicrophoneMuted} />
+          <MicIconByStatus active={!isMicrophoneMuted} color="purple"/>
         </Button>
       </div>
       <MicSelect

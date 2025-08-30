@@ -205,9 +205,9 @@ const CamSettingsBlock = () => {
           onClick={() => dispatch(setCameraMuted(!isCameraMuted))}
         >
           {videoSourceType === VideoSourceType.CAMERA ? (
-            <CamIconByStatus className="h-5 w-5" active={!isCameraMuted} />
+            <CamIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
           ) : (
-            <ScreenIconByStatus className="h-5 w-5" active={!isCameraMuted} />
+            <ScreenIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
           )}
         </Button>
       </div>

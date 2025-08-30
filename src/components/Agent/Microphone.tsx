@@ -8,7 +8,8 @@ import { SessionConnectionState } from "@/types/websocket";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import {Location} from "@/types/message"; // Import useAgentSettings
 import { useAppDispatch, useAppSelector } from "@/common/hooks"; // 导入 useAppDispatch 和 useAppSelector
-import { setMicrophoneMuted } from "@/store/reducers/global"; // 导入 setMicrophoneMuted action
+import { setMicrophoneMuted } from "@/store/reducers/global";
+import {MicIconByStatus} from "@/components/Icon"; // 导入 setMicrophoneMuted action
 
 const SILENCE_THRESHOLD = 0.005; // 定义静音阈值，根据需要调整
 const MAX_SILENT_FRAMES = 15; // 允许通过的最大连续静音帧数，增加以避免影响 ASR 断句
@@ -188,7 +189,7 @@ export const Microphone: React.FC<MicrophoneProps> = ({
           className="border-secondary bg-transparent"
           onClick={() => dispatch(setMicrophoneMuted(!isMicrophoneMuted))} // 直接 dispatch action
         >
-          <MicIcon className="h-5 w-5" active={!isMicrophoneMuted} />
+          <MicIconByStatus active={!isMicrophoneMuted} />
         </Button>
           {/* Removed: Download Button */}
           {/* <Button
