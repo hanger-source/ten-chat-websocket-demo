@@ -3,7 +3,6 @@ import {
   IChatItem,
   Language,
   VoiceType,
-  ITrulienceSettings,
 } from "@/types";
 import { WebSocketConnectionState } from "@/types/websocket"; // Corrected import path for WebSocketConnectionState
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -12,7 +11,6 @@ import {
   DEFAULT_OPTIONS,
   COLOR_LIST,
   isEditModeOn,
-  DEFAULT_TRULIENCE_OPTIONS,
 } from "@/common/constant";
 import {
   apiReloadPackage,
@@ -23,7 +21,6 @@ import {
 import {
   setOptionsToLocal,
 } from "@/common/storage";
-import { Graph } from "@/common/graph";
 import { IModeOption } from "@/types/modeOptions"; // 添加 IModeOption 导入
 
 export interface InitialState {
@@ -39,7 +36,6 @@ export interface InitialState {
   graphList: GraphInfo[];
   graphMap: Record<string, GraphInfo>;
   mobileActiveTab: EMobileActiveTab;
-  trulienceSettings: ITrulienceSettings;
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
   modeOptions: IModeOption[]; // 添加 modeOptions 字段
@@ -60,7 +56,6 @@ const getInitialState = (): InitialState => {
     graphList: [],
     graphMap: {},
     mobileActiveTab: EMobileActiveTab.AGENT,
-    trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
     modeOptions: [], // 初始化 modeOptions 为空数组

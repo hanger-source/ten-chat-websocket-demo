@@ -11,13 +11,6 @@ export interface IOptions {
   userName: string;
   userId: number;
 }
-
-export interface IAgentEnv {
-  GREETING?: string;
-  CHAT_PROMPT?: string;
-  [key: string]: string | undefined;
-}
-
 export interface IAgentSettings {
   greeting?: string;
   prompt?: string;
@@ -27,16 +20,6 @@ export interface IAgentSettings {
   auto_gain_control?: boolean;
   cosy_voice_name?: string;
 }
-
-export interface ITrulienceSettings {
-  enabled: boolean;
-  avatarToken: string;
-  avatarId: string;
-  avatarDesktopLargeWindow: boolean;
-  animationURL: string;
-  trulienceSDK: string;
-}
-
 export enum EMessageType {
   AGENT = "agent",
   USER = "user",
@@ -63,6 +46,12 @@ export interface ISceneCard {
   selectedModels?: Record<string, string>; // New: To store dynamically selected models for the scene
   selectedVoices?: Record<string, string>; // New: To store dynamically selected voices for the scene
   defaultModeValue?: string; // New: To store the default mode associated with this scene
+}
+
+export interface ISceneSetting {
+  greeting: string; // Mapped from uiGreeting
+  prompt: string; // Mapped from prompt
+  [key: string]: string | undefined; // For flattened selectedModels and selectedVoices
 }
 
 export interface IChatItem {

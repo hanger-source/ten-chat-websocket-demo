@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
-import { useAgentSettings, getAgentSettings } from "@/hooks/useAgentSettings";
+import { useSelectedScene } from "@/hooks/useSelectedScene";
 import { webSocketManager } from "@/manager/websocket/websocket";
 import { toast } from 'sonner';
 import { useAppSelector } from "@/common";
 
 const HomeInvokeButton = () => {
   const { isConnected, startSession, stopSession, sessionState } = useWebSocketSession();
-  const { agentSettings } = useAgentSettings();
   const selectedGraphId = useAppSelector((state) => state.global.selectedGraphId);
   const graphList = useAppSelector((state) => state.global.graphList);
 
   const [loading, setLoading] = useState(false);
   const [dots, setDots] = useState('');
+
+  const { getSceneSetting } = useSelectedScene();
 
   // Use isConnected from useWebSocketSession for the button's connecting state
   const isConnecting = loading || isConnected; // Button is 'connecting' if actively loading or already connected
@@ -55,7 +56,12 @@ const HomeInvokeButton = () => {
         setLoading(false);
         return;
       }
-      const latestSettings = getAgentSettings();
+      const latestSettings = getSceneSetting();
+      if (!latestSettings) {
+        toast.error("获取场景设置失败，请检查。");
+        setLoading(false);
+        return;
+      }
       try {
         await webSocketManager.connect(); // Ensure WebSocket is connected
         await startSession(latestSettings);

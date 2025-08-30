@@ -1,10 +1,7 @@
-import { IOptions, ITrulienceSettings, ISceneCard } from "@/types";
+import { IOptions } from "@/types";
 import {
   OPTIONS_KEY,
   DEFAULT_OPTIONS,
-  TRULIENCE_SETTINGS_KEY,
-  DEFAULT_TRULIENCE_OPTIONS,
-  SCENE_STORAGE_KEY_PREFIX, // Import SCENE_STORAGE_KEY_PREFIX
 } from "./constant";
 
 export const getOptionsFromLocal = () => {

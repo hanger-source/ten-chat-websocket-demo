@@ -3,10 +3,7 @@ import {
   ColorItem,
   LanguageOptionItem,
   VoiceOptionItem,
-  GraphOptionItem,
-  ITrulienceSettings,
 } from "@/types";
-export const GITHUB_URL = "https://github.com/TEN-framework/TEN-Agent";
 export const OPTIONS_KEY = "__options__";
 export const DEFAULT_OPTIONS: IOptions = {
   channel: "",
@@ -14,13 +11,6 @@ export const DEFAULT_OPTIONS: IOptions = {
   userId: 0,
 };
 
-export const DEFAULT_AGENT_SETTINGS = {
-  greeting: "",
-  prompt: "",
-};
-
-export const DESCRIPTION =
-  "TEN Agent is an open-source multimodal AI agent that can speak, see, and access a knowledge base(RAG).";
 export const LANGUAGE_OPTIONS: LanguageOptionItem[] = [
   {
     label: "English",
@@ -39,25 +29,6 @@ export const LANGUAGE_OPTIONS: LanguageOptionItem[] = [
     value: "ja-JP",
   },
 ];
-export const GRAPH_OPTIONS: GraphOptionItem[] = [
-  {
-    label: "Voice Agent - OpenAI LLM + Azure TTS",
-    value: "va_openai_azure",
-  },
-  {
-    label: "Voice Agent with Vision - OpenAI LLM + Azure TTS",
-    value: "camera_va_openai_azure",
-  },
-  //{
-  //  label: "Voice Agent with Knowledge - RAG + Qwen LLM + Cosy TTS",
-  //  value: "va_qwen_rag"
-  // },
-];
-
-export const isRagGraph = (graphName: string) => {
-  return graphName === "va_qwen_rag";
-};
-
 export const VOICE_OPTIONS: VoiceOptionItem[] = [
   {
     label: "Male",
@@ -140,17 +111,6 @@ export const isLLM = (extensionName: string) => {
 
 export const isEditModeOn = import.meta.env.VITE_EDIT_GRAPH_MODE === "true";
 
-export const TRULIENCE_SETTINGS_KEY = "__trulience__";
-export const SCENE_STORAGE_KEY_PREFIX = "__scene_config__"; // New: Prefix for scene storage keys
-export const DEFAULT_TRULIENCE_OPTIONS: ITrulienceSettings = {
-  enabled: false,
-  avatarId: "",
-  avatarToken: "",
-  avatarDesktopLargeWindow: false,
-  animationURL: "https://trulience.com",
-  trulienceSDK: "https://trulience.com/sdk/trulience.sdk.js",
-};
-
 // ocket 消息相关常量
 export const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 对应后端的 MessageUtils.TEN_MSGPACK_EXT_TYPE_MSG
 
@@ -165,10 +125,3 @@ export const MESSAGE_CONSTANTS = {
   PROPERTY_MESSAGE_PRIORITY: '__message_priority__',
   DATA_NAME_ECHO_DATA: 'echo_data',
 } as const;
-
-export const WEBSOCKET_CONFIG = {
-  MAX_RECONNECT_ATTEMPTS: 5,
-  RECONNECT_INTERVAL_MS: 3000,
-  MESSAGE_TIMEOUT_MS: 10000,
-  SYS_EXTENSION_NAME: 'client_connection', // Updated from 'sys_engine'
-};

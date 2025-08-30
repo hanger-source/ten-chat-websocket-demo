@@ -42,7 +42,7 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[1200px] bg-gradient-to-bl from-[#e1e5ff] to-white shadow-sm pb-24" overlayClassName="bg-transparent">
+      <SheetContent side="right" className="w-[1000px] bg-gradient-to-bl from-[#e1e5ff] to-white shadow-sm pb-24" overlayClassName="bg-transparent">
         <SheetHeader>
           <SheetTitle>选择 你所需要的 <span className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">AI 人设</span></SheetTitle>
           <SheetDescription>我们已经为您配置好对应人设的 基本参数，您也可以根据自己的需求 进行自定义设置</SheetDescription>

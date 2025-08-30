@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/common/hooks";
 import { setWebsocketConnectionState, setAgentConnected, setSelectedGraphId, setActiveGraphId, setActiveAppUri } from "@/store/reducers/global"; // Import setActiveAppUri
 import { toast } from 'sonner';
 import { RootState } from "@/store";
-import { IAgentSettings } from "@/types";
+import {IAgentSettings, ISceneSetting} from "@/types";
 import {CommandResult, CommandType, Location, Message, MessageType} from "@/types/message"; // Add this import
 
 const FRONTEND_APP_URI = "mock_front://test_app"; // Define fixed frontend URI
@@ -14,7 +14,7 @@ const FRONTEND_APP_URI = "mock_front://test_app"; // Define fixed frontend URI
 interface UseWebSocketSessionResult {
   isConnected: boolean;
   sessionState: SessionConnectionState;
-  startSession: (agentSettings: IAgentSettings) => Promise<void>;
+  startSession: (settings: IAgentSettings | ISceneSetting) => Promise<void>;
   stopSession: () => Promise<void>;
   sendMessage: (name: string, messageContent: string) => void; // Changed message type to string
   sendCommand: (commandType: CommandType, srcLoc?: Location, destLocs?: Location[], properties?: Record<string, any>) => void; // Make srcLoc and destLocs optional
@@ -111,7 +111,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
     };
   }, [handleConnectionStateChange, handleCommandResult]);
 
-  const startSession = useCallback(async (agentSettings: IAgentSettings) => {
+  const startSession = useCallback(async (settings: IAgentSettings | ISceneSetting) => {
     if (!selectedGraph) {
       toast.error("请先选择一个图");
       return;
@@ -122,24 +122,13 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       toast.error("无法启动 AI：WebSocket 未连接或 AI 已激活"); // Changed message
       return;
     }
-
-    // `graphDefinition` is still needed for predefined_graph_name in properties
-    const graphDefinition = {
-      graph_name: selectedGraph.name,
-      graph_id: selectedGraph.uuid,
-      app_uri: defaultLocation.app_uri, // Frontend app_uri for the graph definition
-      nodes: selectedGraph.nodes,
-      connections: selectedGraph.connections,
-    };
-
     webSocketManager.sendCommand(CommandType.START_GRAPH, {
       ...defaultLocation, // Use defaultLocation for src_loc of START_GRAPH command
       graph_id: selectedGraph.uuid, // Use selected graph's UUID for START_GRAPH
     }, [], { // dest_locs for START_GRAPH can be empty or handled by backend implicitly
       predefined_graph_name: selectedGraph.name,
       // 将智能体设置和 options 打平放入 properties
-      ...agentSettings, // Spread agentSettings here
-      ...agentSettings.env, // Spread agentSettings.env here to flatten its properties
+      ...settings, // Spread settings here
       ...options,
     });
     setSessionState(SessionConnectionState.CONNECTING_SESSION);
