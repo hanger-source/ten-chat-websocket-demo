@@ -9,7 +9,6 @@ const Home = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    console.log("NewLayout/layouts/Home: Dispatching initializeGraphData...");
     dispatch(initializeGraphData());
   }, [dispatch]);
 
