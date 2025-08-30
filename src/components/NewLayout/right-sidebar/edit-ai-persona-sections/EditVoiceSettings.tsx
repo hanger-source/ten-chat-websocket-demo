@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import React, { useState, useEffect, useMemo } from 'react'; // Import useState, useEffect, and useMemo
 import { cn } from '@/lib/utils'; // Import cn utility
 import { IModeOption, IReplaceableVoiceOption, ISelectedVoiceOption } from '@/types/modeOptions';
 import { modeOptions } from '@/common/mockModeOptionsData';
@@ -11,7 +11,7 @@ interface EditVoiceSettingsProps {
 }
 
 const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
-  const { editingScene, getEditingDefaultModeValue, getSelectedVoiceId, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersionalEdit();
+  const { editingScene, getEditingDefaultModeValue, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersionalEdit();
 
   // 添加 useEffect 来监听 editingScene 的变化
   useEffect(() => {
@@ -23,8 +23,15 @@ const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
 
   // 从 derivedModeConfiguration 中获取可替换的音色选项
   const replaceableVoiceOption: IReplaceableVoiceOption | undefined = derivedModeConfiguration?.metadata?.replaceableVoices?.[0];
-  const selectedVoiceName = getSelectedVoiceId(replaceableVoiceOption?.key || '');
-  const voiceInMetadata = derivedModeConfiguration?.metadata?.voices?.find(v => v.voice === selectedVoiceName);
+
+  // 直接在组件内部使用 useMemo 依赖 editingScene 来计算 selectedVoiceName
+  const selectedVoiceName = useMemo(() => {
+    return editingScene.selectedVoices?.[replaceableVoiceOption?.key || ''] || '未选择';
+  }, [editingScene, replaceableVoiceOption]);
+
+  const voiceInMetadata = useMemo(() => {
+    return derivedModeConfiguration?.metadata?.voices?.find(v => v.voice === selectedVoiceName);
+  }, [derivedModeConfiguration, selectedVoiceName]);
 
   const handleChangeVoiceClick = (key: string) => {
     if (!editingScene || !getAvailableVoiceConfig(key)) {

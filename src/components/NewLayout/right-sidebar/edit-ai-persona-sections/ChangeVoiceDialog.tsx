@@ -47,19 +47,21 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
 
   useEffect(() => {
     if (showModal && Object.keys(groupedVoicesByTag).length > 0) {
-      const selectedVoice = getSelectedVoiceId(voiceKeyToSelect || '');
+      const selectedVoiceFromScene = getSelectedVoiceId(voiceKeyToSelect || ''); // 获取场景中已保存的语音
+      const currentSelectedVoice = tempSelectedVoiceId || selectedVoiceFromScene; // 优先使用临时选择的语音
+
       let initialTab = Object.keys(groupedVoicesByTag)[0]; // Default to the first tab
 
-      if (selectedVoice && selectedVoice !== '未选择') {
+      if (currentSelectedVoice && currentSelectedVoice !== '未选择') {
         for (const tag in groupedVoicesByTag) {
-          if (groupedVoicesByTag[tag].some(voice => voice.voice === selectedVoice)) {
+          if (groupedVoicesByTag[tag].some(voice => voice.voice === currentSelectedVoice)) {
             initialTab = tag;
             break;
           }
         }
       }
       setActiveTab(initialTab);
-      setTempSelectedVoiceId(selectedVoice !== '未选择' ? selectedVoice : null);
+      setTempSelectedVoiceId(currentSelectedVoice !== '未选择' ? currentSelectedVoice : null);
     } else if (!showModal) {
       setActiveTab(''); // Reset activeTab when modal closes
       setTempSelectedVoiceId(null); // Reset tempSelectedVoiceId when modal closes
@@ -68,7 +70,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
         setPlayingAudio(null);
       }
     }
-  }, [showModal, groupedVoicesByTag, voiceKeyToSelect, getSelectedVoiceId, playingAudio]);
+  }, [showModal, groupedVoicesByTag, voiceKeyToSelect, getSelectedVoiceId, tempSelectedVoiceId]); // 移除 playingAudio 作为依赖
 
   const handleSelectVoice = (selectedVoice: string) => {
     setTempSelectedVoiceId(selectedVoice);

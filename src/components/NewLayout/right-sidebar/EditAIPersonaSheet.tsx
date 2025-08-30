@@ -16,7 +16,7 @@ interface EditAIPersonaSheetProps {
 }
 
 const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose }) => {
-  const { editingScene } = useAiPersionalEdit(); // 引入 useAiPersionalEdit Hook
+  const { editingScene, saveEditingScene } = useAiPersionalEdit(); // 引入 useAiPersionalEdit Hook
   const { switchSelectedScene } = useSelectedScene(); // 引入 useSelectedScene Hook
   const [triangleLeft, setTriangleLeft] = useState<string>('50%');
   const [selectedCapsuleRef, setSelectedCapsuleRef] = useState<HTMLDivElement | null>(null);
@@ -40,6 +40,11 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
       }
     }
   }, [selectedCapsuleRef, editingScene, handleCapsuleClick]);
+
+  const handleSave = useCallback(() => {
+    saveEditingScene();
+    onClose();
+  }, [saveEditingScene, onClose]);
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -69,7 +74,7 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
           <SheetClose asChild>
             <Button variant="outline" onClick={onClose} className="focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" style={{ outline: 'none', boxShadow: 'none' }}>取消</Button>
           </SheetClose>
-          <Button className="bg-gradient-to-br from-blue-400 to-pink-400 via-purple-400 text-white transition-all duration-200 shadow-lg hover:shadow-lg hover:scale-100 transform-gpu will-change-[transform,background-color,color]" onClick={() => { /* 保存逻辑 */ onClose(); }}>保存</Button>
+          <Button className="bg-gradient-to-br from-blue-400 to-pink-400 via-purple-400 text-white transition-all duration-200 shadow-lg hover:shadow-lg hover:scale-100 transform-gpu will-change-[transform,background-color,color]" onClick={handleSave}>保存</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

@@ -2,7 +2,8 @@ import { ISceneCard } from '@/types';
 import { sceneCards } from '@/common/sceneData'; // 导入 sceneData 作为最终默认值的来源
 
 // Function to get a dynamic key for local storage
-const getLocalStorageSceneKey = (aiPersonaName: string): string => `editingAiPersonaScene_${aiPersonaName}`;
+export const getEditingSceneKey = (aiPersonaName: string): string => `editingAiPersonaScene_${aiPersonaName}`;
+const getSavedSceneKey = (aiPersonaName: string): string => `savedAiPersonaScene_${aiPersonaName}`;
 
 // 获取第一个默认场景的辅助函数
 const getDefaultSceneFromData = (): ISceneCard => {
@@ -14,19 +15,20 @@ const getDefaultSceneFromData = (): ISceneCard => {
 };
 
 /**
- * Loads an ISceneCard from local storage based on its aiPersonaName.
+ * Loads an ISceneCard from local storage based on its aiPersonaName and a type (editing or saved).
  * If not found, returns a default scene from sceneData.ts.
  * @param aiPersonaName The aiPersonaName of the scene to load.
+ * @param type The type of scene to load: 'editing' or 'saved'.
  * @returns ISceneCard The loaded or default ISceneCard.
  */
-export const loadSceneByNameFromLocal = (aiPersonaName: string): ISceneCard => {
+export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' | 'saved' = 'editing'): ISceneCard => {
   // 首先尝试从 sceneData.ts 中找到与 aiPersonaName 匹配的场景作为该 aiPersonaName 的默认场景。
   const initialDefaultScene = sceneCards.find(scene => scene.aiPersonaName === aiPersonaName) || getDefaultSceneFromData();
   
   if (typeof window === 'undefined') {
     return initialDefaultScene;
   }
-  const localStorageKey = getLocalStorageSceneKey(aiPersonaName);
+  const localStorageKey = type === 'editing' ? getEditingSceneKey(aiPersonaName) : getSavedSceneKey(aiPersonaName);
   try {
     const serializedScene = localStorage.getItem(localStorageKey);
     if (serializedScene === null) {
@@ -50,7 +52,7 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string): ISceneCard => {
       defaultModeValue: loadedScene.defaultModeValue || '',
     };
   } catch (error) {
-    console.error(`Error loading scene '${aiPersonaName}' from local storage:`, error);
+    console.error(`Error loading scene '${aiPersonaName}' (${type}) from local storage:`, error);
     return initialDefaultScene;
   }
 };
@@ -58,17 +60,18 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string): ISceneCard => {
 /**
  * Saves the given ISceneCard to local storage using its aiPersonaName as part of the key.
  * @param scene The ISceneCard to save.
+ * @param type The type of scene to save: 'editing' or 'saved'.
  */
-export const saveSceneByNameToLocal = (scene: ISceneCard): void => {
+export const saveSceneByNameToLocal = (scene: ISceneCard, type: 'editing' | 'saved' = 'editing'): void => {
   if (typeof window === 'undefined' || !scene.aiPersonaName) {
     return;
   }
-  const localStorageKey = getLocalStorageSceneKey(scene.aiPersonaName);
+  const localStorageKey = type === 'editing' ? getEditingSceneKey(scene.aiPersonaName) : getSavedSceneKey(scene.aiPersonaName);
   try {
     const serializedScene = JSON.stringify(scene);
     localStorage.setItem(localStorageKey, serializedScene);
   } catch (error) {
-    console.error(`Error saving scene '${scene.aiPersonaName}' to local storage:`, error);
+    console.error(`Error saving scene '${scene.aiPersonaName}' (${type}) to local storage:`, error);
   }
 };
 
@@ -110,5 +113,21 @@ export const saveSelectedSceneNameToLocal = (aiPersonaName: string): void => {
     localStorage.setItem(SELECTED_SCENE_AI_PERSONA_NAME_KEY, aiPersonaName);
   } catch (error) {
     console.error(`Error saving selected scene name '${aiPersonaName}' to local storage:`, error);
+  }
+};
+
+export const LAST_SAVED_SCENE_TIMESTAMP_KEY = 'lastSavedSceneTimestamp';
+
+/**
+ * Updates the timestamp of the last saved scene in local storage.
+ */
+export const updateLastSavedSceneTimestamp = (): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    localStorage.setItem(LAST_SAVED_SCENE_TIMESTAMP_KEY, Date.now().toString());
+  } catch (error) {
+    console.error('Error updating last saved scene timestamp:', error);
   }
 };

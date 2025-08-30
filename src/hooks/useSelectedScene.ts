@@ -1,37 +1,39 @@
 import { useMemo } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 import { ISceneCard } from '@/types';
-import { sceneCards } from '@/common/sceneData';
-import { loadSelectedSceneNameFromLocal } from '@/common/localSceneStorage';
+import { loadSelectedSceneNameFromLocal, loadSceneByNameFromLocal, LAST_SAVED_SCENE_TIMESTAMP_KEY } from '@/common/localSceneStorage';
+import { sceneCards } from '@/common/sceneData'; // 重新引入 sceneCards
 
 /**
  * Custom hook that provides and manages the currently selected ISceneCard instance.
  * Uses usehooks-ts useLocalStorage for shared state across components.
  */
 export const useSelectedScene = () => {
-  // 使用 usehooks-ts 的 useLocalStorage hook
-  // 初始值使用 localSceneStorage.ts 的逻辑来确保一致性
   const [selectedSceneAiPersonaName, setSelectedSceneAiPersonaName] = useLocalStorage(
     'selectedAiPersonaName', // localStorage key
     loadSelectedSceneNameFromLocal() // 直接使用值，不用函数
   );
 
+  // 监听 lastSavedSceneTimestamp 的变化
+  const [lastSavedTimestamp] = useLocalStorage(LAST_SAVED_SCENE_TIMESTAMP_KEY, '0');
+
   // 所有可用的场景，使用 useMemo 确保只在 sceneCards 变化时重新计算
   const allScenes: ISceneCard[] = useMemo(() => sceneCards, []);
 
-  // 根据 selectedSceneAiPersonaName 派生出当前选定的场景对象
+  // 根据 selectedSceneAiPersonaName 从本地存储加载当前选定的场景对象
   const selectedScene: ISceneCard | undefined = useMemo(() => {
-    const foundScene = allScenes.find(scene => scene.aiPersonaName === selectedSceneAiPersonaName);
-    return foundScene;
-  }, [allScenes, selectedSceneAiPersonaName]);
+    if (selectedSceneAiPersonaName) {
+      return loadSceneByNameFromLocal(selectedSceneAiPersonaName, 'saved');
+    }
+    return undefined;
+  }, [selectedSceneAiPersonaName, lastSavedTimestamp]); // 添加 lastSavedTimestamp 作为依赖
 
-  // 切换场景的函数
   const switchSelectedScene = (aiPersonaName: string) => {
     setSelectedSceneAiPersonaName(aiPersonaName);
   };
 
   return {
-    allScenes,
+    allScenes, // 重新导出 allScenes
     selectedScene,
     selectedSceneAiPersonaName,
     switchSelectedScene,

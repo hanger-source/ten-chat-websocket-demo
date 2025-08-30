@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react'; // 重新引入 useEffect
+import { useLocalStorage } from 'usehooks-ts'; // 导入 useLocalStorage
 import { ISceneCard } from '@/types';
-import { loadSceneByNameFromLocal, saveSceneByNameToLocal } from '@/common/localSceneStorage'; // 导入本地存储辅助函数
+import { loadSceneByNameFromLocal, saveSceneByNameToLocal, updateLastSavedSceneTimestamp, getEditingSceneKey } from '@/common/localSceneStorage'; // 导入本地存储辅助函数和 getEditingSceneKey
 import { useSelectedScene } from './useSelectedScene'; // 导入 useSelectedScene
 import {
   IModeOption,
@@ -24,58 +25,69 @@ export const useAiPersionalEdit = () => {
   const { selectedSceneAiPersonaName, switchSelectedScene } = useSelectedScene();
   const editingSceneAiPersonaName = selectedSceneAiPersonaName;
 
-  const [editingScene, setEditingScene] = useState<ISceneCard>(
-    () => {
-      const initialScene = loadSceneByNameFromLocal(editingSceneAiPersonaName);
-      return initialScene;
-    }
+  // 使用 useLocalStorage 来管理 editingScene (代表临时编辑状态)
+  const [editingScene, setEditingScene] = useLocalStorage<ISceneCard>(
+    getEditingSceneKey(editingSceneAiPersonaName), // localStorage key
+    // 初始值在组件首次挂载时加载对应 selectedSceneAiPersonaName 的“已保存”场景
+    () => loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved')
   );
 
+  // 当 selectedSceneAiPersonaName 变化时（包括刷新），重置 editingScene 为该角色的“已保存”状态
   useEffect(() => {
-    const loadedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName);
-    setEditingScene(loadedScene);
-  }, [editingSceneAiPersonaName]);
+    const savedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved');
+    // 将“已保存”场景写入本地存储作为“编辑中”状态，以清除旧的临时编辑
+    saveSceneByNameToLocal(savedScene, 'editing');
+    setEditingScene(savedScene); // 同时更新当前 state
+  }, [editingSceneAiPersonaName, setEditingScene]);
 
   const switchEditingScene = useCallback((aiPersonaName: string) => {
     switchSelectedScene(aiPersonaName);
   }, [switchSelectedScene]);
 
-  // 手动保存当前编辑的场景
+  // 手动保存当前编辑的场景 (保存为 “已保存” 场景)
   const saveEditingScene = useCallback(() => {
     if (editingScene && editingScene.aiPersonaName && editingScene.aiPersonaName === editingSceneAiPersonaName) {
-      saveSceneByNameToLocal(editingScene);
+      saveSceneByNameToLocal(editingScene, 'saved'); // 保存为 "saved" 类型
+      updateLastSavedSceneTimestamp(); // 更新时间戳
+      // 保存后，将当前的 editingScene 也更新到编辑状态，保持同步
+      const updatedSavedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved');
+      saveSceneByNameToLocal(updatedSavedScene, 'editing'); // 更新 editing 状态为 saved 状态
+      setEditingScene(updatedSavedScene); // 更新当前 state
     }
-  }, [editingScene, editingSceneAiPersonaName]);
+  }, [editingScene, editingSceneAiPersonaName, setEditingScene]);
 
   // --- 更新 editingScene 内部状态的方法 ---
 
   const updateEntireEditingScene = useCallback((newScene: ISceneCard) => {
     setEditingScene(newScene);
-  }, []);
+  }, [setEditingScene]);
 
   const updateEditingSceneField = useCallback(<K extends keyof ISceneCard>(field: K, value: ISceneCard[K]) => {
-    setEditingScene(prev => ({ ...prev, [field]: value }));
-  }, []);
+    setEditingScene(prevEditingScene => ({
+      ...prevEditingScene,
+      [field]: value
+    }));
+  }, [setEditingScene]);
 
   const updateEditingSelectedModel = useCallback((modelKey: string, modelId: string) => {
-    setEditingScene(prev => ({
-      ...prev,
-      selectedModels: {
-        ...(prev.selectedModels || {}),
+    setEditingScene(prevEditingScene => {
+      const newSelectedModels = {
+        ...(prevEditingScene.selectedModels || {}),
         [modelKey]: modelId,
-      },
-    }));
-  }, []);
+      };
+      return { ...prevEditingScene, selectedModels: newSelectedModels };
+    });
+  }, [setEditingScene]);
 
   const updateEditingSelectedVoice = useCallback((voiceKey: string, voiceId: string) => {
-    setEditingScene(prev => ({
-      ...prev,
-      selectedVoices: {
-        ...(prev.selectedVoices || {}),
+    setEditingScene(prevEditingScene => {
+      const newSelectedVoices = {
+        ...(prevEditingScene.selectedVoices || {}),
         [voiceKey]: voiceId,
-      },
-    }));
-  }, []);
+      };
+      return { ...prevEditingScene, selectedVoices: newSelectedVoices };
+    });
+  }, [setEditingScene]);
 
   // --- 模式相关的逻辑：根据 editingScene 的 defaultModeValue 派生 currentMode ---
   const derivedModeConfiguration: IModeOption | undefined = useMemo(
