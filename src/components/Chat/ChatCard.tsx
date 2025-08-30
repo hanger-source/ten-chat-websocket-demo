@@ -44,9 +44,6 @@ export default function ChatCard(props: { className?: string }) {
     }
   }, [sessionState]);
 
-  // Removed connectionStateMap as ConnectionTest handles it
-  // Removed showSettings and srcLoc as they are not needed here
-
   React.useEffect(() => {
     // ChatCard should only consume messages, not manage connection or session state
     const unsubscribeData = webSocketManager.onMessage(MessageType.DATA, (message: Message) => { // Explicitly typed message

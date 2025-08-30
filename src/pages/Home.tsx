@@ -51,7 +51,6 @@ function Home() {
                   <div> {/* Wrap VoiceSelection in a div to ensure proper centering with justify-between */}
                     <VoiceSelection />
                   </div>
-                  {/* <ConnectionTest /> */}
                 </div>
                 <div className="flex-1"> {/* Removed border-b here */}
                   <ChatCard />
