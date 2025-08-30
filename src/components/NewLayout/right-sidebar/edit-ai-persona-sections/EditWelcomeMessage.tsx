@@ -1,13 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../../store';
+import { setCurrentScene } from '@/store/reducers/global';
+import { Textarea } from '@/components/ui/textarea'; // 导入 Textarea 组件
 
-const EditWelcomeMessage = () => {
+interface EditWelcomeMessageProps {
+  className?: string;
+}
+
+const EditWelcomeMessage: React.FC<EditWelcomeMessageProps> = ({ className }) => {
+  const dispatch = useDispatch();
+  const { currentScene } = useSelector((state: RootState) => state.global);
+  const [welcomeMessage, setWelcomeMessage] = useState(currentScene?.aiResponseGreeting || '');
+
+  useEffect(() => {
+    setWelcomeMessage(currentScene?.aiResponseGreeting || '');
+  }, [currentScene]);
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newMessage = e.target.value;
+    setWelcomeMessage(newMessage);
+    if (currentScene) {
+      const updatedScene = { ...currentScene, aiResponseGreeting: newMessage };
+      dispatch(setCurrentScene(updatedScene));
+    }
+  };
+
   return (
-    <div className="wrapper-bPWIzS undefined">
-      <div data-text="欢迎语" className="title-AIzHyH">欢迎语</div>
-      <div>
-        {/* Welcome message content goes here */}
-        <textarea className="arco-textarea" placeholder="请输入欢迎语" style={{ height: '30px' }}></textarea>
-        <p>欢迎语设置区域</p>
+    <div className={cn("mb-6 relative", className)}>
+      <div className="relative bg-white rounded-lg shadow-sm pt-4 p-4 border border-gray-200">
+        <div className="absolute top-0 left-4 -translate-y-1/2 flex space-x-2 bg-white px-2 z-10">
+          <span className="px-3 py-1 rounded-md text-sm font-normal bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent border-transparent">欢迎语</span>
+        </div>
+        <div className="pt-2 text-gray-600 text-sm">
+          <Textarea
+            placeholder="请输入欢迎语"
+            value={welcomeMessage}
+            onChange={handleMessageChange}
+            className="min-h-[100px] focus:outline-none focus:ring-0 focus:border-transparent focus:shadow-none"
+          />
+        </div>
       </div>
     </div>
   );

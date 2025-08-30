@@ -11,7 +11,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/new-home" element={<NewHome />} />
+          <Route path="/live" element={<NewHome />} />
         </Routes>
       </BrowserRouter>
       <Toaster richColors closeButton theme="light" />

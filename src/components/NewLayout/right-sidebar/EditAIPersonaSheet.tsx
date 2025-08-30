@@ -41,7 +41,7 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[1200px] bg-gradient-to-bl from-[#e1e5ff] to-white shadow-sm pb-24 overflow-y-auto" overlayClassName="bg-transparent">
+      <SheetContent side="right" className="w-[1200px] bg-gradient-to-bl from-[#e1e5ff] to-white shadow-sm pb-24" overlayClassName="bg-transparent">
         <SheetHeader>
           <SheetTitle>选择 你所需要的 <span className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">AI 人设</span></SheetTitle>
           <SheetDescription>我们已经为您配置好对应人设的 基本参数，您也可以根据自己的需求 进行自定义设置</SheetDescription>
@@ -65,9 +65,9 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
         </div>
         <SheetFooter className="mt-auto">
           <SheetClose asChild>
-            <Button variant="outline" onClick={onClose} className="focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0" style={{ outline: 'none', boxShadow: 'none' }}>取消</Button>
+            <Button variant="outline" onClick={onClose} className="focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" style={{ outline: 'none', boxShadow: 'none' }}>取消</Button>
           </SheetClose>
-          <Button onClick={() => { /* 保存逻辑 */ onClose(); }}>保存</Button>
+          <Button className="bg-gradient-to-br from-blue-400 to-pink-400 via-purple-400 text-white transition-all duration-200 shadow-lg hover:shadow-lg hover:scale-100 transform-gpu will-change-[transform,background-color,color]" onClick={() => { /* 保存逻辑 */ onClose(); }}>保存</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
