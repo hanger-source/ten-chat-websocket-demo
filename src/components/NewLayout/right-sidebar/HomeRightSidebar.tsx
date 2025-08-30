@@ -1,19 +1,14 @@
 import React from 'react';
 import HomeAVSettingsBlock from "./HomeAVSettingsBlock"; // Updated import path
-import { useAppSelector } from "@/common/hooks";
 import EditAIPersonaSheet from "./EditAIPersonaSheet"; // Import EditAIPersonaSheet
-// import { VideoSourceType } from "@/common/constant"; // Removed
-
-interface HomeRightSidebarProps {
-  // No audio/video related props here
-}
+import { useSelectedScene } from "@/hooks/useSelectedScene";
 
 const HomeRightSidebar = () => {
-  const currentScene = useAppSelector((state) => state.global.currentScene);
+  const { selectedScene, selectedSceneAiPersonaName } = useSelectedScene();
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false); // State to control drawer visibility
 
-  const aiPersonaName = currentScene?.aiPersonaName || "AI助手";
-  const aiCapabilities = currentScene?.aiCapabilities || [
+  const aiPersonaName = selectedSceneAiPersonaName;
+  const aiCapabilities = selectedScene?.aiCapabilities || [
     "视觉理解",
     "时间感知",
     "图片生成",

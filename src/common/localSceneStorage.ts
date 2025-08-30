@@ -1,0 +1,114 @@
+import { ISceneCard } from '@/types';
+import { sceneCards } from '@/common/sceneData'; // 导入 sceneData 作为最终默认值的来源
+
+// Function to get a dynamic key for local storage
+const getLocalStorageSceneKey = (aiPersonaName: string): string => `editingAiPersonaScene_${aiPersonaName}`;
+
+// 获取第一个默认场景的辅助函数
+const getDefaultSceneFromData = (): ISceneCard => {
+  return sceneCards.length > 0 ? sceneCards[0] : {
+    tag: null, bgColor: null, iconSrc: '', text: '', aiPersonaName: 'default-persona', // 确保有默认名称
+    aiCapabilities: [], uiGreeting: '', aiResponseGreeting: '', welcomeSubText: '', prompt: '',
+    selectedModels: {}, selectedVoices: {}, defaultModeValue: '',
+  };
+};
+
+/**
+ * Loads an ISceneCard from local storage based on its aiPersonaName.
+ * If not found, returns a default scene from sceneData.ts.
+ * @param aiPersonaName The aiPersonaName of the scene to load.
+ * @returns ISceneCard The loaded or default ISceneCard.
+ */
+export const loadSceneByNameFromLocal = (aiPersonaName: string): ISceneCard => {
+  // 首先尝试从 sceneData.ts 中找到与 aiPersonaName 匹配的场景作为该 aiPersonaName 的默认场景。
+  const initialDefaultScene = sceneCards.find(scene => scene.aiPersonaName === aiPersonaName) || getDefaultSceneFromData();
+  
+  if (typeof window === 'undefined') {
+    return initialDefaultScene;
+  }
+  const localStorageKey = getLocalStorageSceneKey(aiPersonaName);
+  try {
+    const serializedScene = localStorage.getItem(localStorageKey);
+    if (serializedScene === null) {
+      return initialDefaultScene;
+    }
+    const loadedScene: ISceneCard = JSON.parse(serializedScene);
+    // Robustness: ensure all properties exist and aiPersonaName is consistent
+    return {
+      tag: loadedScene.tag !== undefined ? loadedScene.tag : null,
+      bgColor: loadedScene.bgColor !== undefined ? loadedScene.bgColor : null,
+      iconSrc: loadedScene.iconSrc || '',
+      text: loadedScene.text || '',
+      aiPersonaName: loadedScene.aiPersonaName || aiPersonaName,
+      aiCapabilities: loadedScene.aiCapabilities || [],
+      uiGreeting: loadedScene.uiGreeting || '',
+      aiResponseGreeting: loadedScene.aiResponseGreeting || '',
+      welcomeSubText: loadedScene.welcomeSubText || '',
+      prompt: loadedScene.prompt || '',
+      selectedModels: loadedScene.selectedModels || {},
+      selectedVoices: loadedScene.selectedVoices || {},
+      defaultModeValue: loadedScene.defaultModeValue || '',
+    };
+  } catch (error) {
+    console.error(`Error loading scene '${aiPersonaName}' from local storage:`, error);
+    return initialDefaultScene;
+  }
+};
+
+/**
+ * Saves the given ISceneCard to local storage using its aiPersonaName as part of the key.
+ * @param scene The ISceneCard to save.
+ */
+export const saveSceneByNameToLocal = (scene: ISceneCard): void => {
+  if (typeof window === 'undefined' || !scene.aiPersonaName) {
+    return;
+  }
+  const localStorageKey = getLocalStorageSceneKey(scene.aiPersonaName);
+  try {
+    const serializedScene = JSON.stringify(scene);
+    localStorage.setItem(localStorageKey, serializedScene);
+  } catch (error) {
+    console.error(`Error saving scene '${scene.aiPersonaName}' to local storage:`, error);
+  }
+};
+
+/**
+ * Returns the default ISceneCard from sceneData.ts.
+ */
+export const getDefaultScene = (): ISceneCard => getDefaultSceneFromData();
+
+// Key for storing the selected scene's aiPersonaName globally
+const SELECTED_SCENE_AI_PERSONA_NAME_KEY = 'selectedAiPersonaName';
+
+/**
+ * Loads the selected scene's aiPersonaName from local storage.
+ * If not found, returns the aiPersonaName of the default scene from sceneData.ts.
+ * @returns string The aiPersonaName of the selected or default scene.
+ */
+export const loadSelectedSceneNameFromLocal = (): string => {
+  if (typeof window === 'undefined') {
+    return getDefaultSceneFromData().aiPersonaName;
+  }
+  try {
+    const storedName = localStorage.getItem(SELECTED_SCENE_AI_PERSONA_NAME_KEY);
+    return storedName || getDefaultSceneFromData().aiPersonaName;
+  } catch (error) {
+    console.error('Error loading selected scene name from local storage:', error);
+    return getDefaultSceneFromData().aiPersonaName;
+  }
+};
+
+/**
+ * Saves the given aiPersonaName as the selected scene's name to local storage.
+ * @param aiPersonaName The aiPersonaName to save as selected.
+ */
+export const saveSelectedSceneNameToLocal = (aiPersonaName: string): void => {
+  if (typeof window === 'undefined' || !aiPersonaName) {
+    return;
+  }
+  try {
+    localStorage.setItem(SELECTED_SCENE_AI_PERSONA_NAME_KEY, aiPersonaName);
+  } catch (error) {
+    console.error(`Error saving selected scene name '${aiPersonaName}' to local storage:`, error);
+  }
+};

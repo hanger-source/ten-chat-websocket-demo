@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { IModeOption, ISelectedModelOption, IReplaceableModelOption, ModelCategory } from '@/types/modeOptions';
-import { RootState } from '../../../../store';
-import { setCurrentScene } from '@/store/reducers/global';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
+import { IModeOption, ISelectedModelOption, IReplaceableModelOption, ModelCategory } from '@/types/modeOptions';
 
 const BASE_TEXT_GRADIENT = "bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text";
 const TEXT_GRADIENT_CLASSES = `${BASE_TEXT_GRADIENT} text-transparent`;
@@ -18,9 +16,6 @@ interface ChangeModelDialogProps {
   showModal: boolean;
   setShowModal: (show: boolean) => void;
   modelKeyToSelect: string | null;
-  currentScene: RootState['global']['currentScene'];
-  currentMode: IModeOption | undefined;
-  currentReplaceableModelConfig: IReplaceableModelOption | undefined;
 }
 
 const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
@@ -28,30 +23,13 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
     showModal,
     setShowModal,
     modelKeyToSelect,
-    currentScene,
-    currentMode,
-    currentReplaceableModelConfig,
   } = props;
-  const dispatch = useDispatch();
+  const { editingScene, updateEditingSelectedModel, getSelectedModelId, getModelsForAvailableKey, getAvailableModelConfig, getPersonaModelDescription } = useAiPersionalEdit();
   const [activeTab, setActiveTab] = useState<string>('');
   const [hoveredModelId, setHoveredModelId] = useState<string | null>(null);
   const [tempSelectedModelId, setTempSelectedModelId] = useState<string | null>(null);
 
-  const getModelsForModal = (): ISelectedModelOption[] => {
-    if (!currentMode || !modelKeyToSelect || !currentMode.metadata?.replaceableModels) return [];
-
-    const currentReplaceableModelConfigFound = currentMode.metadata.replaceableModels.find(
-      (rm: IReplaceableModelOption & { key: string }) => rm.key === modelKeyToSelect
-    );
-    if (!currentReplaceableModelConfigFound) return [];
-
-    const modelsFromMetadata = currentMode.metadata.models || [];
-    return modelsFromMetadata.filter((modelOption: ISelectedModelOption) => {
-      return modelOption.type.some((t: ModelCategory) => currentReplaceableModelConfigFound.type.includes(t));
-    });
-  };
-
-  const modelsForModal = React.useMemo(() => getModelsForModal(), [currentMode, modelKeyToSelect]);
+  const modelsForModal = React.useMemo(() => getModelsForAvailableKey(modelKeyToSelect), [getModelsForAvailableKey, modelKeyToSelect]);
 
   const groupedModelsByTag = React.useMemo(() => {
     return modelsForModal.reduce((acc: Record<string, ISelectedModelOption[]>, model: ISelectedModelOption) => {
@@ -67,10 +45,10 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
 
   useEffect(() => {
     if (showModal && Object.keys(groupedModelsByTag).length > 0) {
-      const selectedModel = currentScene?.selectedModels?.[modelKeyToSelect || ''];
+      const selectedModel = getSelectedModelId(modelKeyToSelect || '');
       let initialTab = Object.keys(groupedModelsByTag)[0]; // Default to the first tab
 
-      if (selectedModel) {
+      if (selectedModel && selectedModel !== '未选择') {
         for (const tag in groupedModelsByTag) {
           if (groupedModelsByTag[tag].some(model => model.model === selectedModel)) {
             initialTab = tag;
@@ -79,33 +57,20 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
         }
       }
       setActiveTab(initialTab);
-      setTempSelectedModelId(selectedModel || null);
+      setTempSelectedModelId(selectedModel !== '未选择' ? selectedModel : null);
     } else if (!showModal) {
       setActiveTab(''); // Reset activeTab when modal closes
       setTempSelectedModelId(null); // Reset tempSelectedModelId when modal closes
     }
-  }, [showModal, groupedModelsByTag, currentScene, modelKeyToSelect]);
+  }, [showModal, groupedModelsByTag, modelKeyToSelect, getSelectedModelId]);
 
   const handleSelectModel = (selectedModel: string) => {
     setTempSelectedModelId(selectedModel);
   };
 
-  const modelDescription = (modelName: string) => {
-    const metadataModel = currentMode?.metadata?.models?.find(m => m.model === modelName);
-    if (metadataModel) {
-      return metadataModel.description;
-    }
-    return '暂无描述';
-  };
-
   const handleConfirm = () => {
-    if (currentScene && modelKeyToSelect && tempSelectedModelId) {
-      const updatedSelectedModels = {
-        ...(currentScene.selectedModels || {}),
-        [modelKeyToSelect]: tempSelectedModelId,
-      };
-      const updatedScene = { ...currentScene, selectedModels: updatedSelectedModels };
-      dispatch(setCurrentScene(updatedScene));
+    if (editingScene && modelKeyToSelect && tempSelectedModelId) {
+      updateEditingSelectedModel(modelKeyToSelect, tempSelectedModelId);
       setShowModal(false);
     } else {
       // If no model is selected, just close the modal
@@ -148,14 +113,14 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
                     className={`group relative p-0.5 rounded-md cursor-pointer transition-colors duration-200
                       ${(model.model === tempSelectedModelId)
                         ? BORDER_GRADIENT_CLASSES // Applied abstracted gradient for selected border
-                        : `hover:${BORDER_GRADIENT_CLASSES}`} // Applied abstracted gradient for hover border
+                        : `hover:${BORDER_GRADIENT_CLASSES}`}
                     `}
                   >
                     <div
                       className={`px-3 py-2 border border-transparent rounded-md text-sm break-words h-full w-full 
                         ${(model.model === tempSelectedModelId)
                           ? 'bg-white' // Inner white background for selected
-                          : 'bg-gray-50 group-hover:bg-white'} 
+                          : 'bg-gray-50 group-hover:bg-white'}
                       `}
                     >
                       <div className={`font-semibold 
@@ -163,18 +128,17 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
                           ? TEXT_GRADIENT_CLASSES // Selected state: gradient text
                           : (model.model === hoveredModelId 
                               ? TEXT_GRADIENT_CLASSES // Hover state: gradient text
-                              : 'text-gray-800' // Default: gray text
-                            )
+                              : 'text-gray-800')
                         }
                       `}>{model.name}</div> 
                       <div className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-3">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger className="text-left w-full">
-                              <div className="line-clamp-3">{modelDescription(model.model)}</div>
+                              <div className="line-clamp-3">{getPersonaModelDescription(model.model)}</div>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs text-wrap break-words">
-                              {modelDescription(model.model)}
+                              {getPersonaModelDescription(model.model)}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

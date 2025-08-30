@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../../store';
-import { setCurrentScene } from '@/store/reducers/global';
+import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit'; // Import the new hook
 import { Textarea } from '@/components/ui/textarea'; // 导入 Textarea 组件
 
 interface EditSystemPromptProps {
@@ -10,21 +8,17 @@ interface EditSystemPromptProps {
 }
 
 const EditSystemPrompt: React.FC<EditSystemPromptProps> = ({ className }) => {
-  const dispatch = useDispatch();
-  const { currentScene } = useSelector((state: RootState) => state.global);
-  const [systemPrompt, setSystemPrompt] = useState(currentScene?.prompt || '');
+  const { editingScene, updateEditingSceneField } = useAiPersionalEdit();
+  const [systemPrompt, setSystemPrompt] = useState(editingScene.prompt || '');
 
   useEffect(() => {
-    setSystemPrompt(currentScene?.prompt || '');
-  }, [currentScene]);
+    setSystemPrompt(editingScene.prompt || '');
+  }, [editingScene.prompt]); // 直接依赖 editingScene.prompt
 
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newPrompt = e.target.value;
     setSystemPrompt(newPrompt);
-    if (currentScene) {
-      const updatedScene = { ...currentScene, prompt: newPrompt };
-      dispatch(setCurrentScene(updatedScene));
-    }
+    updateEditingSceneField('prompt', newPrompt);
   };
 
   return (

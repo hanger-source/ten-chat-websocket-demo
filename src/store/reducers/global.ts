@@ -51,8 +51,6 @@ export interface InitialState {
   trulienceSettings: ITrulienceSettings;
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
-  currentScene: ISceneCard | null; // New: To store the currently selected scene
-  globalMode: string; // New: To store the selected global mode
   allScenes: ISceneCard[]; // New: To store all initialized scenes
 }
 
@@ -92,8 +90,6 @@ const getInitialState = (): InitialState => {
     trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
-    currentScene: initialScene, // Initialize currentScene
-    globalMode: initialGlobalMode, // Initialize globalMode
     allScenes: initializedScenes, // Initialize allScenes with the processed scenes
   };
 };
@@ -254,25 +250,6 @@ export const globalSlice = createSlice({
       state.activeAppUri = action.payload;
       console.log('Redux: activeAppUri set to', action.payload);
     },
-    // New: Reducer to set the current selected scene
-    setCurrentScene: (state, action: PayloadAction<ISceneCard>) => {
-      state.currentScene = action.payload;
-      console.log('Redux: currentScene set to', action.payload.text);
-      // Also update the corresponding scene in allScenes
-      const index = state.allScenes.findIndex(scene => scene.aiPersonaName === action.payload.aiPersonaName);
-      if (index !== -1) {
-        state.allScenes[index] = action.payload;
-      }
-      // 保存到本地存储
-      if (action.payload.aiPersonaName && typeof window !== "undefined") {
-        saveSceneToLocal(action.payload);
-      }
-    },
-    // New: Reducer to set the global mode
-    setGlobalMode: (state, action: PayloadAction<string>) => {
-      state.globalMode = action.payload;
-      console.log('Redux: globalMode set to', action.payload);
-    },
   },
 });
 
@@ -349,8 +326,6 @@ export const {
   setWebsocketConnectionState, // ducer
   setActiveGraphId, // Add setActiveGraphId to exports
   setActiveAppUri, // Add setActiveAppUri to exports
-  setCurrentScene, // Export the new setCurrentScene reducer
-  setGlobalMode, // Export the new setGlobalMode reducer
 } = globalSlice.actions;
 
 export { initializeGraphData, fetchGraphDetails };

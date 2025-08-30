@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../../store';
-import { setCurrentScene } from '@/store/reducers/global';
+import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit'; // Import the new hook
 import { Textarea } from '@/components/ui/textarea'; // 导入 Textarea 组件
 
 interface EditWelcomeMessageProps {
@@ -10,21 +8,17 @@ interface EditWelcomeMessageProps {
 }
 
 const EditWelcomeMessage: React.FC<EditWelcomeMessageProps> = ({ className }) => {
-  const dispatch = useDispatch();
-  const { currentScene } = useSelector((state: RootState) => state.global);
-  const [welcomeMessage, setWelcomeMessage] = useState(currentScene?.aiResponseGreeting || '');
+  const { editingScene, updateEditingSceneField } = useAiPersionalEdit();
+  const [welcomeMessage, setWelcomeMessage] = useState(editingScene.aiResponseGreeting || '');
 
   useEffect(() => {
-    setWelcomeMessage(currentScene?.aiResponseGreeting || '');
-  }, [currentScene]);
+    setWelcomeMessage(editingScene.aiResponseGreeting || '');
+  }, [editingScene.aiResponseGreeting]); // 直接依赖 editingScene.aiResponseGreeting
 
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newMessage = e.target.value;
     setWelcomeMessage(newMessage);
-    if (currentScene) {
-      const updatedScene = { ...currentScene, aiResponseGreeting: newMessage };
-      dispatch(setCurrentScene(updatedScene));
-    }
+    updateEditingSceneField('aiResponseGreeting', newMessage);
   };
 
   return (

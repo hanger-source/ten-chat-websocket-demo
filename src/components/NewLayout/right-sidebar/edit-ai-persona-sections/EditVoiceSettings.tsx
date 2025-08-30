@@ -1,42 +1,40 @@
-import React, { useState } from 'react'; // Import useState
+import React, { useState, useEffect } from 'react'; // Import useState and useEffect
 import { cn } from '@/lib/utils'; // Import cn utility
-import { useDispatch, useSelector } from 'react-redux';
 import { IModeOption, IReplaceableVoiceOption, ISelectedVoiceOption } from '@/types/modeOptions';
 import { modeOptions } from '@/common/mockModeOptionsData';
-import { RootState } from '../../../../store';
 import { Button } from '@/components/ui/button'; // Import Button
 import ChangeVoiceDialog from "./ChangeVoiceDialog"; // Import the new component
+import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
 
 interface EditVoiceSettingsProps {
   className?: string;
 }
 
 const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
-  const dispatch = useDispatch();
-  const { globalMode, currentScene } = useSelector((state: RootState) => state.global);
-  const currentMode = modeOptions.find(mode => mode.value === globalMode);
+  const { editingScene, getEditingDefaultModeValue, getSelectedVoiceId, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersionalEdit();
+
+  // 添加 useEffect 来监听 editingScene 的变化
+  useEffect(() => {
+  }, [editingScene]);
 
   const [showModal, setShowModal] = useState(false);
   const [voiceKeyToSelect, setVoiceKeyToSelect] = useState<string | null>(null);
   const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
 
-  // Assuming there's only one replaceable voice model for simplicity, or we pick the first one
-  const replaceableVoiceOption = currentMode?.metadata?.replaceableVoices?.[0];
-  const selectedVoiceName = currentScene?.selectedVoices?.[replaceableVoiceOption?.key || ''];
-
-  const voiceInMetadata = currentMode?.metadata?.voices?.find(v => v.voice === selectedVoiceName);
+  // 从 derivedModeConfiguration 中获取可替换的音色选项
+  const replaceableVoiceOption: IReplaceableVoiceOption | undefined = derivedModeConfiguration?.metadata?.replaceableVoices?.[0];
+  const selectedVoiceName = getSelectedVoiceId(replaceableVoiceOption?.key || '');
+  const voiceInMetadata = derivedModeConfiguration?.metadata?.voices?.find(v => v.voice === selectedVoiceName);
 
   const handleChangeVoiceClick = (key: string) => {
-    if (!currentScene || !currentMode?.metadata?.replaceableVoices) {
+    if (!editingScene || !getAvailableVoiceConfig(key)) {
       return;
     }
     setVoiceKeyToSelect(key);
     setShowModal(true);
   };
 
-  const currentReplaceableVoiceConfig = currentMode?.metadata?.replaceableVoices?.find(
-    (rv: IReplaceableVoiceOption) => rv.key === voiceKeyToSelect
-  );
+  const currentReplaceableVoiceConfig = getAvailableVoiceConfig(voiceKeyToSelect); // 直接从 hook 获取
 
   const handlePlayPreview = (url: string) => {
     if (playingAudio) {
@@ -96,9 +94,6 @@ const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
         showModal={showModal}
         setShowModal={setShowModal}
         voiceKeyToSelect={voiceKeyToSelect}
-        currentScene={currentScene}
-        currentMode={currentMode}
-        currentReplaceableVoiceConfig={currentReplaceableVoiceConfig}
       />
     </div>
   );

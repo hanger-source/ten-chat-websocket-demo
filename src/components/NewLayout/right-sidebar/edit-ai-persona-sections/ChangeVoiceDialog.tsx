@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { IModeOption, ISelectedVoiceOption, IReplaceableVoiceOption } from '@/types/modeOptions';
-import { RootState } from '../../../../store';
-import { setCurrentScene } from '@/store/reducers/global';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiPersionalEdit } from '../../../../hooks/useAiPersionalEdit';
+import { IModeOption, ISelectedVoiceOption, IReplaceableVoiceOption } from '@/types/modeOptions';
 
 const BASE_TEXT_GRADIENT = "bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text";
 const TEXT_GRADIENT_CLASSES = `${BASE_TEXT_GRADIENT} text-transparent`;
@@ -18,9 +16,6 @@ interface ChangeVoiceDialogProps {
   showModal: boolean;
   setShowModal: (show: boolean) => void;
   voiceKeyToSelect: string | null;
-  currentScene: RootState['global']['currentScene'];
-  currentMode: IModeOption | undefined;
-  currentReplaceableVoiceConfig: IReplaceableVoiceOption | undefined;
 }
 
 const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
@@ -28,30 +23,14 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
     showModal,
     setShowModal,
     voiceKeyToSelect,
-    currentScene,
-    currentMode,
-    currentReplaceableVoiceConfig,
   } = props;
-  const dispatch = useDispatch();
+  const { editingScene, updateEditingSelectedVoice, getSelectedVoiceId, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName } = useAiPersionalEdit();
   const [activeTab, setActiveTab] = useState<string>('');
   const [hoveredVoiceId, setHoveredVoiceId] = useState<string | null>(null);
   const [tempSelectedVoiceId, setTempSelectedVoiceId] = useState<string | null>(null);
   const [playingAudio, setPlayingAudio] = useState<HTMLAudioElement | null>(null);
 
-  const getVoicesForModal = (): ISelectedVoiceOption[] => {
-    if (!currentMode || !voiceKeyToSelect || !currentMode.metadata?.replaceableVoices) return [];
-
-    const currentReplaceableVoiceConfigFound = currentMode.metadata.replaceableVoices.find(
-      (rv: IReplaceableVoiceOption & { key: string }) => rv.key === voiceKeyToSelect
-    );
-    if (!currentReplaceableVoiceConfigFound) return [];
-
-    const voicesFromMetadata = currentMode.metadata.voices || [];
-    // For now, we return all voices as there's no specific type filtering in IReplaceableVoiceOption
-    return voicesFromMetadata;
-  };
-
-  const voicesForModal = React.useMemo(() => getVoicesForModal(), [currentMode, voiceKeyToSelect]);
+  const voicesForModal = React.useMemo(() => getVoicesForAvailableKey(voiceKeyToSelect), [getVoicesForAvailableKey, voiceKeyToSelect]);
 
   const groupedVoicesByTag = React.useMemo(() => {
     return voicesForModal.reduce((acc: Record<string, ISelectedVoiceOption[]>, voice: ISelectedVoiceOption) => {
@@ -68,10 +47,10 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
 
   useEffect(() => {
     if (showModal && Object.keys(groupedVoicesByTag).length > 0) {
-      const selectedVoice = currentScene?.selectedVoices?.[voiceKeyToSelect || ''];
+      const selectedVoice = getSelectedVoiceId(voiceKeyToSelect || '');
       let initialTab = Object.keys(groupedVoicesByTag)[0]; // Default to the first tab
 
-      if (selectedVoice) {
+      if (selectedVoice && selectedVoice !== '未选择') {
         for (const tag in groupedVoicesByTag) {
           if (groupedVoicesByTag[tag].some(voice => voice.voice === selectedVoice)) {
             initialTab = tag;
@@ -80,7 +59,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
         }
       }
       setActiveTab(initialTab);
-      setTempSelectedVoiceId(selectedVoice || null);
+      setTempSelectedVoiceId(selectedVoice !== '未选择' ? selectedVoice : null);
     } else if (!showModal) {
       setActiveTab(''); // Reset activeTab when modal closes
       setTempSelectedVoiceId(null); // Reset tempSelectedVoiceId when modal closes
@@ -89,18 +68,10 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
         setPlayingAudio(null);
       }
     }
-  }, [showModal, groupedVoicesByTag, currentScene, voiceKeyToSelect]);
+  }, [showModal, groupedVoicesByTag, voiceKeyToSelect, getSelectedVoiceId, playingAudio]);
 
   const handleSelectVoice = (selectedVoice: string) => {
     setTempSelectedVoiceId(selectedVoice);
-  };
-
-  const voiceDescription = (voiceName: string) => {
-    const metadataVoice = currentMode?.metadata?.voices?.find(v => v.voice === voiceName);
-    if (metadataVoice) {
-      return metadataVoice.name; // For voices, we display the name as the "description"
-    }
-    return '暂无描述';
   };
 
   const handlePlayPreview = (url: string) => {
@@ -114,13 +85,8 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
   };
 
   const handleConfirm = () => {
-    if (currentScene && voiceKeyToSelect && tempSelectedVoiceId) {
-      const updatedSelectedVoices = {
-        ...(currentScene.selectedVoices || {}),
-        [voiceKeyToSelect]: tempSelectedVoiceId,
-      };
-      const updatedScene = { ...currentScene, selectedVoices: updatedSelectedVoices };
-      dispatch(setCurrentScene(updatedScene));
+    if (editingScene && voiceKeyToSelect && tempSelectedVoiceId) {
+      updateEditingSelectedVoice(voiceKeyToSelect, tempSelectedVoiceId);
       setShowModal(false);
     } else {
       setShowModal(false);
@@ -181,8 +147,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
                           ? TEXT_GRADIENT_CLASSES
                           : (voice.voice === hoveredVoiceId 
                               ? TEXT_GRADIENT_CLASSES
-                              : 'text-gray-800'
-                            )
+                              : 'text-gray-800')
                         }
                       `}>{voice.name}</div> 
                       <div className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-3">
@@ -190,10 +155,10 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger className="text-left w-full">
-                              <div className="line-clamp-3">{voice.name}</div> {/* Display voice name */}
+                              <div className="line-clamp-3">{getPersonaVoiceDisplayName(voice.voice)}</div>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs text-wrap break-words">
-                              {voice.name}
+                              {getPersonaVoiceDisplayName(voice.voice)}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
