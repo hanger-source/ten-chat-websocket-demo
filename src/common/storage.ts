@@ -1,9 +1,10 @@
-import { IOptions, ITrulienceSettings } from "@/types";
+import { IOptions, ITrulienceSettings, ISceneCard } from "@/types";
 import {
   OPTIONS_KEY,
   DEFAULT_OPTIONS,
   TRULIENCE_SETTINGS_KEY,
   DEFAULT_TRULIENCE_OPTIONS,
+  SCENE_STORAGE_KEY_PREFIX, // Import SCENE_STORAGE_KEY_PREFIX
 } from "./constant";
 
 export const getOptionsFromLocal = () => {
@@ -35,5 +36,26 @@ export const getTrulienceSettingsFromLocal = () => {
 export const setTrulienceSettingsToLocal = (settings: ITrulienceSettings) => {
   if (typeof window !== "undefined") {
     localStorage.setItem(TRULIENCE_SETTINGS_KEY, JSON.stringify(settings));
+  }
+};
+
+export const loadSceneFromLocal = (sceneName: string): ISceneCard | null => {
+  if (typeof window !== "undefined") {
+    const data = localStorage.getItem(SCENE_STORAGE_KEY_PREFIX + sceneName);
+    if (data) {
+      try {
+        return JSON.parse(data);
+      } catch (error) {
+        console.error("Error parsing scene from local storage:", error);
+        return null;
+      }
+    }
+  }
+  return null;
+};
+
+export const saveSceneToLocal = (scene: ISceneCard) => {
+  if (typeof window !== "undefined" && scene.aiPersonaName) {
+    localStorage.setItem(SCENE_STORAGE_KEY_PREFIX + scene.aiPersonaName, JSON.stringify(scene));
   }
 };

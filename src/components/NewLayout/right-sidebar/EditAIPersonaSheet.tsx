@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import EditAIPersonaScenes from "./edit-ai-persona-sections/EditAIPersonaScenes";
-import EditAIModelSettings from "./edit-ai-persona-sections/EditAIModelSettings";
 import EditVoiceSettings from "./edit-ai-persona-sections/EditVoiceSettings";
 import EditSystemPrompt from "./edit-ai-persona-sections/EditSystemPrompt";
 import EditWelcomeMessage from "./edit-ai-persona-sections/EditWelcomeMessage";
-import EditInfoText from "./edit-ai-persona-sections/EditInfoText";
 import { ISceneCard } from '@/types'; // Import ISceneCard
+import EditAIModelMode from "./edit-ai-persona-sections/EditAIModelMode";
 
 interface EditAIPersonaSheetProps {
   isOpen: boolean;
@@ -56,11 +55,12 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
             <div className="absolute top-[-17px] w-0 h-0 border-l-[18px] border-r-[18px] border-b-[18px] border-l-transparent border-r-transparent border-b-white" style={{ left: triangleLeft, transform: 'translateX(-50%)' }}></div>
 
             {/* All settings components go here */}
-            <EditAIModelSettings />
-            <EditVoiceSettings />
+            <div className="flex space-x-4 mb-6">
+              <EditAIModelMode className="flex-1" />
+              <EditVoiceSettings className="flex-1" />
+            </div>
             <EditSystemPrompt />
             <EditWelcomeMessage />
-            <EditInfoText />
           </div>
         </div>
         <SheetFooter className="mt-auto">

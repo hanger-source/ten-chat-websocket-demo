@@ -1,8 +1,13 @@
 import React from 'react';
+import { cn } from '@/lib/utils'; // Import cn utility
 
-const EditVoiceSettings = () => {
+interface EditVoiceSettingsProps {
+  className?: string;
+}
+
+const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
   return (
-    <div className="wrapper-bPWIzS undefined">
+    <div className={cn("wrapper-bPWIzS undefined", className)}>
       <div data-text="音色" className="title-AIzHyH">音色</div>
       <div>
         {/* Voice settings content goes here */}

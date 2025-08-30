@@ -27,8 +27,13 @@ import {
 import {
   setOptionsToLocal,
   setTrulienceSettingsToLocal,
+  loadSceneFromLocal, // Import loadSceneFromLocal
+  saveSceneToLocal, // Import saveSceneToLocal
 } from "@/common/storage";
 import { AddonDef, Graph } from "@/common/graph";
+import { modeOptions } from "@/common/modeOptionsData"; // Only import modeOptions from here
+import { IReplaceableModelOption, STANDARD_DIALOGUE_MODE_VALUE } from "@/common/modeData"; // Import types and constants from modeData
+import { sceneCards } from "@/common/sceneData"; // Import sceneCards
 
 export interface InitialState {
   options: IOptions;
@@ -48,9 +53,29 @@ export interface InitialState {
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
   currentScene: ISceneCard | null; // New: To store the currently selected scene
+  globalMode: string; // New: To store the selected global mode
+  allScenes: ISceneCard[]; // New: To store all initialized scenes
 }
 
 const getInitialState = (): InitialState => {
+  let initialScene: ISceneCard | null = null;
+
+  const initializedScenes: ISceneCard[] = sceneCards.map(sceneCard => {
+    const loadedScene = typeof window !== "undefined" ? loadSceneFromLocal(sceneCard.aiPersonaName) : null;
+    if (loadedScene) {
+      return loadedScene;
+    } else {
+      // If no loaded scene, use a deep copy of the sceneCard from sceneData.ts
+      return { ...sceneCard };
+    }
+  });
+
+  if (initializedScenes.length > 0) {
+    initialScene = initializedScenes[0]; // Set currentScene to the first initialized scene
+  }
+
+  const initialGlobalMode: string = initialScene?.defaultModeValue || modeOptions[0].value; // Initialize globalMode based on currentScene or fallback
+
   return {
     options: DEFAULT_OPTIONS,
     themeColor: COLOR_LIST[0].active,
@@ -68,7 +93,9 @@ const getInitialState = (): InitialState => {
     trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
-    currentScene: null, // Initialize currentScene as null
+    currentScene: initialScene, // Initialize currentScene
+    globalMode: initialGlobalMode, // Initialize globalMode
+    allScenes: initializedScenes, // Initialize allScenes with the processed scenes
   };
 };
 
@@ -232,6 +259,20 @@ export const globalSlice = createSlice({
     setCurrentScene: (state, action: PayloadAction<ISceneCard>) => {
       state.currentScene = action.payload;
       console.log('Redux: currentScene set to', action.payload.text);
+      // Also update the corresponding scene in allScenes
+      const index = state.allScenes.findIndex(scene => scene.aiPersonaName === action.payload.aiPersonaName);
+      if (index !== -1) {
+        state.allScenes[index] = action.payload;
+      }
+      // 保存到本地存储
+      if (action.payload.aiPersonaName && typeof window !== "undefined") {
+        saveSceneToLocal(action.payload);
+      }
+    },
+    // New: Reducer to set the global mode
+    setGlobalMode: (state, action: PayloadAction<string>) => {
+      state.globalMode = action.payload;
+      console.log('Redux: globalMode set to', action.payload);
     },
   },
 });
@@ -310,6 +351,7 @@ export const {
   setActiveGraphId, // Add setActiveGraphId to exports
   setActiveAppUri, // Add setActiveAppUri to exports
   setCurrentScene, // Export the new setCurrentScene reducer
+  setGlobalMode, // Export the new setGlobalMode reducer
 } = globalSlice.actions;
 
 export { initializeGraphData, fetchGraphDetails };

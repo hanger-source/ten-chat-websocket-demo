@@ -6,6 +6,9 @@ import { SCREEN_READER_UI_GREETING, SCREEN_READER_RESPONSE_GREETING, SCREEN_READ
 import { CHILDREN_ENCYCLOPEDIA_UI_GREETING, CHILDREN_ENCYCLOPEDIA_RESPONSE_GREETING, CHILDREN_ENCYCLOPEDIA_SUBTEXT, CHILDREN_ENCYCLOPEDIA_PROMPT } from "./scenePrompts/childrenEncyclopedia";
 import { SIMULTANEOUS_INTERPRETATION_UI_GREETING, SIMULTANEOUS_INTERPRETATION_RESPONSE_GREETING, SIMULTANEOUS_INTERPRETATION_SUBTEXT, SIMULTANEOUS_INTERPRETATION_PROMPT } from "./scenePrompts/simultaneousInterpretation";
 import { SMART_CUSTOMER_SERVICE_UI_GREETING, SMART_CUSTOMER_SERVICE_RESPONSE_GREETING, SMART_CUSTOMER_SERVICE_SUBTEXT, SMART_CUSTOMER_SERVICE_PROMPT } from "./scenePrompts/smartCustomerService";
+import { STANDARD_DIALOGUE_MODE_VALUE } from "./modeData"; // Import STANDARD_DIALOGUE_MODE_VALUE
+
+// Removed getInitialSelectedModels function
 
 export const sceneCards: ISceneCard[] = [
   {
@@ -19,6 +22,11 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: AI_ASSISTANT_RESPONSE_GREETING,
     welcomeSubText: AI_ASSISTANT_SUBTEXT,
     prompt: AI_ASSISTANT_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-turbo',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
     tag: '联网查询',
@@ -31,6 +39,11 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: SMART_TOY_RESPONSE_GREETING,
     welcomeSubText: SMART_TOY_SUBTEXT,
     prompt: SMART_TOY_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-max',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
     tag: null,
@@ -43,6 +56,11 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: VIRTUAL_GIRL_FRIEND_RESPONSE_GREETING,
     welcomeSubText: VIRTUAL_GIRL_FRIEND_SUBTEXT,
     prompt: VIRTUAL_GIRL_FRIEND_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-plus-character',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
     tag: '屏幕识别',
@@ -55,6 +73,11 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: SCREEN_READER_RESPONSE_GREETING,
     welcomeSubText: SCREEN_READER_SUBTEXT,
     prompt: SCREEN_READER_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-max',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
     tag: null,
@@ -67,6 +90,11 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: CHILDREN_ENCYCLOPEDIA_RESPONSE_GREETING,
     welcomeSubText: CHILDREN_ENCYCLOPEDIA_SUBTEXT,
     prompt: CHILDREN_ENCYCLOPEDIA_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-max',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
     tag: null,
@@ -79,6 +107,11 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: SIMULTANEOUS_INTERPRETATION_RESPONSE_GREETING,
     welcomeSubText: SIMULTANEOUS_INTERPRETATION_SUBTEXT,
     prompt: SIMULTANEOUS_INTERPRETATION_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-max',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
   {
     tag: null,
@@ -91,5 +124,10 @@ export const sceneCards: ISceneCard[] = [
     aiResponseGreeting: SMART_CUSTOMER_SERVICE_RESPONSE_GREETING,
     welcomeSubText: SMART_CUSTOMER_SERVICE_SUBTEXT,
     prompt: SMART_CUSTOMER_SERVICE_PROMPT,
+    selectedModels: {
+      textModel: 'qwen-max',
+      visionModel: 'qwen-vl-max',
+    },
+    defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
 ];

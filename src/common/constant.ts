@@ -141,6 +141,7 @@ export const isLLM = (extensionName: string) => {
 export const isEditModeOn = import.meta.env.VITE_EDIT_GRAPH_MODE === "true";
 
 export const TRULIENCE_SETTINGS_KEY = "__trulience__";
+export const SCENE_STORAGE_KEY_PREFIX = "__scene_config__"; // New: Prefix for scene storage keys
 export const DEFAULT_TRULIENCE_OPTIONS: ITrulienceSettings = {
   enabled: false,
   avatarId: "",
