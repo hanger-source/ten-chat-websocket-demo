@@ -365,38 +365,38 @@ export const modeOptions: IModeOption[] = [
           name: "龙硕",
           voice: 'longshuo_v2',
           tag: ['新闻播报'],
-          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/mprlhm/%E9%BE%99%E7%A1%95.mp3',
+          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/mhfnjs/%E9%BE%99%E7%A1%95.mp3',
           feature: '博才干练男',
         },
         {
           name: "龙小白",
           voice: 'longxiaobai_v2',
           tag: ['新闻播报'],
-          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/kpqfhi/%E9%BE%99%E5%B0%8F%E7%99%BD.mp3',
+          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/ruqhkp/%E9%BE%99%E5%B0%8F%E7%99%BD.mp3',
           feature: '沉稳播报女',
         },
         {
           name: "龙婧",
           voice: 'longjing_v2',
           tag: ['新闻播报'],
-          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/sgygjm/%E9%BE%99%E5%A9%A7.mp3',
+          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/yryekx/%E9%BE%99%E5%A9%A7.mp3',
           feature: '典型播音女',
         },
         {
           name: "loongstella",
           voice: 'loongstella_v2',
           tag: ['新闻播报'],
-          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/bprnjc/loongstella.mp3',
+          previewAudioUrl: 'https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20250617/jfnolr/loongstella.mp3',
           feature: '飒爽利落女',
         },
       ],
       replaceableModels: [{
         type: "文本生成",
-        key: 'textModel',
+        key: 'text_model',
         model: "qwen-max"
       },{
         type: "视频理解",
-        key: 'visionModel',
+        key: 'vision_model',
         model: "qwen-vl-max"
       }],
       models :[

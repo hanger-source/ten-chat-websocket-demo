@@ -156,7 +156,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
           </TabsList>
           {Object.entries(groupedVoicesByTag).map(([tag, voices]) => (
             <TabsContent key={tag} value={tag} className="flex-1 p-4 border border-gray-200 rounded-b-lg bg-white">
-              <div className="grid grid-cols-3 gap-4 py-4">
+              <div className="grid grid-cols-3 gap-4 py-4 max-h-[calc(100vh-350px)] overflow-y-auto">
                 {voices.map((voice: ISelectedVoiceOption) => (
                   <div
                     key={voice.voice}

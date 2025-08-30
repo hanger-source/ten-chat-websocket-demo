@@ -22,8 +22,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: AI_ASSISTANT_SUBTEXT,
     prompt: AI_ASSISTANT_PROMPT,
     selectedModels: {
-      textModel: 'qwen-turbo',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-turbo',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -42,8 +42,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SMART_TOY_SUBTEXT,
     prompt: SMART_TOY_PROMPT,
     selectedModels: {
-      textModel: 'qwen-max',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-max',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -62,8 +62,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: VIRTUAL_GIRL_FRIEND_SUBTEXT,
     prompt: VIRTUAL_GIRL_FRIEND_PROMPT,
     selectedModels: {
-      textModel: 'qwen-plus-character',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-plus-character',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -82,8 +82,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SCREEN_READER_SUBTEXT,
     prompt: SCREEN_READER_PROMPT,
     selectedModels: {
-      textModel: 'qwen-max',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-max',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -102,8 +102,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: CHILDREN_ENCYCLOPEDIA_SUBTEXT,
     prompt: CHILDREN_ENCYCLOPEDIA_PROMPT,
     selectedModels: {
-      textModel: 'qwen-max',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-max',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -122,8 +122,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SIMULTANEOUS_INTERPRETATION_SUBTEXT,
     prompt: SIMULTANEOUS_INTERPRETATION_PROMPT,
     selectedModels: {
-      textModel: 'qwen-max',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-max',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',
@@ -142,8 +142,8 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SMART_CUSTOMER_SERVICE_SUBTEXT,
     prompt: SMART_CUSTOMER_SERVICE_PROMPT,
     selectedModels: {
-      textModel: 'qwen-max',
-      visionModel: 'qwen-vl-max',
+      text_model: 'qwen-max',
+      vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
       cosy_voice_name: 'longhuohuo',

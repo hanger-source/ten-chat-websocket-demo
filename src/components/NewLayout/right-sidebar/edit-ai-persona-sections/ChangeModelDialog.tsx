@@ -138,7 +138,7 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
           </TabsList>
           {Object.entries(groupedModelsByTag).map(([tag, models]) => (
             <TabsContent key={tag} value={tag} className="flex-1 p-4 border border-gray-200 rounded-b-lg bg-white"> {/* Added border and rounded-b-lg to content */}
-              <div className="grid grid-cols-3 gap-4 py-4"> {/* Changed to grid layout with 3 columns */}
+              <div className="grid grid-cols-3 gap-4 py-4 max-h-[calc(100vh-350px)] overflow-y-auto"> {/* Changed to grid layout with 3 columns, added max height and scroll */}
                 {models.map((model: ISelectedModelOption) => (
                   <div
                     key={model.model}
