@@ -36,16 +36,6 @@ export const useAiPersionalEdit = () => {
     setEditingScene(loadedScene);
   }, [editingSceneAiPersonaName]);
 
-  // 移除自动保存逻辑，改为手动保存
-  // useEffect(() => {
-  //   if (editingScene && editingScene.aiPersonaName && editingScene.aiPersonaName === editingSceneAiPersonaName) {
-  //     console.log('useAiPersionalEdit - saving scene:', editingScene.aiPersonaName);
-  //     saveSceneByNameToLocal(editingScene);
-  //   } else if (editingScene && editingScene.aiPersonaName) {
-  //     console.log('useAiPersionalEdit - SKIPPING save - scene mismatch:', editingScene.aiPersonaName, 'vs', editingSceneAiPersonaName);
-  //   }
-  // }, [editingScene, editingSceneAiPersonaName]);
-
   const switchEditingScene = useCallback((aiPersonaName: string) => {
     switchSelectedScene(aiPersonaName);
   }, [switchSelectedScene]);
