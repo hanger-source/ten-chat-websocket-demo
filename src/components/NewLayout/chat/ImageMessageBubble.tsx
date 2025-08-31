@@ -89,7 +89,7 @@ const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({ message, aiAvat
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
             <div className={cn(
-                "relative p-[1px] max-w-[80%] rounded-lg overflow-hidden ml-10", // 为消息气泡添加左外边距，使其向右缩进 (ml-10)
+                "relative p-[1px] max-w-[50%] rounded-lg overflow-hidden ml-10", // 调整图片容器的最大宽度
                 gradientBorderClass,
                 borderRadiusClass,
             )}>

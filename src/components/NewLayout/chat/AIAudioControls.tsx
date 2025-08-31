@@ -101,11 +101,11 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
       {/* 波浪动画 */}
       <div
         ref={siriwaveContainerRef}
-        className="absolute inset-x-0 bottom-0 h-[100px] bg-white/30 flex items-center justify-center pointer-events-none overflow-hidden" // 调整高度和垂直定位
+        className="absolute inset-x-0 bottom-0 h-[110px] md:h-[60px] flex items-center justify-center pointer-events-none overflow-hidden" // 调整高度和垂直定位
       ></div>
 
       {isPlaying && ( // 仅当 isPlaying 为 true 时才展示打断按钮区块
-        <div className="flex items-center space-x-2 -mt-32 bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
+        <div className="flex items-center space-x-2 -mt-36 md:-mt-24 backdrop-blur-[2px] bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
           <span className="text-sm text-[#635bff]">语音打断 或</span>
           <motion.button
             onClick={onInterrupt}

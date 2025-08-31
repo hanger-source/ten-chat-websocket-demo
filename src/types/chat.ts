@@ -9,6 +9,7 @@ export enum EMessageDataType {
     TEXT = "text",
     REASON = "reason",
     IMAGE = "image",
+    IMAGE_URL = "image_url", // 修正：用于表示图片 URL 数据类型
 }
 
 // 基础聊天消息接口，包含所有消息类型共有的属性

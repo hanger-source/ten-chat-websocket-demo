@@ -367,7 +367,7 @@ export class WebSocketManager {
 
         try {
             const message = this.decodeMessage(arrayBufferData);
-            console.log(`收到消息 ${message.type} ${message.name}(解码后):`, message);
+            console.log(`收到消息 ${message.type} ${message.name} ${message.id} (解码后):`, message);
 
             const handlers = this.messageHandlers.get(message.type);
             if (handlers && handlers.length > 0) {

@@ -29,9 +29,9 @@ export function parseWebSocketMessage(rawMessage: Message): IChatMessage | null 
             const properties = rawMessage.properties || {};
             const role = properties.role || EMessageType.AGENT;
             const text = properties.text || properties.audio_text || '';
-            const imageUrl = properties.image_url || undefined;
+            const dataType = properties.type || EMessageDataType.TEXT; // 修正：从 properties.type 获取数据类型
+            const imageUrl = dataType === EMessageDataType.IMAGE_URL ? (properties.data as string) : properties.image_url || undefined;
             const endOfSegment = properties.end_of_segment || false;
-            const dataType = properties.data_type || EMessageDataType.TEXT; // 兼容旧的 data_type
             const asrRequestId = properties.asr_request_id || undefined; // 从后端原始数据中获取 asr_request_id
 
             // 优先处理 ASR 消息：当原始消息的 name 为 "asr_result" 且包含 text 时

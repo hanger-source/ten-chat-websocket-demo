@@ -156,7 +156,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
         expanded={isChatInputExpanded}
       />
       {/* 底部声明 */}
-      <p className="text-xs text-gray-500 mt-4">AI生成内容由大模型生成，不能完全保障真实</p>
+      <p className="text-xs text-gray-500 mt-4 text-center">AI生成内容由大模型生成，不能完全保障真实</p>
       {/* 工具栏 */}
       {!isMobileDevice || !isChatInputExpanded ? (
         <ChatControls className="absolute bottom-12 right-10 z-20" />
