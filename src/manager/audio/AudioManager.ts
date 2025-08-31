@@ -144,8 +144,7 @@ class AudioManager {
 
   public stopAudioPlayback(): void {
     if (this.outputWorkletNode) {
-      this.outputWorkletNode.port.postMessage('clear');
-      this.outputWorkletNode.port.onmessage = null;
+      this.outputWorkletNode.port.postMessage('clear'); // 通知 AudioWorkletNode 清空播放队列
       this.outputWorkletNode.disconnect();
       this.outputWorkletNode = null;
     }

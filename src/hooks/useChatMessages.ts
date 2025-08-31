@@ -92,13 +92,13 @@ export const useChatMessages = (): UseChatMessagesReturn => {
                 } else if (isFinalAsr) {
                     // 如果是最终 ASR 结果，但没有找到匹配的消息，则创建一个新的最终 AI 消息
                     const newAsrMessage: ITextMessage = {
-                        id: parsedMessage.id || uuidv4(),
-                        role: asrRole as EMessageType, // 使用解析后的 asrRole
-                        timestamp: Date.now(),
-                        type: 'text',
-                        payload: { text: asrText },
-                        isFinal: true,
-                        asrRequestId: asrRequestId,
+                            id: parsedMessage.id || uuidv4(),
+                            role: asrRole as EMessageType, // 使用解析后的 asrRole
+                            timestamp: Date.now(),
+                            type: 'text',
+                            payload: { text: asrText },
+                            isFinal: true,
+                            asrRequestId: asrRequestId,
                     };
                     newMessages.push(newAsrMessage);
                     lastAsrRequestIdRef.current = undefined; // 最终消息，清除 ref
@@ -137,7 +137,6 @@ export const useChatMessages = (): UseChatMessagesReturn => {
             if ((parsedMessage.type === 'text' || parsedMessage.type === 'image') && (parsedMessage.role === EMessageType.AGENT || parsedMessage.role === EMessageType.ASSISTANT)) {
                 // lastAiMessageIdRef.current = parsedMessage.id; // This line is removed
             }
-
             return newMessages;
         });
     }, []);

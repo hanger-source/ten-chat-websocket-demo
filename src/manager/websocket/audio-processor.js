@@ -23,7 +23,7 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
         this.currentBufferOffset = 0;
         if (this.isPlayingState) {
             this.isPlayingState = false;
-            this.port.postMessage('stopped');
+            this.port.postMessage({ type: 'stopped' }); // 发送一个对象，包含 type 属性
         }
       }
     };
