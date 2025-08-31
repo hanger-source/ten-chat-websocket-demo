@@ -106,7 +106,7 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longhuohuo',
+      cosy_voice_name: 'longnan_v2',
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },

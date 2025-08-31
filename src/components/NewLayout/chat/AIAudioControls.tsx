@@ -64,7 +64,7 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   useEffect(() => {
     if (siriwaveRef.current) {
       // 根据 audioLevel 调整振幅，使其更灵敏，波动更大
-      const newAmplitude = Math.min(3, 0.5 + audioLevel * 25); // 大幅提高基础振幅，增强音量影响，最大 4
+      const newAmplitude = Math.min(2.5, 0.5 + audioLevel * 25); // 大幅提高基础振幅，增强音量影响，最大 4
       siriwaveRef.current.setAmplitude(newAmplitude);
     }
   }, [audioLevel]);
@@ -101,11 +101,11 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
       {/* 波浪动画 */}
       <div
         ref={siriwaveContainerRef}
-        className="absolute inset-x-0 bottom-0 h-[100px] backdrop-blur-[1px] bg-white/30 flex items-center justify-center pointer-events-none overflow-hidden" // 调整高度和垂直定位
+        className="absolute inset-x-0 bottom-0 h-[100px] bg-white/30 flex items-center justify-center pointer-events-none overflow-hidden" // 调整高度和垂直定位
       ></div>
 
       {isPlaying && ( // 仅当 isPlaying 为 true 时才展示打断按钮区块
-        <div className="flex items-center space-x-2 -mt-32 backdrop-blur-[1px] bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
+        <div className="flex items-center space-x-2 -mt-32 bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
           <span className="text-sm text-[#635bff]">语音打断 或</span>
           <motion.button
             onClick={onInterrupt}
