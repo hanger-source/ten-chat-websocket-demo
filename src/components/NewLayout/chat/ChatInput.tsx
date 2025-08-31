@@ -87,7 +87,7 @@ const ChatInput = React.forwardRef<HTMLFormElement, ChatInputProps>(
           "flex items-center z-20 transition-all duration-300 ease-in-out",
           isExpanded 
             ? "w-[320px] h-12 px-4 py-2" 
-            : "w-12 h-12 justify-center rounded-full shadow-xl bg-transparent",
+            : "w-12 h-12 justify-center rounded-full shadow-xl bg-white",
           className
         )}
       >
@@ -115,7 +115,7 @@ const ChatInput = React.forwardRef<HTMLFormElement, ChatInputProps>(
               placeholder="输入你的消息..."
               value={inputValue}
               onChange={handleInputChange}
-              className="flex-1 rounded-full shadow-xl"
+              className="flex-1 rounded-full shadow-xl bg-white"
               disabled={sessionState !== SessionConnectionState.SESSION_ACTIVE || isSending}
             />
             <Button 
