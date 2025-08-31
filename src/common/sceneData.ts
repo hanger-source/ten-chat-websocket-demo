@@ -82,7 +82,7 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SCREEN_READER_SUBTEXT,
     prompt: SCREEN_READER_PROMPT,
     selectedModels: {
-      text_model: 'qwen3',
+      text_model: 'qwen-plus',
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
@@ -122,7 +122,7 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SIMULTANEOUS_INTERPRETATION_SUBTEXT,
     prompt: SIMULTANEOUS_INTERPRETATION_PROMPT,
     selectedModels: {
-      text_model: 'qwen3',
+      text_model: 'qwen-plus',
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
