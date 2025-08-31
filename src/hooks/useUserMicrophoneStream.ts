@@ -1,0 +1,258 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { webSocketManager } from '@/manager/websocket/websocket';
+import { SessionConnectionState } from "@/types/websocket";
+import { Location, MessageType } from '@/types/message';
+import { audioManager } from '@/manager/audio/AudioManager';
+import { MESSAGE_CONSTANTS } from '@/common/constant';
+import { WebSocketConnectionState } from '@/types/websocket';
+
+const RETRY_CONFIG = {
+  MAX_RETRIES: 3,
+  BASE_DELAY: 1000,
+  MAX_DELAY: 5000,
+};
+
+interface UseUserMicrophoneStreamProps {
+  defaultLocation: Location;
+  sessionState: SessionConnectionState;
+}
+
+interface UseUserMicrophoneStreamReturn {
+  isStreaming: boolean;
+  audioLevel: number;
+  micPermission: 'granted' | 'denied' | 'pending';
+  error?: string;
+}
+
+const VOICE_ACTIVITY_THRESHOLD = 0.025;
+const SILENCE_DURATION_THRESHOLD_MS = 1920;
+
+export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUserMicrophoneStreamProps): UseUserMicrophoneStreamReturn => {
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'pending'>('pending');
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [error, setError] = useState<string | undefined>(undefined);
+
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const sessionStateRef = useRef<SessionConnectionState>(sessionState);
+  const isAudioProcessingActiveRef = useRef(false);
+  
+  const audioBufferRef = useRef<Uint8Array[]>([]);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  const calculateRetryDelay = (retryCount: number): number => {
+    const delay = Math.min(
+      RETRY_CONFIG.BASE_DELAY * Math.pow(2, retryCount),
+      RETRY_CONFIG.MAX_DELAY
+    );
+    return delay + Math.random() * 100;
+  };
+
+  const resetRetryState = useCallback((): void => {
+    retryCountRef.current = 0;
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  // 新增：音频重采样函数，将 Int16Array 从原始采样率重采样到目标采样率
+  const resampleInt16Data = useCallback((
+    originalInt16Data: Int16Array,
+    originalSampleRate: number,
+    targetSampleRate: number
+  ): Int16Array => {
+    if (originalSampleRate === targetSampleRate) {
+      return originalInt16Data;
+    }
+
+    // 将 Int16Array 转换为 Float32Array 进行重采样
+    const originalFloat32Data = new Float32Array(originalInt16Data.length);
+    for (let i = 0; i < originalInt16Data.length; i++) {
+      originalFloat32Data[i] = originalInt16Data[i] / 32767.0; // 归一化到 -1.0 到 1.0
+    }
+
+    const ratio = targetSampleRate / originalSampleRate;
+    const newLength = Math.round(originalFloat32Data.length * ratio);
+    const resampledFloat32Data = new Float32Array(newLength);
+
+    // 线性插值重采样
+    for (let i = 0; i < newLength; i++) {
+      const originalIndex = i / ratio;
+      const indexLower = Math.floor(originalIndex);
+      const indexUpper = Math.ceil(originalIndex);
+
+      if (indexUpper >= originalFloat32Data.length) {
+        resampledFloat32Data[i] = originalFloat32Data[originalFloat32Data.length - 1];
+      } else if (indexLower < 0) {
+        resampledFloat32Data[i] = originalFloat32Data[0];
+      } else {
+        const weightUpper = originalIndex - indexLower;
+        const weightLower = 1 - weightUpper;
+        resampledFloat32Data[i] = (
+          originalFloat32Data[indexLower] * weightLower +
+          originalFloat32Data[indexUpper] * weightUpper
+        );
+      }
+    }
+
+    // 将重采样后的 Float32Array 转换回 Int16Array
+    const resampledInt16Data = new Int16Array(newLength);
+    for (let i = 0; i < newLength; i++) {
+      resampledInt16Data[i] = Math.max(-32768, Math.min(32767, Math.round(resampledFloat32Data[i] * 32767.0)));
+    }
+
+    return resampledInt16Data;
+  }, []);
+
+  // 声明 startMicrophoneStreamInternal，以便 handleMicrophoneError 可以引用它
+  const startMicrophoneStreamInternal = useCallback(async () => {
+    setError(undefined);
+    resetRetryState();
+
+    if (micPermission === 'denied' || sessionState !== SessionConnectionState.SESSION_ACTIVE) {
+      setError("无法开始麦克风流：权限不足或会话未激活。");
+      setIsStreaming(false);
+      setMicPermission('denied');
+      return;
+    }
+
+    try {
+      setMicPermission('pending');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 48000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      mediaStreamRef.current = stream;
+      setMicPermission('granted');
+
+      await audioManager.startMicrophoneStream(stream);
+
+      const unsubscribe = audioManager.onInputMessage((message) => {
+        if (!isAudioProcessingActiveRef.current) return;
+
+        const { frameId, data: audioData, audioLevel: currentAudioLevel } = message;
+        
+        setAudioLevel(currentAudioLevel || 0);
+ 
+        const currentSrcLoc: Location = defaultLocation;
+        const currentDestLocs: Location[] = [defaultLocation];
+        
+        if ((currentAudioLevel || 0) > VOICE_ACTIVITY_THRESHOLD) {
+          // audioData 现在是 Int16Array (48000Hz)，需要重采样到 16000Hz
+          const originalInt16Data = audioData as Int16Array;
+          const resampledInt16Data = resampleInt16Data(originalInt16Data, 48000, 16000);
+ 
+          // 将重采样后的 Int16Array 的 buffer 转换为 Uint8Array
+          const uint8AudioData = new Uint8Array(resampledInt16Data.buffer);
+          audioBufferRef.current.push(uint8AudioData);
+          
+          try {
+            webSocketManager.sendAudioFrame(
+              uint8AudioData,
+              currentSrcLoc,
+              currentDestLocs,
+              "pcm_frame",
+              16000, // 后端 ASR 采样率
+              1,
+              16,
+              false
+            );
+          } catch (error) {
+            console.error(`WebSocket发送失败: ${error}`);
+            setError(`WebSocket发送失败: ${error}`);
+          }
+        }
+      });
+      // TODO: 确保在组件卸载时取消订阅
+      unsubscribeRef.current = unsubscribe;
+
+      setIsStreaming(true);
+      isAudioProcessingActiveRef.current = true;
+
+    } catch (error) {
+      console.error(`无法访问麦克风或启动音频流: ${error}`);
+      setError(`无法访问麦克风或启动音频流: ${error}`);
+      setIsStreaming(false);
+      setMicPermission('denied');
+
+      // 错误恢复机制
+      if (retryCountRef.current < RETRY_CONFIG.MAX_RETRIES) {
+        const delay = calculateRetryDelay(retryCountRef.current);
+        retryTimeoutRef.current = setTimeout(() => {
+          retryCountRef.current++;
+          startMicrophoneStreamInternal(); // 再次调用自身进行重试
+        }, delay);
+      } else {
+        console.error('❌ 麦克风重试次数已达上限，停止重试。');
+        setError('麦克风重试次数已达上限，停止重试。');
+      }
+    }
+  }, [micPermission, sessionState, defaultLocation, resetRetryState]);
+
+  const handleMicrophoneError = useCallback((errorMessage: string): void => {
+    // 这个函数现在主要用于设置错误状态，实际的重试逻辑已合并到 startMicrophoneStreamInternal
+    console.error(`❌ 麦克风错误: ${errorMessage}`);
+    setError(errorMessage);
+    setIsStreaming(false);
+    setMicPermission('denied');
+  }, []);
+
+  const stopMicrophoneStream = useCallback((): void => {
+    isAudioProcessingActiveRef.current = false;
+    
+    audioManager.stopMicrophoneStream();
+
+    setIsStreaming(false);
+    setAudioLevel(0);
+    setError(undefined);
+    resetRetryState();
+  }, [resetRetryState]);
+
+  useEffect(() => {
+    sessionStateRef.current = sessionState;
+
+    if (sessionState === SessionConnectionState.SESSION_ACTIVE && !isStreaming) {
+      startMicrophoneStreamInternal(); // 直接调用内部启动函数
+    } else if (sessionState !== SessionConnectionState.SESSION_ACTIVE && isStreaming) {
+      stopMicrophoneStream();
+    }
+ 
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [sessionState, isStreaming, startMicrophoneStreamInternal, stopMicrophoneStream]);
+
+  useEffect(() => {
+    navigator.permissions.query({ name: 'microphone' as PermissionName }).then((result: PermissionStatus) => {
+      if (result.state === 'granted') {
+        setMicPermission('granted');
+      } else if (result.state === 'denied') {
+        setMicPermission('denied');
+      } else {
+        setMicPermission('pending');
+      }
+    }).catch(() => {
+      setMicPermission('denied');
+    });
+  }, []);
+
+  return {
+    isStreaming,
+    audioLevel,
+    micPermission,
+    error,
+  };
+};

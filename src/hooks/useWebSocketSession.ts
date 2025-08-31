@@ -3,57 +3,65 @@ import { webSocketManager } from "@/manager/websocket/websocket";
 import { WebSocketConnectionState, SessionConnectionState } from "@/types/websocket";
 import { MESSAGE_CONSTANTS } from '@/common/constant';
 import { useAppDispatch, useAppSelector } from "@/common/hooks";
-import { setWebsocketConnectionState, setAgentConnected, setSelectedGraphId, setActiveGraphId, setActiveAppUri, setSessionConnectionState } from "@/store/reducers/global"; // Import setSessionConnectionState
+import { setWebsocketConnectionState, setAgentConnected, setSelectedGraphId, setActiveGraphId, setActiveAppUri, setSessionConnectionState } from "@/store/reducers/global";
 import { toast } from 'sonner';
 import { RootState } from "@/store";
 import {IAgentSettings, ISceneSetting} from "@/types";
-import {CommandResult, CommandType, Location, Message, MessageType} from "@/types/message"; // Add this import
+import {CommandResult, CommandType, Location, Message, MessageType} from "@/types/message";
+import { audioManager } from '@/manager/audio/AudioManager';
 
-const FRONTEND_APP_URI = "mock_front://test_app"; // Define fixed frontend URI
+const FRONTEND_APP_URI = "mock_front://test_app";
 
 interface UseWebSocketSessionResult {
   isConnected: boolean;
-  sessionState: SessionConnectionState; // 使用全局 sessionState
+  sessionState: SessionConnectionState;
   startSession: (settings: IAgentSettings | ISceneSetting) => Promise<void>;
   stopSession: () => Promise<void>;
-  sendMessage: (name: string, messageContent: string) => void; // Changed message type to string
-  sendCommand: (commandType: CommandType, srcLoc?: Location, destLocs?: Location[], properties?: Record<string, any>) => void; // Make srcLoc and destLocs optional
+  sendMessage: (name: string, messageContent: string) => void;
+  sendCommand: (commandType: CommandType, srcLoc?: Location, destLocs?: Location[], properties?: Record<string, any>) => void;
   defaultLocation: Location;
-  activeAppUri: string; // Add activeAppUri
-  activeGraphId: string; // Add activeGraphId
+  activeAppUri: string;
+  activeGraphId: string;
 }
 
 export const useWebSocketSession = (): UseWebSocketSessionResult => {
   const dispatch = useAppDispatch();
   const isConnected = useAppSelector((state: RootState) => state.global.agentConnected);
   const websocketConnectionState = useAppSelector((state: RootState) => state.global.websocketConnectionState);
-  const sessionState = useAppSelector((state: RootState) => state.global.sessionConnectionState); // 从 Redux 获取 sessionState
+  const sessionState = useAppSelector((state: RootState) => state.global.sessionConnectionState);
   const selectedGraphId = useAppSelector((state: RootState) => state.global.selectedGraphId);
   const graphMap = useAppSelector((state: RootState) => state.global.graphMap);
   const activeGraphId = useAppSelector((state: RootState) => state.global.activeGraphId);
-  const activeAppUri = useAppSelector((state: RootState) => state.global.activeAppUri); // Get activeAppUri from Redux
+  const activeAppUri = useAppSelector((state: RootState) => state.global.activeAppUri);
   const selectedGraph = selectedGraphId ? graphMap[selectedGraphId] : null;
 
-  // 获取设置中的属性
   const options = useAppSelector((state: RootState) => state.global.options);
 
-  // 移除 sessionStateRef 和本地 sessionState
-
-  // Default location for commands (src_loc)
   const defaultLocation: Location = useMemo(() => ({
-    app_uri: FRONTEND_APP_URI, // Frontend fixed URI for src_loc
+    app_uri: FRONTEND_APP_URI,
     graph_id: activeGraphId || selectedGraphId || "",
     extension_name: MESSAGE_CONSTANTS.SYS_EXTENSION_NAME,
-  }), [activeGraphId, selectedGraphId]); // FRONTEND_APP_URI is constant, no need in dependency array
+  }), [activeGraphId, selectedGraphId]);
 
-  const handleConnectionStateChange = useCallback((newState: WebSocketConnectionState) => {
+  const handleConnectionStateChange = useCallback(async (newState: WebSocketConnectionState) => {
     dispatch(setWebsocketConnectionState(newState));
-    if (newState === WebSocketConnectionState.CLOSED) {
+    if (newState === WebSocketConnectionState.OPEN) {
+      try {
+        await audioManager.init();
+        console.log("AudioManager initialized due to WebSocket OPEN.");
+      } catch (error) {
+        console.error("Failed to initialize AudioManager on WebSocket OPEN:", error);
+      }
+    } else if (newState === WebSocketConnectionState.CLOSED) {
       dispatch(setAgentConnected(false));
-      dispatch(setActiveGraphId("")); // Clear activeGraphId on disconnect
-      dispatch(setActiveAppUri("")); // Clear activeAppUri on disconnect
-      dispatch(setSessionConnectionState(SessionConnectionState.IDLE)); // 更新全局 sessionState
-      // webSocketManager.setManualDisconnectFlag(false); // Removed: Flag is reset by WebSocketManager's handleReconnect
+      dispatch(setActiveGraphId(""));
+      dispatch(setActiveAppUri(""));
+      dispatch(setSessionConnectionState(SessionConnectionState.IDLE));
+      // 只有在 AudioManager 已经初始化时才关闭，防止竞态条件
+      if (audioManager.getIsInitialized()) { 
+        audioManager.close();
+        console.log("AudioManager closed due to WebSocket CLOSED.");
+      }
     }
   }, [dispatch]);
 
@@ -66,31 +74,28 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
 
     if (cmdResult.original_cmd_name === CommandType.START_GRAPH) {
       if (cmdResult.success) {
-        dispatch(setSessionConnectionState(SessionConnectionState.SESSION_ACTIVE)); // 更新全局 sessionState
+        dispatch(setSessionConnectionState(SessionConnectionState.SESSION_ACTIVE));
         dispatch(setAgentConnected(true));
-        // toast.success("AI 已启动！"); // Changed message
         if (cmdResult.properties && cmdResult.properties.graph_id) {
           dispatch(setActiveGraphId(cmdResult.properties.graph_id));
-          // console.log("useWebSocketSession: Active Graph ID set to", cmdResult.properties.graph_id);
         }
-        if (cmdResult.properties && cmdResult.properties.app_uri) { // Extract app_uri
+        if (cmdResult.properties && cmdResult.properties.app_uri) {
           dispatch(setActiveAppUri(cmdResult.properties.app_uri));
-          // console.log("useWebSocketSession: Active App URI set to", cmdResult.properties.app_uri);
         }
       } else {
-        dispatch(setSessionConnectionState(SessionConnectionState.IDLE)); // 更新全局 sessionState
+        dispatch(setSessionConnectionState(SessionConnectionState.IDLE));
         dispatch(setAgentConnected(false));
-        toast.error(`AI 启动失败: ${cmdResult.errorMessage || cmdResult.error}`); // Changed message
+        toast.error(`AI 启动失败: ${cmdResult.errorMessage || cmdResult.error}`);
       }
     } else if (cmdResult.original_cmd_name === CommandType.STOP_GRAPH) {
       if (cmdResult.success) {
-        dispatch(setSessionConnectionState(SessionConnectionState.IDLE)); // 更新全局 sessionState
+        dispatch(setSessionConnectionState(SessionConnectionState.IDLE));
         dispatch(setAgentConnected(false));
         dispatch(setActiveGraphId(""));
-        dispatch(setActiveAppUri("")); // Clear activeAppUri on successful stop
-        toast.info("AI 已停止。"); // Changed message
+        dispatch(setActiveAppUri(""));
+        toast.info("AI 已停止。");
       } else {
-        toast.error(`AI 停止失败: ${cmdResult.errorMessage || cmdResult.error}`); // Changed message
+        toast.error(`AI 停止失败: ${cmdResult.errorMessage || cmdResult.error}`);
       }
     }
   }, [dispatch]);
@@ -103,7 +108,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       webSocketManager.offConnectionStateChange(handleConnectionStateChange);
       webSocketManager.offMessage(MessageType.CMD_RESULT, handleCommandResult);
     };
-  }, [handleConnectionStateChange, handleCommandResult, dispatch]); // 添加 dispatch 依赖
+  }, [handleConnectionStateChange, handleCommandResult, dispatch]);
 
   const startSession = useCallback(async (settings: IAgentSettings | ISceneSetting) => {
     if (!selectedGraph) {
@@ -112,26 +117,25 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
     }
 
     const currentWebsocketConnectionState = webSocketManager.getConnectionState();
-    if (currentWebsocketConnectionState !== WebSocketConnectionState.OPEN || sessionState !== SessionConnectionState.IDLE) { // 使用全局 sessionState
-      toast.error("无法启动 AI：WebSocket 未连接或 AI 已激活"); // Changed message
+    if (currentWebsocketConnectionState !== WebSocketConnectionState.OPEN || sessionState !== SessionConnectionState.IDLE) {
+      toast.error("无法启动 AI：WebSocket 未连接或 AI 已激活");
       return;
     }
     webSocketManager.sendCommand(CommandType.START_GRAPH, {
-      ...defaultLocation, // Use defaultLocation for src_loc of START_GRAPH command
-      graph_id: selectedGraph.uuid, // Use selected graph's UUID for START_GRAPH
-    }, [], { // dest_locs for START_GRAPH can be empty or handled by backend implicitly
+      ...defaultLocation,
+      graph_id: selectedGraph.uuid,
+    }, [], {
       predefined_graph_name: selectedGraph.name,
-      // 将智能体设置和 options 打平放入 properties
-      ...settings, // Spread settings here
+      ...settings,
       ...options,
     });
-    dispatch(setSessionConnectionState(SessionConnectionState.CONNECTING_SESSION)); // 更新全局 sessionState
+    dispatch(setSessionConnectionState(SessionConnectionState.CONNECTING_SESSION));
 
-  }, [selectedGraph, defaultLocation, dispatch, options, sessionState]); // 添加 sessionState 依赖
+  }, [selectedGraph, defaultLocation, dispatch, options, sessionState]);
 
   const stopSession = useCallback(async () => {
-    if (sessionState === SessionConnectionState.SESSION_ACTIVE || sessionState === SessionConnectionState.CONNECTING_SESSION) { // 使用全局 sessionState
-      webSocketManager.setManualDisconnectFlag(true); // Set manual disconnect flag BEFORE sending STOP_GRAPH
+    if (sessionState === SessionConnectionState.SESSION_ACTIVE || sessionState === SessionConnectionState.CONNECTING_SESSION) {
+      webSocketManager.setManualDisconnectFlag(true);
       
       const destLocsForStop: Location[] = activeAppUri ? [{
         app_uri: activeAppUri,
@@ -140,13 +144,12 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
 
       webSocketManager.sendCommand(CommandType.STOP_GRAPH, defaultLocation, destLocsForStop, { location_uri: activeAppUri });
     } else {
-      console.warn("useWebSocketSession: Cannot stop AI, not currently connected."); // Changed message
+      console.warn("useWebSocketSession: Cannot stop AI, not currently connected.");
     }
-  }, [defaultLocation, dispatch, activeAppUri, activeGraphId, sessionState]); // 添加 sessionState 依赖
+  }, [defaultLocation, dispatch, activeAppUri, activeGraphId, sessionState]);
 
   const sendMessage = useCallback((name: string, messageContent: string) => {
     if (websocketConnectionState === WebSocketConnectionState.OPEN) {
-      // console.log(`sendMessage: Using name: ${name}, activeAppUri: ${activeAppUri}, activeGraphId: ${activeGraphId}`);
       const message: Message = {
         id: Date.now().toString() + Math.random().toString().substring(2, 8),
         type: MessageType.DATA,
@@ -156,8 +159,8 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
           graph_id: activeGraphId,
           extension_name: MESSAGE_CONSTANTS.SYS_EXTENSION_NAME,
         }] : [],
-        name: name, // Use passed name
-        properties: { text: messageContent, is_final: true }, // 重新添加 is_final: true
+        name: name,
+        properties: { text: messageContent, is_final: true },
         timestamp: Date.now(),
       };
       webSocketManager.sendMessage(message);
@@ -172,7 +175,6 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       const finalSrcLoc = srcLocOverride || defaultLocation;
 
       let finalDestLocs: Location[] = destLocsOverride || [];
-      // If no explicit destLocs were provided and an activeAppUri exists, construct a default dest_loc
       if (!destLocsOverride && activeAppUri) {
         finalDestLocs = [{
           app_uri: activeAppUri,

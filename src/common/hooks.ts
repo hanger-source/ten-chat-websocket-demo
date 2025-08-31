@@ -166,9 +166,6 @@ export const usePrevious = (value: unknown) => {
 
 const useGraphs = () => {
   const dispatch = useAppDispatch();
-  const selectedGraphId = useAppSelector(
-    (state) => state.global.selectedGraphId,
-  );
   const initialize = async () => {
     console.log('useGraphs: initialize function called');
     const result = await dispatch(initializeGraphData());

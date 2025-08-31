@@ -16,6 +16,8 @@ import { v4 as uuidv4 } from 'uuid'; // 导入 uuidv4 用于生成唯一 ID
 import { EMessageType, ITextMessage } from '@/types/chat'; // 导入 EMessageType 和 ITextMessage
 import { SessionConnectionState } from '@/types/websocket'; // 导入 SessionConnectionState
 import { useWebSocketSession } from '@/hooks/useWebSocketSession'; // 导入 useWebSocketSession
+import { useUserMicrophoneStream } from '@/hooks/useUserMicrophoneStream'; // 导入 useUserMicrophoneStream
+import AIAudioControls from './AIAudioControls'; // 导入 AIAudioControls
 
 interface HomeMainChatProps {
   className?: string;
@@ -32,7 +34,8 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   // 使用新的 Hooks
   const { chatMessages, addChatMessage, clearMessages } = useChatMessages(); // 获取 addChatMessage 和 clearMessages
   const { processAudioFrame, stopPlayback, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
-  const { sessionState } = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState
+  const { sessionState, defaultLocation } = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
+  const { audioLevel, micPermission } = useUserMicrophoneStream({ defaultLocation, sessionState}); // 使用 useUserMicrophoneStream 并传递 activeAppUri 和 activeGraphId
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
   useWebSocketEvents();
@@ -134,6 +137,15 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
           <MessageListRenderer messages={chatMessages} aiAvatarUrl={aiAvatarUrl} userName={userName} aiPersonaName={aiPersonaName} /> {/* 传递 aiAvatarUrl, userName, aiPersonaName */}
         </div>        
       </div>
+
+      {/* 音频输入控制组件 */}
+      <AIAudioControls 
+        isPlaying={isPlaying} // 传递 AI 播放状态
+        onInterrupt={stopPlayback} // 传递打断 AI 播放的函数
+        audioLevel={audioLevel} // 传递用户麦克风音量
+        micPermission={micPermission} // 传递麦克风权限状态
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20"
+      />
 
       {/* 输入框组件 */}
       <ChatInput

@@ -143,11 +143,13 @@ export class WebSocketManager {
             name: name,
             src_loc: srcLoc,
             dest_locs: destLocs,
-            data: new Uint8Array(0), // data 字段为空的 Uint8Array
-            content_type: 'text/plain',
-            encoding: 'UTF-8',
             timestamp: Date.now(),
-            properties: { text: text, is_final: true }, // 文本内容放在 properties 中
+            properties: { 
+              text: text, 
+              is_final: true,
+              content_type: 'text/plain',
+              encoding: 'UTF-8',
+            }, // 文本内容和类型信息放在 properties 中
         };
         this.sendMessage(dataMessage);
     }
@@ -160,10 +162,12 @@ export class WebSocketManager {
             name: name, // name 字段直接放在这里
             src_loc: srcLoc,
             dest_locs: destLocs,
-            data: new TextEncoder().encode(JSON.stringify(jsonData)),
-            content_type: 'application/json',
-            encoding: 'UTF-8',
             timestamp: Date.now(),
+            properties: { 
+              json_data: jsonData, // 将 JSON 数据本身作为属性发送
+              content_type: 'application/json',
+              encoding: 'UTF-8',
+            },
         };
         this.sendMessage(dataMessage);
     }
