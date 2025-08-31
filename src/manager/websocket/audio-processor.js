@@ -72,10 +72,10 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
     // 根据是否有音频数据播放来更新状态并发送消息
     if (hasAudioToPlay && !this.isPlayingState) {
         this.isPlayingState = true;
-        this.port.postMessage('playing');
+        this.port.postMessage({ type: 'playing' }); // 发送一个对象，包含 type 属性
     } else if (!hasAudioToPlay && this.isPlayingState) {
         this.isPlayingState = false;
-        this.port.postMessage('stopped');
+        this.port.postMessage({ type: 'stopped' }); // 发送一个对象，包含 type 属性
     }
     
     // Return true to keep the processor alive.

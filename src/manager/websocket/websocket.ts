@@ -360,15 +360,14 @@ export class WebSocketManager {
     // 处理接收到的消息
     private handleMessage(event: MessageEvent): void { // 改回同步方法
         console.log('Received raw message event:', event);
-        console.log('Received raw message data type:', typeof event.data);
         
         // 确保 data 是 ArrayBuffer 类型，因为 binaryType 已设置为 "arraybuffer"
         const arrayBufferData: ArrayBuffer = event.data as ArrayBuffer; 
-        console.log('Received ArrayBuffer size:', arrayBufferData.byteLength);
+        // console.log('Received ArrayBuffer size:', arrayBufferData.byteLength);
 
         try {
             const message = this.decodeMessage(arrayBufferData);
-            console.log('收到消息 (解码后):', message);
+            console.log(`收到消息 ${message.type} (解码后):`, message);
 
             const handlers = this.messageHandlers.get(message.type);
             if (handlers && handlers.length > 0) {
@@ -443,15 +442,10 @@ export class WebSocketManager {
 
     // 解码消息
     private decodeMessage(data: ArrayBuffer): Message {
-        console.log('Attempting to decode MsgPack data.');
-        console.log('Message to decode (Uint8Array length):', new Uint8Array(data).length);
-        console.log('Message to decode (first 20 bytes):', new Uint8Array(data).slice(0, 20)); // 打印前20个字节
+        // console.log('Message to decode (Uint8Array length):', new Uint8Array(data).length);
+        // console.log('Message to decode (first 20 bytes):', new Uint8Array(data).slice(0, 20)); // 打印前20个字节
         try {
             const decoded = decode(new Uint8Array(data), { extensionCodec });
-            console.log('MsgPack decoded object:', decoded); // Add log to inspect decoded object
-            if (decoded && typeof decoded === 'object' && 'type' in decoded) {
-                console.log('Decoded message type:', (decoded as any).type); // Log the type if it exists
-            }
             return decoded as Message;
         } catch (error) {
             console.error('MsgPack 解码错误:', error);

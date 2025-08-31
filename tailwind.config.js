@@ -64,9 +64,14 @@ module.exports = {
         from: { opacity: '0', transform: 'translateY(20px)' },
         to: { opacity: '1', transform: 'translateY(0)' },
       },
+      glow: {
+        '0%, 100%': { boxShadow: '0 0 5px rgba(0, 191, 255, 0.4), 0 0 10px rgba(0, 191, 255, 0.2)', opacity: '0.8' },
+        '50%': { boxShadow: '0 0 15px rgba(0, 191, 255, 0.8), 0 0 25px rgba(0, 191, 255, 0.4)', opacity: '1' },
+      },
     },
     animation: {
       fadeInUp: 'fadeInUp 0.5s ease-out forwards',
+      'glow-pulse': 'glow 1.5s infinite alternate',
     },
   },
   plugins: [require("tailwindcss-animate")],

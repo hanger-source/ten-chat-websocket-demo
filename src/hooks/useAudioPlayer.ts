@@ -33,9 +33,9 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
 
     const startPlayback = useCallback(async () => {
         const unsubscribe = audioManager.onOutputMessage((message) => {
-            if (message.type === 'playing') {
+            if (message && message.type === 'playing') {
                 setIsPlaying(true);
-            } else if (message.type === 'stopped') {
+            } else if (message && message.type === 'stopped') {
                 setIsPlaying(false);
             }
         });

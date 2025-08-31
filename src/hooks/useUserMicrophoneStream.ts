@@ -1,10 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
 import { SessionConnectionState } from "@/types/websocket";
-import { Location, MessageType } from '@/types/message';
+import { Location } from '@/types/message';
 import { audioManager } from '@/manager/audio/AudioManager';
-import { MESSAGE_CONSTANTS } from '@/common/constant';
-import { WebSocketConnectionState } from '@/types/websocket';
+import { useAppSelector } from '@/common/hooks'; // 导入 useAppSelector
 
 const RETRY_CONFIG = {
   MAX_RETRIES: 3,
@@ -47,6 +46,8 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
   const audioBufferRef = useRef<Uint8Array[]>([]);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const silentFrameCountRef = useRef(0); // 新增：用于跟踪连续静音帧数
+ 
+  const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted); // 获取麦克风静音状态
 
   const calculateRetryDelay = (retryCount: number): number => {
     const delay = Math.min(
@@ -113,6 +114,17 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
     return resampledInt16Data;
   }, []);
 
+  const stopMicrophoneStream = useCallback((): void => {
+    isAudioProcessingActiveRef.current = false;
+    
+    audioManager.stopMicrophoneStream();
+
+    setIsStreaming(false);
+    setAudioLevel(0);
+    setError(undefined);
+    resetRetryState();
+  }, [resetRetryState]);
+ 
   // 声明 startMicrophoneStreamInternal，以便 handleMicrophoneError 可以引用它
   const startMicrophoneStreamInternal = useCallback(async () => {
     setError(undefined);
@@ -122,6 +134,13 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
       setError("无法开始麦克风流：权限不足或会话未激活。");
       setIsStreaming(false);
       setMicPermission('denied');
+      return;
+    }
+
+    // 如果麦克风被静音，则不启动流
+    if (isMicrophoneMuted) {
+      console.log("麦克风已静音，不启动麦克风流。");
+      stopMicrophoneStream(); // 确保停止任何可能的现有流
       return;
     }
 
@@ -206,7 +225,7 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
       unsubscribeRef.current = unsubscribe;
 
       setIsStreaming(true);
-      isAudioProcessingActiveRef.current = true;
+      isAudioProcessingActiveRef.current = !isMicrophoneMuted; // 根据静音状态设置处理是否激活
 
     } catch (error) {
       console.error(`无法访问麦克风或启动音频流: ${error}`);
@@ -226,7 +245,7 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
         setError('麦克风重试次数已达上限，停止重试。');
       }
     }
-  }, [micPermission, sessionState, defaultLocation, resetRetryState]);
+  }, [micPermission, sessionState, defaultLocation, resetRetryState, isMicrophoneMuted, stopMicrophoneStream, resampleInt16Data]);
 
   const handleMicrophoneError = useCallback((errorMessage: string): void => {
     // 这个函数现在主要用于设置错误状态，实际的重试逻辑已合并到 startMicrophoneStreamInternal
@@ -234,25 +253,20 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
     setError(errorMessage);
     setIsStreaming(false);
     setMicPermission('denied');
+    // isAudioProcessingActiveRef.current = false; // 移除，由 useEffect 统一控制
   }, []);
-
-  const stopMicrophoneStream = useCallback((): void => {
-    isAudioProcessingActiveRef.current = false;
-    
-    audioManager.stopMicrophoneStream();
-
-    setIsStreaming(false);
-    setAudioLevel(0);
-    setError(undefined);
-    resetRetryState();
-  }, [resetRetryState]);
 
   useEffect(() => {
     sessionStateRef.current = sessionState;
 
-    if (sessionState === SessionConnectionState.SESSION_ACTIVE && !isStreaming) {
-      startMicrophoneStreamInternal(); // 直接调用内部启动函数
-    } else if (sessionState !== SessionConnectionState.SESSION_ACTIVE && isStreaming) {
+    // 统一在这里根据 sessionState 和 isMicrophoneMuted 状态来控制流的启停
+    if (sessionState === SessionConnectionState.SESSION_ACTIVE && !isMicrophoneMuted) {
+      if (!isStreaming) {
+        console.log("排查日志: 会话激活且麦克风未静音，启动麦克风流。");
+        startMicrophoneStreamInternal();
+      }
+    } else if (isStreaming) { // 如果麦克风静音或会话未激活，且当前正在流式传输，则停止流
+      console.log("排查日志: 会话未激活或麦克风已静音，停止麦克风流。");
       stopMicrophoneStream();
     }
  
@@ -262,7 +276,7 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
         unsubscribeRef.current = null;
       }
     };
-  }, [sessionState, isStreaming, startMicrophoneStreamInternal, stopMicrophoneStream]);
+  }, [sessionState, isStreaming, isMicrophoneMuted, startMicrophoneStreamInternal, stopMicrophoneStream]);
 
   useEffect(() => {
     navigator.permissions.query({ name: 'microphone' as PermissionName }).then((result: PermissionStatus) => {
