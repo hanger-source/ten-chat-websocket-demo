@@ -32,18 +32,21 @@ export function parseWebSocketMessage(rawMessage: Message): IChatMessage | null 
             const imageUrl = properties.image_url || undefined;
             const endOfSegment = properties.end_of_segment || false;
             const dataType = properties.data_type || EMessageDataType.TEXT; // 兼容旧的 data_type
+            const asrRequestId = properties.asr_request_id || undefined; // 从后端原始数据中获取 asr_request_id
 
-            // 优先处理 ASR 消息
-            if (properties.audio_text) {
+            // 优先处理 ASR 消息：当原始消息的 name 为 "asr_result" 且包含 text 时
+            if (rawMessage.name === "asr_result" && properties.text) {
+                const asrRole = properties.role || EMessageType.USER; // ASR 结果通常是用户说的，默认为 USER
                 return {
                     ...baseProps,
-                    role: role as EMessageType,
+                    role: asrRole as EMessageType,
                     type: 'asr_result',
                     payload: {
-                        asrText: properties.audio_text,
+                        asrText: properties.text, // 使用 properties.text 作为 ASR 文本
                     },
-                    end_of_segment: endOfSegment,
-                    data_type: dataType,
+                    isFinal: endOfSegment, // 将 endOfSegment 映射到 isFinal
+                    data_type: dataType, // 兼容旧的IChatItem字段
+                    asrRequestId: asrRequestId, // 设置 asrRequestId
                 } as IAsrResultMessage;
             }
 

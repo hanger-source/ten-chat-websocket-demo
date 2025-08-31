@@ -21,6 +21,7 @@ export interface IBaseChatMessage {
     group_id?: string;
     isFinal?: boolean; // 兼容字段，从 properties 获取
     data_type?: EMessageDataType; // 兼容旧的IChatItem字段
+    asrRequestId?: string; // 新增：用于关联同一段语音识别的 ASR 结果，如果适用
 }
 
 // 文本消息
@@ -56,6 +57,8 @@ export interface IAsrResultMessage extends IBaseChatMessage {
     payload: {
         asrText: string;
     };
+    isFinal?: boolean; // 新增：用于指示 ASR 结果是否为最终结果
+    asr_request_id?: string; // 新增：用于关联同一段语音识别的 ASR 结果
 }
 
 // 自定义卡片消息

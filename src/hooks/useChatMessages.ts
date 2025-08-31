@@ -3,6 +3,7 @@ import { webSocketManager } from '@/manager/websocket/websocket';
 import { Message, MessageType } from '@/types/message';
 import { IChatMessage, ITextMessage, IImageMessage, IAsrResultMessage, EMessageType } from '@/types/chat';
 import { parseWebSocketMessage } from '@/utils/messageParser';
+import { v4 as uuidv4 } from 'uuid';
 
 interface UseChatMessagesReturn {
     chatMessages: IChatMessage[];
@@ -12,7 +13,7 @@ interface UseChatMessagesReturn {
 
 export const useChatMessages = (): UseChatMessagesReturn => {
     const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
-    const lastAiMessageIdRef = useRef<string | undefined>(undefined); // 用于跟踪最后一条 AI 消息的 ID，以便进行 ASR 更新
+    const lastAsrRequestIdRef = useRef<string | undefined>(undefined); // 新增：用于跟踪当前正在处理的 ASR 请求的 ID
 
     const processMessage = useCallback((rawMessage: Message) => {
         const parsedMessage = parseWebSocketMessage(rawMessage);
@@ -27,35 +28,83 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
             // ASR Result Handling: Update the latest AI text/image message
             if (parsedMessage.type === 'asr_result' && parsedMessage.payload.asrText) {
+                const asrText = parsedMessage.payload.asrText;
+                const isFinalAsr = parsedMessage.isFinal;
+                const asrRequestId = parsedMessage.asrRequestId; // 从 parsedMessage 中获取 asrRequestId
+                const asrRole = parsedMessage.role; // 获取 ASR 消息的角色，通常是 USER
+
+                // 尝试通过 asrRequestId 查找需要更新的消息
                 let targetMessageIndex = -1;
-                for (let i = newMessages.length - 1; i >= 0; i--) {
-                    const msg = newMessages[i];
-                    // 查找最近的 AGENT/ASSISTANT 的文本或图片消息来更新 ASR 文本
-                    if ((msg.role === EMessageType.AGENT || msg.role === EMessageType.ASSISTANT) && (msg.type === 'text' || msg.type === 'image')) {
-                        targetMessageIndex = i;
-                        break;
-                    }
+                if (asrRequestId) {
+                    targetMessageIndex = newMessages.findIndex(msg =>
+                        msg.asrRequestId === asrRequestId &&
+                        msg.role === asrRole && // 角色必须一致
+                        !msg.isFinal // 只更新非最终消息
+                    );
                 }
 
                 if (targetMessageIndex !== -1) {
+                    // 找到了匹配的非最终 ASR 消息，进行更新
                     const messageToUpdate = newMessages[targetMessageIndex];
                     if (messageToUpdate.type === 'text') {
                         const updatedMessage: ITextMessage = {
                             ...messageToUpdate,
-                            payload: { ...messageToUpdate.payload, text: parsedMessage.payload.asrText }
+                            payload: { ...messageToUpdate.payload, text: asrText },
+                            isFinal: isFinalAsr, // 根据 ASR 结果更新 isFinal 标志
                         };
                         newMessages[targetMessageIndex] = updatedMessage;
                     } else if (messageToUpdate.type === 'image') {
-                        // ASR 结果也可能更新图片消息的文本描述
                         const updatedMessage: IImageMessage = {
                             ...messageToUpdate,
-                            payload: { ...messageToUpdate.payload, text: parsedMessage.payload.asrText }
+                            payload: { ...messageToUpdate.payload, text: asrText },
+                            isFinal: isFinalAsr, // 根据 ASR 结果更新 isFinal 标志
                         };
                         newMessages[targetMessageIndex] = updatedMessage;
                     }
+
+                    // 如果是最终 ASR 结果，则清除 lastAsrRequestIdRef
+                    if (isFinalAsr) {
+                        lastAsrRequestIdRef.current = undefined;
+                    } else {
+                        // 只有在当前 asrRequestId 与正在跟踪的相同，且不是最终结果时，才更新 ref
+                        if (lastAsrRequestIdRef.current === asrRequestId) {
+                            lastAsrRequestIdRef.current = asrRequestId; // 保持对当前 ASR 请求的跟踪
+                        }
+                    }
+                    return newMessages;
+                } else if (!isFinalAsr && asrRequestId) {
+                    // 如果是中间 ASR 结果，但没有找到匹配的消息，并且有 asrRequestId，则创建一个新的非最终 AI 消息
+                    // 只有当这是当前 asrRequestId 的第一个中间结果，或者 asrRequestId 发生变化时才创建新消息
+                    if (lastAsrRequestIdRef.current !== asrRequestId) {
+                        const newAsrMessage: ITextMessage = {
+                            id: parsedMessage.id || uuidv4(),
+                            role: asrRole as EMessageType, // 使用解析后的 asrRole
+                            timestamp: Date.now(),
+                            type: 'text',
+                            payload: { text: asrText },
+                            isFinal: false,
+                            asrRequestId: asrRequestId,
+                        };
+                        newMessages.push(newAsrMessage);
+                        lastAsrRequestIdRef.current = asrRequestId; // 跟踪新的 asrRequestId
+                    }
+                    return newMessages; // 即使没有创建新消息，也要返回，避免后续逻辑干扰
+                } else if (isFinalAsr) {
+                    // 如果是最终 ASR 结果，但没有找到匹配的消息，则创建一个新的最终 AI 消息
+                    const newAsrMessage: ITextMessage = {
+                        id: parsedMessage.id || uuidv4(),
+                        role: asrRole as EMessageType, // 使用解析后的 asrRole
+                        timestamp: Date.now(),
+                        type: 'text',
+                        payload: { text: asrText },
+                        isFinal: true,
+                        asrRequestId: asrRequestId,
+                    };
+                    newMessages.push(newAsrMessage);
+                    lastAsrRequestIdRef.current = undefined; // 最终消息，清除 ref
                     return newMessages;
                 }
-                // 如果没有找到合适的 AI 消息来更新，则忽略此 ASR 结果
+
                 return newMessages;
             }
 
@@ -86,7 +135,7 @@ export const useChatMessages = (): UseChatMessagesReturn => {
             newMessages.push(parsedMessage);
             // 如果是新的 AI 文本或图片消息，跟踪其 ID 以便可能的 ASR 更新
             if ((parsedMessage.type === 'text' || parsedMessage.type === 'image') && (parsedMessage.role === EMessageType.AGENT || parsedMessage.role === EMessageType.ASSISTANT)) {
-                lastAiMessageIdRef.current = parsedMessage.id;
+                // lastAiMessageIdRef.current = parsedMessage.id; // This line is removed
             }
 
             return newMessages;
@@ -105,7 +154,7 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
     const clearMessages = useCallback(() => {
         setChatMessages([]);
-        lastAiMessageIdRef.current = undefined; // 清除最后一条 AI 消息 ID
+        // lastAiMessageIdRef.current = undefined; // This line is removed
     }, []);
 
     return {
