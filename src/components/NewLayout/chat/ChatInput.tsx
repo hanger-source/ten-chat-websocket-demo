@@ -122,7 +122,7 @@ const ChatInput = React.forwardRef<HTMLFormElement, ChatInputProps>(
               type="submit" 
               size="icon" 
               disabled={isDisabled} 
-              className="rounded-full shadow-xl"
+              className="rounded-full shadow-xl bg-gradient-to-r from-blue-500 to-pink-500 text-white hover:from-blue-600 hover:to-pink-600"
             >
               {isSending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
