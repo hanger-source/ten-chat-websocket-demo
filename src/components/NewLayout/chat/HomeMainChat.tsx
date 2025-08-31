@@ -144,7 +144,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
         onInterrupt={stopPlayback} // 传递打断 AI 播放的函数
         audioLevel={audioLevel} // 传递用户麦克风音量
         micPermission={micPermission} // 传递麦克风权限状态
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20"
+        className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20"
       />
 
       {/* 输入框组件 */}

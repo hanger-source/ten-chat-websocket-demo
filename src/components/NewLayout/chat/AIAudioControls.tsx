@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'; // 导入图标
 import { motion } from 'framer-motion'; // 导入 motion 用于动画
+import SiriWave from 'siriwave'; // 导入 siriwave 库
 
 interface AIAudioControlsProps {
   isPlaying: boolean; // AI 是否正在播放音频
@@ -19,6 +20,55 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   micPermission,
   className,
 }) => {
+  const siriwaveContainerRef = useRef<HTMLDivElement>(null);
+  const siriwaveRef = useRef<SiriWave | null>(null);
+
+  // 初始化 SiriWave
+  useEffect(() => {
+    if (micPermission === "granted" && siriwaveContainerRef.current) {
+      if (!siriwaveRef.current) {
+        siriwaveRef.current = new SiriWave({
+          container: siriwaveContainerRef.current,
+          width: siriwaveContainerRef.current.offsetWidth,
+          height: 120, // 固定高度，根据需要调整
+          style: "ios9", // 使用 iOS9 风格
+          speed: 0.2, // 文档默认速度
+          amplitude: 1, // 文档默认振幅
+          autostart: true,
+          curveDefinition: [
+            { "color": "255,105,180", "supportLine": true }, // 热粉色
+            { "color": "255,153,204" }, // 稍亮的粉紫色
+            { "color": "204,153,255" }, // 亮紫色
+            { "color": "153,102,255", "supportLine": true }, // 柔和蓝紫
+            { "color": "102,102,255" },  // 稍亮的蓝色
+            { "color": "102,153,255" },  // 蓝天色
+            { "color": "51,153,255" }    // 明亮蓝色
+          ],
+          globalCompositeOperation: "lighter", // 文档推荐的波浪重叠混合模式
+        });
+      }
+    } else if (siriwaveRef.current) {
+      siriwaveRef.current.dispose();
+      siriwaveRef.current = null;
+    }
+
+    return () => {
+      if (siriwaveRef.current) {
+        siriwaveRef.current.dispose();
+        siriwaveRef.current = null;
+      }
+    };
+  }, [micPermission]);
+
+  // 动态更新振幅
+  useEffect(() => {
+    if (siriwaveRef.current) {
+      // 根据 audioLevel 调整振幅，使其更灵敏，波动更大
+      const newAmplitude = Math.min(3, 0.5 + audioLevel * 25); // 大幅提高基础振幅，增强音量影响，最大 4
+      siriwaveRef.current.setAmplitude(newAmplitude);
+    }
+  }, [audioLevel]);
+
   const renderUserMicStatus = () => {
     if (micPermission === 'denied') {
       return (
@@ -34,9 +84,10 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
           <span className="text-sm">等待权限</span>
         </div>
       );
+    } else if (micPermission === 'granted' && audioLevel > 0.005) { // 有波浪动画时，不显示文本
+      return null; 
     } else {
-      // 这里将是波浪动画，先清空旧的柱状图代码
-      return null; // 暂时返回 null，后面会用 SVG 波浪动画替换
+      return null; // 默认情况下，在没有动画或者权限未 granted 时不显示任何文本
     }
   };
 
@@ -48,56 +99,16 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
       </div>
 
       {/* 波浪动画 */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <svg className="w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
-          {[0, 1, 2, 3, 4].map((i) => {
-            const baseAmplitude = 5 + audioLevel * 20; // 根据音量调整基础振幅
-            const frequency = 0.02 + i * 0.005; // 不同波浪层有不同频率
-            const phaseShift = i * Math.PI / 4; // 不同波浪层有不同相位
-            const color = [
-              "#8A2BE2", // 蓝色紫罗兰
-              "#DC143C", // 深红色
-              "#FF4500", // 橙红色
-              "#1E90FF", // 道奇蓝
-              "#FF69B4", // 热粉色
-            ][i];
-
-            const pathData = Array.from({ length: 200 }, (_, x) => {
-              const y = 30 + baseAmplitude * Math.sin(x * frequency + phaseShift);
-              return `${x} ${y}`;
-            }).join(" L ");
-
-            return (
-              <motion.path
-                key={i}
-                d={`M 0 30 L ${pathData} L 200 30 Z`}
-                fill="none"
-                stroke={color}
-                strokeWidth={2 + audioLevel * 2} // 根据音量调整线宽
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ 
-                  opacity: audioLevel > 0.01 ? 0.7 : 0, 
-                  scale: 1,
-                  x: i % 2 === 0 ? [0, 5, 0] : [0, -5, 0] // 模拟左右轻微晃动
-                }}
-                transition={{ 
-                  duration: 0.8 + i * 0.1, 
-                  ease: "easeInOut", 
-                  repeat: Infinity, 
-                  repeatType: "reverse", 
-                  delay: i * 0.1 
-                }}
-              />
-            );
-          })}
-        </svg>
-      </div>
+      <div
+        ref={siriwaveContainerRef}
+        className="absolute inset-x-0 bottom-0 h-[100px] backdrop-blur-[1px] bg-white/30 flex items-center justify-center pointer-events-none overflow-hidden" // 调整高度和垂直定位
+      ></div>
 
       {isPlaying && ( // 仅当 isPlaying 为 true 时才展示打断按钮区块
-        <div className="flex items-center space-x-2 -mt-32 backdrop-blur-sm bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
+        <div className="flex items-center space-x-2 -mt-32 backdrop-blur-[1px] bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
           <span className="text-sm text-[#635bff]">语音打断 或</span>
-          <motion.button 
-            onClick={onInterrupt} 
+          <motion.button
+            onClick={onInterrupt}
             className={cn("relative z-10 px-2 py-1 text-sm rounded-md", {
               "bg-gray-200 text-[#635bff] hover:bg-gray-300": true, // AI播放时保持默认颜色，悬停时加深背景
             })}
