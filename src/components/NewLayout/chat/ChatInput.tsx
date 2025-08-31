@@ -2,10 +2,11 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Loader2, MessageCircle } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { useWebSocketSession } from '@/hooks/useWebSocketSession';
 import { SessionConnectionState } from '@/types/websocket';
 import { isMobile } from '@/common/utils';
+import ChatMessageSvg from "@/assets/chat/chat_message.svg?react"; // 导入 chat_message.svg
 
 interface ChatInputProps {
   className?: string;
@@ -131,10 +132,10 @@ const ChatInput = React.forwardRef<HTMLFormElement, ChatInputProps>(
             </Button>
           </div>
         ) : (
-          <MessageCircle
-            className="h-8 w-8 text-gray-500 cursor-pointer"
+          <ChatMessageSvg
+            className="h-6 w-6 text-gray-500 cursor-pointer"
             onClick={isMobileDevice ? handleExpand : undefined}
-          />
+          /> // 未展开时显示 chat_message.svg
         )}
       </form>
     );

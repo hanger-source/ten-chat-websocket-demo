@@ -14,6 +14,8 @@ import { isMobile } from '@/common/utils'; // 导入 isMobile 函数
 import ChatInput from './ChatInput'; // 导入 ChatInput 组件
 import { v4 as uuidv4 } from 'uuid'; // 导入 uuidv4 用于生成唯一 ID
 import { EMessageType, ITextMessage } from '@/types/chat'; // 导入 EMessageType 和 ITextMessage
+import { SessionConnectionState } from '@/types/websocket'; // 导入 SessionConnectionState
+import { useWebSocketSession } from '@/hooks/useWebSocketSession'; // 导入 useWebSocketSession
 
 interface HomeMainChatProps {
   className?: string;
@@ -28,8 +30,9 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   const [isChatInputExpanded, setIsChatInputExpanded] = useState(false);
 
   // 使用新的 Hooks
-  const { chatMessages, addChatMessage } = useChatMessages(); // 获取 addChatMessage
+  const { chatMessages, addChatMessage, clearMessages } = useChatMessages(); // 获取 addChatMessage 和 clearMessages
   const { processAudioFrame, stopPlayback, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
+  const { sessionState } = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
   useWebSocketEvents();
@@ -80,6 +83,14 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
       document.removeEventListener('click', handleClickOutside, true);
     };
   }, [isMobileDevice, isChatInputExpanded]);
+
+  // 监听 sessionState 变化，通话开始时清除聊天记录
+  useEffect(() => {
+    if (sessionState === SessionConnectionState.SESSION_ACTIVE) {
+      console.log("排查日志: 通话开始，清除历史聊天记录"); // 添加排查日志
+      clearMessages();
+    }
+  }, [sessionState, clearMessages]);
 
   return (
     <div ref={mainRef} className={cn("flex-1 flex flex-col items-center p-4 bg-gray-50 rounded-lg relative", className)}>

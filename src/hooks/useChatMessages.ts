@@ -7,6 +7,7 @@ import { parseWebSocketMessage } from '@/utils/messageParser';
 interface UseChatMessagesReturn {
     chatMessages: IChatMessage[];
     addChatMessage: (message: IChatMessage) => void; // 添加 addChatMessage 函数到返回接口
+    clearMessages: () => void; // 新增 clearMessages 函数到返回接口
 }
 
 export const useChatMessages = (): UseChatMessagesReturn => {
@@ -103,10 +104,16 @@ export const useChatMessages = (): UseChatMessagesReturn => {
         };
     }, [processMessage]);
 
+    const clearMessages = useCallback(() => {
+        setChatMessages([]);
+        lastAiMessageIdRef.current = undefined; // 清除最后一条 AI 消息 ID
+    }, []);
+
     return {
         chatMessages,
         addChatMessage: (message: IChatMessage) => {
             setChatMessages(prev => [...prev, message]);
         },
+        clearMessages, // 返回 clearMessages 函数
     };
 };
