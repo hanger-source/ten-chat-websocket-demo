@@ -104,7 +104,7 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            点此打断
+            ◼ 点此打断
           </motion.button>
         </div>
       )}
