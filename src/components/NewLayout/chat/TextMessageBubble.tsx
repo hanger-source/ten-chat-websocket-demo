@@ -57,10 +57,13 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                 let charIndex = 0;
                 const typeChar = () => {
                     if (charIndex < fullText.length) {
-                        setDisplayedText(prev => String(prev) + String(fullText[charIndex] || '')); // 显式转换为字符串，并处理 undefined
+                        // FIX: 直接设置显示的文本为 fullText 的子字符串，避免闭包捕获旧的 prevDisplayedText
+                        setDisplayedText(fullText.substring(0, charIndex + 1));
                         charIndex++;
                         timeoutRef.current = setTimeout(typeChar, 50); // 每个字符50ms延迟
                     } else {
+                        // 确保在打字机结束时，displayedText 最终设置为完整的文本
+                        setDisplayedText(fullText);
                         timeoutRef.current = null; // 打字机完成
                     }
                 };
