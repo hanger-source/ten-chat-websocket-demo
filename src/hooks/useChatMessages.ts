@@ -67,7 +67,6 @@ export const useChatMessages = (): UseChatMessagesReturn => {
                                          lastMessage.type === 'text' &&
                                          parsedMessage.type === 'text' &&
                                          lastMessage.group_timestamp === currentGroupTimestamp &&
-                                         !parsedMessage.end_of_segment &&
                                          (lastMessage.role === parsedMessage.role);
 
             // 如果是文本消息的延续，则追加文本
