@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'; // 引入 useState, useEffect, useRef
 import { ITextMessage, EMessageType } from '@/types/chat'; // 修改为 ITextMessage
 import { cn } from '@/lib/utils';
+import { UserAvatarIcon } from '@/components/icons/userAvatar'; // 导入用户头像 SVG 组件
 
 interface TextMessageBubbleProps {
     message: ITextMessage; // 修改为 ITextMessage
@@ -65,7 +66,6 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
         };
     }, [message, isUser, displayedText.length]); // 依赖 message, isUser, displayedText.length
 
-    const avatarSrc = isUser ? "/path/to/default/user/avatar.png" : aiAvatarUrl || "/path/to/default/ai/avatar.png"; // 替换为实际的用户默认头像路径
     const senderName = isUser ? userName || "用户" : aiPersonaName || "AI助手"; // AI消息优先使用 aiPersonaName, 移除 message.senderName
 
     return (
@@ -76,12 +76,16 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
             )}
         >
             <div className={cn("flex items-center mb-2", "space-x-2")}> {/* 头像和名称的容器，统一 avatar 在左，名称在右 */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src={avatarSrc}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                />
+                {isUser ? (
+                    <UserAvatarIcon className="w-8 h-8 rounded-full object-cover mr-2" />
+                ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={aiAvatarUrl}
+                        alt={isUser ? "User Avatar" : "AI Avatar"}
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                    />
+                )}
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
             <div className={cn(

@@ -2,6 +2,7 @@ import React from 'react';
 import { ICommandResultMessage, EMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, Info, Terminal } from 'lucide-react'; // 导入图标库
+import { UserAvatarIcon } from '@/components/icons/userAvatar'; // 导入用户头像 SVG 组件
 
 interface CommandResultMessageBubbleProps {
     message: ICommandResultMessage;
@@ -31,20 +32,23 @@ const CommandResultMessageBubble: React.FC<CommandResultMessageBubbleProps> = ({
 
     const borderRadiusClass = "rounded-xl"; // 所有气泡都使用更圆的圆角
 
-    const avatarSrc = isSystem ? aiAvatarUrl || "/path/to/default/ai/avatar.png" : "/path/to/default/user/avatar.png"; // 系统消息使用AI头像，用户消息使用用户默认头像
-    const senderName = isSystem ? aiPersonaName || "系统" : userName || "用户"; // 系统消息优先使用 aiPersonaName, 移除 message.senderName
+    const senderName = isSystem ? aiPersonaName || "AI助手" : userName || "用户"; // AI消息优先使用 aiPersonaName, 移除 message.senderName
 
     return (
         <div
             className={cn("flex flex-col w-full mb-4", "items-start")} // 统一靠左显示
         >
             <div className={cn("flex items-center mb-2", "space-x-2")}> {/* 头像和名称的容器，统一 avatar 在左，名称在右 */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src={avatarSrc}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                />
+                {isSystem ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={aiAvatarUrl}
+                        alt="AI Avatar"
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                    />
+                ) : (
+                    <UserAvatarIcon className="w-8 h-8 rounded-full object-cover mr-2" />
+                )}
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
             <div className={cn(

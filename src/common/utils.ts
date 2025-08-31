@@ -88,6 +88,15 @@ export const deepMerge = (
   return output;
 };
 
+// 防抖函数
+export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
+
 // 性能监控工具
 export const performanceMonitor = {
   lastLogTime: 0,
@@ -99,18 +108,9 @@ export const performanceMonitor = {
     const now = Date.now();
     if (now - this.lastLogTime > this.logInterval) {
       const fps = Math.round((this.frameCount * 1000) / (now - this.lastLogTime));
-      console.log(`性能监控: ${fps} FPS, 音频处理频率: 62.5Hz`);
+      console.log(`性能监控: %s FPS, 音频处理频率: 62.5Hz`, fps); // 恢复为 console.log
       this.frameCount = 0;
       this.lastLogTime = now;
     }
   }
 };
-
-// 防抖函数
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout;
-  return ((...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  }) as T;
-}

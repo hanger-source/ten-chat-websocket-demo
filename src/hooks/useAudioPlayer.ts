@@ -32,7 +32,7 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
     const websocketConnectionState = useSelector((state: RootState) => state.global.websocketConnectionState);
     const agentConnected = useSelector((state: RootState) => state.global.agentConnected);
 
-    const initAudioContext = useCallback(async () => {
+    const initAudioContext = useCallback(async () => { // 恢复为 console.info
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             try {
@@ -41,14 +41,12 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
                 await audioContextRef.current.audioWorklet.addModule(audioWorkletBlobUrl);
                 URL.revokeObjectURL(audioWorkletBlobUrl); // Clean up the Blob URL after use
             } catch (error) {
-                console.error('useAudioPlayer: Failed to add AudioWorklet module:', error);
             }
         }
         if (audioContextRef.current.state === 'suspended') {
             try {
                 await audioContextRef.current.resume();
             } catch (error) {
-                console.error('useAudioPlayer: Failed to resume AudioContext:', error);
             }
         }
         return audioContextRef.current;
@@ -64,7 +62,6 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
     const startPlayback = useCallback(async () => {
         const audioContext = await initAudioContext();
         if (!audioContext) {
-            console.error('useAudioPlayer: AudioContext not initialized, cannot setup AudioWorkletNode.');
             return;
         }
 
@@ -80,7 +77,6 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
                 }
             };
         }
-        // setIsPlaying(true); // 移除：isPlaying 状态现在由 AudioWorklet Processor 控制
     }, [initAudioContext]);
 
     const resampleAudioData = useCallback((
@@ -119,7 +115,6 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
 
     const processAudioFrame = useCallback((frame: AudioFrameData) => {
         if (!audioWorkletNodeRef.current || !audioContextRef.current) {
-            console.warn('useAudioPlayer: AudioWorkletNode or AudioContext not initialized, cannot process audio frame.');
             return;
         }
 
@@ -150,7 +145,7 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
         } else {
             stopPlayback();
             if (audioContextRef.current) {
-                audioContextRef.current.close().catch(console.error);
+                audioContextRef.current.close().catch(console.error); // 恢复为 console.error
                 audioContextRef.current = null;
             }
             if (audioWorkletNodeRef.current) {
@@ -167,7 +162,7 @@ export const useAudioPlayer = (): UseAudioPlayerReturn => {
                 audioWorkletNodeRef.current = null;
             }
             if (audioContextRef.current) {
-                audioContextRef.current.close().catch(console.error);
+                audioContextRef.current.close().catch(console.error); // 恢复为 console.error
                 audioContextRef.current = null;
             }
         };

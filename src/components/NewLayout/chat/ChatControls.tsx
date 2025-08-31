@@ -16,12 +16,10 @@ interface ChatControlsProps {
 }
 
 const ChatControls = ({ className }: ChatControlsProps) => {
-  const { stopSession, sessionState } = useWebSocketSession(); // 获取 stopSession 和 sessionState
+  const { stopSession } = useWebSocketSession(); // 获取 stopSession 和 sessionState
   const dispatch = useAppDispatch();
   const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted);
   const isCameraMuted = useAppSelector(state => state.global.isCameraMuted);
-
-  console.log("[CHAT_CONTROLS_LOG] Current sessionState:", sessionState);
 
   return (
     <div className={cn("flex space-x-4", className)}>
