@@ -52,7 +52,7 @@ const CommandResultMessageBubble: React.FC<CommandResultMessageBubbleProps> = ({
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
             <div className={cn(
-                "relative p-[1px] rounded-xl max-w-[60%] ml-10", // 为命令结果消息气泡添加左外边距，使其向右缩进 (ml-10)
+                "relative p-[1px] rounded-xl max-w-[80%] ml-10", // 为命令结果消息气泡添加左外边距，使其向右缩进 (ml-10)
                 gradientBorderClass,
                 borderRadiusClass
             )}>

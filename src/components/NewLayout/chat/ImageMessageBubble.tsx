@@ -89,7 +89,7 @@ const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({ message, aiAvat
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
             <div className={cn(
-                "relative p-[1px] max-w-[60%] rounded-lg overflow-hidden ml-10", // 为消息气泡添加左外边距，使其向右缩进 (ml-10)
+                "relative p-[1px] max-w-[80%] rounded-lg overflow-hidden ml-10", // 为消息气泡添加左外边距，使其向右缩进 (ml-10)
                 gradientBorderClass,
                 borderRadiusClass,
             )}>
@@ -97,7 +97,7 @@ const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({ message, aiAvat
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={message.payload.imageUrl} alt="Chat Image" className="w-full h-auto object-cover" />
                     {message.payload.text && (
-                        <p className={cn("text-sm px-4 py-2 break-words", innerTextColorClass)}>{displayedText}</p>
+                        <p className={cn("text-sm px-3 py-2 break-words", innerTextColorClass)}>{displayedText}</p>
                     )}
                 </div>
             </div>

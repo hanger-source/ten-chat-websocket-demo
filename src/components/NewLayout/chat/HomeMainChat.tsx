@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'; // 移除了 useEffect 的导入，因为它将不再被用于处理 audioFrames
+import React, { useCallback, useState, useRef, useEffect } from 'react'; // 移除了 useEffect 的导入，因为它将不再被用于处理 audioFrames
 import { cn } from '@/lib/utils';
 import ChatCamera from "./ChatCamera";
 // import ChatCard from "@/components/Chat/ChatCard";
@@ -22,6 +22,10 @@ interface HomeMainChatProps {
 const HomeMainChat = ({ className }: HomeMainChatProps) => {
   const mainRef = React.useRef<HTMLDivElement>(null);
   const cameraRef = React.useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLFormElement>(null); // 创建 chatInputRef
+
+  // 跟踪 ChatInput 的展开状态
+  const [isChatInputExpanded, setIsChatInputExpanded] = useState(false);
 
   // 使用新的 Hooks
   const { chatMessages, addChatMessage } = useChatMessages(); // 获取 addChatMessage
@@ -50,12 +54,47 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   // 根据是否是手机端，设置不同的头像尺寸
   const avatarSize = isMobile() ? '30%' : '15%'; // 手机端设置为 30%，非手机端保持 15%
 
+  const isMobileDevice = isMobile(); // 获取是否是手机端
+
+  // 处理手机端点击外部收起 ChatInput 的逻辑
+  useEffect(() => {
+    if (!isMobileDevice || !isChatInputExpanded) return;
+
+    const handleClickOutside = (event: TouchEvent | MouseEvent) => {
+      const target = event.target as Node;
+      const isOutside = chatInputRef.current && !chatInputRef.current.contains(target);
+      if (isOutside) {
+        setIsChatInputExpanded(false);
+      }
+    };
+
+    // 延迟添加监听器，避免立即触发
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('touchstart', handleClickOutside, { capture: true });
+      document.addEventListener('click', handleClickOutside, { capture: true });
+    }, 200);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('touchstart', handleClickOutside, true);
+      document.removeEventListener('click', handleClickOutside, true);
+    };
+  }, [isMobileDevice, isChatInputExpanded]);
+
   return (
     <div ref={mainRef} className={cn("flex-1 flex flex-col items-center p-4 bg-gray-50 rounded-lg relative", className)}>
 
       {/* 用户摄像头/屏幕预览区域 - 可拖动 */}
       <Draggable nodeRef={cameraRef} bounds="parent" defaultPosition={{x: 0, y: 0}}>
-        <div ref={cameraRef} className="absolute bottom-[220px] right-4 z-10 w-64 h-48 flex flex-col"> {/* 修改定位到 ChatControls 上方，并添加阴影 */}
+        <div
+          ref={cameraRef}
+          className={cn(
+            "z-10 flex flex-col",
+            isMobileDevice
+              ? "absolute bottom-[180px] right-4 w-48 h-36" // 调整为更合适的高度 (bottom-[80px])
+              : "absolute top-[40px] right-8 w-64 h-48"
+          )} // 根据设备类型调整定位和尺寸
+        >
           <ChatCamera />
         </div>
       </Draggable>
@@ -80,17 +119,25 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
           />
         )}
         {/* 会话消息列表区域 - 使用新的 MessageListRenderer */}
-        <div className="flex-1 overflow-y-auto w-full"> {/* 添加 min-h-0 确保消息列表在 flex 布局中正确滚动 */}
+        <div className="flex-1 overflow-y-auto w-full pb-20"> {/* 添加 min-h-0 确保消息列表在 flex 布局中正确滚动 */}
           <MessageListRenderer messages={chatMessages} aiAvatarUrl={aiAvatarUrl} userName={userName} aiPersonaName={aiPersonaName} /> {/* 传递 aiAvatarUrl, userName, aiPersonaName */}
-        </div>
-        {/* 输入框组件 */}
-        <ChatInput className="mt-auto" onSendMessage={handleUserSendMessage} /> {/* 添加 ChatInput 组件，并设置 mt-auto 使其在底部，并传递 onSendMessage 回调 */}
+        </div>        
       </div>
 
+      {/* 输入框组件 */}
+      <ChatInput
+        ref={chatInputRef}
+        className="absolute bottom-12 left-12 z-20"
+        onSendMessage={handleUserSendMessage}
+        onExpandedChange={setIsChatInputExpanded}
+        expanded={isChatInputExpanded}
+      />
       {/* 底部声明 */}
       <p className="text-xs text-gray-500 mt-4">AI生成内容由大模型生成，不能完全保障真实</p>
       {/* 工具栏 */}
-      <ChatControls className="absolute bottom-20 right-4 z-20" />
+      {!isMobileDevice || !isChatInputExpanded ? (
+        <ChatControls className="absolute bottom-12 right-12 z-20" />
+      ) : null} {/* 条件渲染 ChatControls */}
     </div>
   );
 };

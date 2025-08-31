@@ -22,7 +22,7 @@ const Home = () => {
         <HomeRightSidebar className="hidden lg:block w-75" /> {/* 桌面端侧边栏 */}
       </div>
       {/* 移动端侧边栏触发按钮 (仅在小屏幕显示) */}
-      <div className="lg:hidden fixed bottom-4 right-4">
+      <div className="lg:hidden fixed top-14 right-4">
         <MobileRightSidebarSheet />
       </div>
     </div>

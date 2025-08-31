@@ -89,7 +89,7 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
             <div className={cn(
-                "relative p-[1px] max-w-[60%] rounded-lg ml-10", // 为消息气泡添加左外边距，使其向右缩进 (ml-10)
+                "relative p-[1px] max-w-[80%] rounded-lg ml-10", // 为消息气泡添加左外边距，使其向右缩进 (ml-10)
                 gradientBorderClass,
                 borderRadiusClass,
             )}>
@@ -101,7 +101,7 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                         borderRadiusClass
                     )}
                 >
-                    <p className="text-sm">{displayedText}</p>
+                    <p className="text-sm tracking-wide">{displayedText}</p> {/* 添加 tracking-wide 调整字间距 */}
                 </div>
             </div>
         </div>
