@@ -46,17 +46,26 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
             return;
         }
 
-        // 如果是 AI 的最终文本消息，并且尚未完全显示，则启动打字机效果
-        if (displayedText.length < fullText.length) {
-            let charIndex = displayedText.length;
-            const typeChar = () => {
-                if (charIndex < fullText.length) {
-                    setDisplayedText(prev => prev + fullText[charIndex]);
-                    charIndex++;
-                    timeoutRef.current = setTimeout(typeChar, 50); // 每个字符50ms延迟
-                }
-            };
-            timeoutRef.current = setTimeout(typeChar, 50);
+        // 如果是 AI 的最终文本消息，并且尚未完全显示，则在延迟后启动打字机效果
+        if (!isUser && message.isFinal && (messageId !== currentMessageIdRef.current || displayedText.length < fullText.length)) {
+            setDisplayedText(''); // 先清空，等待动画完成
+            currentMessageIdRef.current = messageId;
+
+            const delay = 500; // 与 fadeInUp 动画持续时间匹配的延迟
+
+            timeoutRef.current = setTimeout(() => {
+                let charIndex = 0;
+                const typeChar = () => {
+                    if (charIndex < fullText.length) {
+                        setDisplayedText(prev => prev + fullText[charIndex]);
+                        charIndex++;
+                        timeoutRef.current = setTimeout(typeChar, 50); // 每个字符50ms延迟
+                    } else {
+                        timeoutRef.current = null; // 打字机完成
+                    }
+                };
+                typeChar(); // 启动打字机效果
+            }, delay);
         }
 
         return () => {
@@ -64,7 +73,7 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, [message, isUser, displayedText.length]); // 依赖 message, isUser, displayedText.length
+    }, [message, isUser]); // 依赖 message 和 isUser，不再依赖 displayedText.length 以避免循环
 
     const senderName = isUser ? userName || "用户" : aiPersonaName || "AI助手"; // AI消息优先使用 aiPersonaName, 移除 message.senderName
 
