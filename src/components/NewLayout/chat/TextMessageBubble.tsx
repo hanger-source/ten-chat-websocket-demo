@@ -30,7 +30,7 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
     const borderRadiusClass = "rounded-xl"; // 所有气泡都使用更圆的圆角
 
     useEffect(() => {
-        const fullText = message.payload.text || '';
+        const fullText = String(message.payload.text || ''); // 显式转换为字符串
         const messageId = message.id;
 
         // 清除任何进行中的定时器
@@ -57,7 +57,7 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                 let charIndex = 0;
                 const typeChar = () => {
                     if (charIndex < fullText.length) {
-                        setDisplayedText(prev => prev + fullText[charIndex]);
+                        setDisplayedText(prev => String(prev) + String(fullText[charIndex] || '')); // 显式转换为字符串，并处理 undefined
                         charIndex++;
                         timeoutRef.current = setTimeout(typeChar, 50); // 每个字符50ms延迟
                     } else {
