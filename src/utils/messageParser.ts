@@ -20,7 +20,8 @@ export function parseWebSocketMessage(rawMessage: Message): IChatMessage | null 
         timestamp: rawMessage.timestamp || Date.now(),
         group_timestamp: rawMessage.properties?.group_timestamp || undefined,
         group_id: rawMessage.properties?.group_id || undefined,
-        isFinal: rawMessage.properties?.is_final || undefined,
+        isFinal: rawMessage.properties?.end_of_segment === true, // 修正：使用 end_of_segment 来判断是否是最终消息
+        data_type: rawMessage.properties?.data_type || undefined, // 修正：添加 data_type 的解析
     };
 
     switch (rawMessage.type) {

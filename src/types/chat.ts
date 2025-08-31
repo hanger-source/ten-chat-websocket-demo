@@ -12,7 +12,7 @@ export enum EMessageDataType {
 }
 
 // 基础聊天消息接口，包含所有消息类型共有的属性
-interface IBaseChatMessage {
+export interface IBaseChatMessage {
     id: string;
     role: EMessageType; // 使用 EMessageType
     timestamp: number;
