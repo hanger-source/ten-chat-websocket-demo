@@ -10,7 +10,7 @@ interface HomeRightSidebarProps {
 }
 
 const HomeRightSidebar = ({ className }: HomeRightSidebarProps) => {
-  const { selectedScene, selectedSceneAiPersonaName } = useSelectedScene();
+  const { selectedScene, selectedSceneAiPersonaName, getDisplayVoiceName } = useSelectedScene();
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false); // State to control drawer visibility
   const { isConnected } = useWebSocketSession(); // 获取连接状态
 
@@ -38,7 +38,7 @@ const HomeRightSidebar = ({ className }: HomeRightSidebarProps) => {
         <div className="flex items-center justify-between mb-2">
           <div className="text-base font-semibold">AI 人设：{aiPersonaName}</div>
         </div>
-        <div className="text-sm text-gray-700 mb-4">音色：标准女声</div>
+        <div className="text-sm text-gray-700 mb-4">音色：{getDisplayVoiceName(selectedScene)}</div>
         <div className="mt-auto p-0.5 rounded-md bg-gradient-to-r from-blue-100 to-pink-100">
           <button 
             className={cn("w-full h-full px-4 py-2 text-sm bg-gradient-to-r from-blue-50 to-pink-50 rounded-md transition-colors duration-200", {

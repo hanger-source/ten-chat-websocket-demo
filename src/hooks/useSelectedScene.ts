@@ -4,6 +4,8 @@ import { ISceneCard } from '@/types';
 import { loadSelectedSceneNameFromLocal, loadSceneByNameFromLocal, LAST_SAVED_SCENE_TIMESTAMP_KEY } from '@/common/localSceneStorage';
 import { sceneCards } from '@/common/sceneData'; // 重新引入 sceneCards
 import { ISceneSetting } from '@/types'; // 导入 ISceneSetting
+import { modeOptions } from '@/common/mockModeOptionsData'; // 导入 modeOptions
+import { IModeOption, IReplaceableVoiceOption, ISelectedVoiceOption } from '@/types/modeOptions'; // 导入相关类型
 
 /**
  * Custom hook that provides and manages the currently selected ISceneCard instance.
@@ -62,11 +64,44 @@ export const useSelectedScene = () => {
     return setting;
   }, [selectedScene]);
 
+  const getDisplayVoiceName = useCallback((scene: ISceneCard | undefined): string => {
+    if (!scene || !scene.selectedVoices || Object.keys(scene.selectedVoices).length === 0) {
+      return ''; // 默认值
+    }
+
+    const firstVoiceKey = Object.keys(scene.selectedVoices)[0];
+    const selectedVoiceId = scene.selectedVoices[firstVoiceKey];
+
+    // 查找当前场景的默认模式配置，如果不存在则使用第一个模式配置
+    const currentModeOption = modeOptions.find(mode => mode.value === scene.defaultModeValue) || modeOptions[0];
+
+    if (!currentModeOption || !currentModeOption.metadata || !currentModeOption.metadata.replaceableVoices || !currentModeOption.metadata.voices) {
+      return ''; // 默认值
+    }
+
+    // 从 replaceableVoices 中找到匹配的 key
+    const replaceableVoiceConfig = currentModeOption.metadata.replaceableVoices.find(
+      (rv: IReplaceableVoiceOption) => rv.key === firstVoiceKey
+    );
+
+    if (!replaceableVoiceConfig) {
+      return ''; // 默认值
+    }
+
+    // 从 voices 中找到匹配的 voiceId (即 replaceableVoiceConfig.voice) 对应的显示名称
+    const voiceOption = currentModeOption.metadata.voices.find(
+      (v: ISelectedVoiceOption) => v.voice === selectedVoiceId
+    );
+
+    return voiceOption?.name || '';
+  }, [modeOptions]);
+
   return {
     allScenes, // 重新导出 allScenes
     selectedScene,
     selectedSceneAiPersonaName,
     switchSelectedScene,
     getSceneSetting, // 导出 getSceneSetting
+    getDisplayVoiceName, // 导出新的 getDisplayVoiceName 函数
   };
 };
