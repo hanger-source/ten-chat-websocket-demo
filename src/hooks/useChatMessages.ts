@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
 import { Message, MessageType } from '@/types/message';
 import { IChatMessage, ITextMessage, IImageMessage, IAsrResultMessage, EMessageType } from '@/types/chat';
+import { ICommandResultMessage, ICustomCardMessage, IAudioMessage, IUnknownMessage } from '@/types/chat'; // 导入所有缺失的聊天消息类型
 import { parseWebSocketMessage } from '@/utils/messageParser';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -10,6 +11,15 @@ interface UseChatMessagesReturn {
     addChatMessage: (message: IChatMessage) => void; // 添加 addChatMessage 函数到返回接口
     clearMessages: () => void; // 新增 clearMessages 函数到返回接口
 }
+
+// 类型守卫函数，用于缩小 IChatMessage 的类型
+const isTextMessage = (message: IChatMessage): message is ITextMessage => message.type === 'text';
+const isAsrResultMessage = (message: IChatMessage): message is IAsrResultMessage => message.type === 'asr_result';
+const isImageMessage = (message: IChatMessage): message is IImageMessage => message.type === 'image';
+const isCommandResultMessage = (message: IChatMessage): message is ICommandResultMessage => message.type === 'command_result';
+const isCustomCardMessage = (message: IChatMessage): message is ICustomCardMessage => message.type === 'custom_card';
+const isAudioMessage = (message: IChatMessage): message is IAudioMessage => message.type === 'audio';
+const isUnknownMessage = (message: IChatMessage): message is IUnknownMessage => message.type === 'unknown';
 
 export const useChatMessages = (): UseChatMessagesReturn => {
     const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
@@ -33,12 +43,12 @@ export const useChatMessages = (): UseChatMessagesReturn => {
                 const asrRequestId = parsedMessage.asrRequestId; // 从 parsedMessage 中获取 asrRequestId
                 const asrRole = parsedMessage.role; // 获取 ASR 消息的角色，通常是 USER
 
-                // 尝试通过 asrRequestId 查找需要更新的消息
+                // 尝试通过 asrRequestId 查找是否有相同 asrRequestId 且 !isFinal 的消息需要更新
                 let targetMessageIndex = -1;
                 if (asrRequestId) {
                     targetMessageIndex = newMessages.findIndex(msg =>
                         msg.asrRequestId === asrRequestId &&
-                        msg.role === asrRole && // 角色必须一致
+                        msg.role === asrRole &&
                         !msg.isFinal // 只更新非最终消息
                     );
                 }
@@ -64,48 +74,31 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
                     // 如果是最终 ASR 结果，则清除 lastAsrRequestIdRef
                     if (isFinalAsr) {
-                        lastAsrRequestIdRef.current = undefined;
-                    } else {
-                        // 只有在当前 asrRequestId 与正在跟踪的相同，且不是最终结果时，才更新 ref
-                        if (lastAsrRequestIdRef.current === asrRequestId) {
-                            lastAsrRequestIdRef.current = asrRequestId; // 保持对当前 ASR 请求的跟踪
+                        // 如果是最终 ASR 结果，确保 isFinal 状态被设置
+                        if (newMessages[targetMessageIndex]) {
+                            (newMessages[targetMessageIndex] as IAsrResultMessage).isFinal = true;
                         }
+                    } else {
                     }
                     return newMessages;
-                } else if (!isFinalAsr && asrRequestId) {
-                    // 如果是中间 ASR 结果，但没有找到匹配的消息，并且有 asrRequestId，则创建一个新的非最终 AI 消息
-                    // 只有当这是当前 asrRequestId 的第一个中间结果，或者 asrRequestId 发生变化时才创建新消息
-                    if (lastAsrRequestIdRef.current !== asrRequestId) {
-                        const newAsrMessage: ITextMessage = {
-                            id: parsedMessage.id || uuidv4(),
-                            role: asrRole as EMessageType, // 使用解析后的 asrRole
-                            timestamp: Date.now(),
-                            type: 'text',
-                            payload: { text: asrText },
-                            isFinal: false,
-                            asrRequestId: asrRequestId,
-                        };
-                        newMessages.push(newAsrMessage);
-                        lastAsrRequestIdRef.current = asrRequestId; // 跟踪新的 asrRequestId
-                    }
-                    return newMessages; // 即使没有创建新消息，也要返回，避免后续逻辑干扰
-                } else if (isFinalAsr) {
-                    // 如果是最终 ASR 结果，但没有找到匹配的消息，则创建一个新的最终 AI 消息
-                    const newAsrMessage: ITextMessage = {
-                            id: parsedMessage.id || uuidv4(),
-                            role: asrRole as EMessageType, // 使用解析后的 asrRole
-                            timestamp: Date.now(),
-                            type: 'text',
-                            payload: { text: asrText },
-                            isFinal: true,
-                            asrRequestId: asrRequestId,
+                } else { // 如果没有找到匹配的消息，无论是中间结果还是最终结果，都添加为新消息
+                    const newAsrMessage: ITextMessage = { // 使用 ITextMessage 因为它是文本内容
+                        id: parsedMessage.id || uuidv4(),
+                        role: asrRole as EMessageType,
+                        timestamp: Date.now(),
+                        type: 'text',
+                        payload: { text: asrText },
+                        isFinal: isFinalAsr, // 使用传入的 isFinal 状态
+                        asrRequestId: asrRequestId,
                     };
                     newMessages.push(newAsrMessage);
-                    lastAsrRequestIdRef.current = undefined; // 最终消息，清除 ref
+                    // 如果是最终消息，则不需要跟踪 asrRequestId
+                    if (isFinalAsr) {
+                        lastAsrRequestIdRef.current = undefined;
+                    }
                     return newMessages;
                 }
 
-                return newMessages;
             }
 
             // Grouping logic for text/image messages
@@ -139,7 +132,7 @@ export const useChatMessages = (): UseChatMessagesReturn => {
             }
             return newMessages;
         });
-    }, []);
+    }, [lastAsrRequestIdRef, setChatMessages, parseWebSocketMessage]);
 
     useEffect(() => {
         const unsubscribeData = webSocketManager.onMessage(MessageType.DATA, processMessage);

@@ -126,20 +126,28 @@ class AudioInputProcessor extends AudioWorkletProcessor {
       }
 
       const currentFrameSum = this._sumSamples(combinedInt16Data);
+      
+      // 计算当前帧的音量级别
+      let sumOfSquares = 0;
+      for (let i = 0; i < combinedInt16Data.length; i++) {
+        sumOfSquares += combinedInt16Data[i] * combinedInt16Data[i];
+      }
+      const rms = Math.sqrt(sumOfSquares / combinedInt16Data.length); // 均方根值
+      const audioLevel = Math.min(1, rms / 32767); // 归一化到 0-1 范围，32767是Int16的最大值
 
       // 质量控制和去重
       const isDuplicateFrame = this._qualityControlEnabled && (
         (this._lastSentFrameSum !== null && Math.abs(currentFrameSum - this._lastSentFrameSum) < 0.01) ||
         (this._lastFullFrameData && this._isFrameIdentical(this._lastFullFrameData, combinedInt16Data))
       );
-
+      
       if (!isDuplicateFrame) {
         this._frameCount++;
         this.port.postMessage({ 
           type: 'audioFrame', 
           frameId: this._frameCount, 
           data: combinedInt16Data, // 直接发送 Int16Array
-          // audioLevel 不再在此处计算，由 useUserMicrophoneStream 处理
+          audioLevel: audioLevel, // 重新在此处计算并发送 audioLevel
         });
 
         this._lastSentFrameSum = currentFrameSum;
