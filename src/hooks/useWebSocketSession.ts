@@ -68,7 +68,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       if (cmdResult.success) {
         dispatch(setSessionConnectionState(SessionConnectionState.SESSION_ACTIVE)); // 更新全局 sessionState
         dispatch(setAgentConnected(true));
-        toast.success("AI 已启动！"); // Changed message
+        // toast.success("AI 已启动！"); // Changed message
         if (cmdResult.properties && cmdResult.properties.graph_id) {
           dispatch(setActiveGraphId(cmdResult.properties.graph_id));
           // console.log("useWebSocketSession: Active Graph ID set to", cmdResult.properties.graph_id);

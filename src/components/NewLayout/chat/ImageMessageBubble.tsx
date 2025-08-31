@@ -20,13 +20,13 @@ const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({ message, aiAvat
     }
 
     const gradientBorderClass = isUser
-        ? "bg-gradient-to-r from-blue-400 to-indigo-400" // 用户消息的渐变色 (与 NewLayout 主题蓝色协调)
+        ? "" // 用户消息的边框，设置为空，移除边框
         : "bg-gradient-to-r from-blue-300 to-pink-300"; // AI/系统消息的渐变色 (蓝粉渐变)
 
-    const innerBgClass = "bg-white"; // 内部消息内容的背景色统一改为白色
-    const innerTextColorClass = isUser ? "text-primary-foreground" : "text-gray-800"; // 内部消息内容的文本颜色
+    const innerBgClass = isUser ? "bg-gray-200" : "bg-white"; // 内部消息内容的背景色
+    const innerTextColorClass = "text-gray-800"; // 内部消息内容的文本颜色统一为灰色800（接近黑色）
 
-    const borderRadiusClass = "rounded-lg"; // 所有气泡都使用完全圆角
+    const borderRadiusClass = "rounded-xl"; // 所有气泡都使用更圆的圆角
 
     useEffect(() => {
         const fullText = message.payload.text || '';
@@ -66,16 +66,16 @@ const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({ message, aiAvat
     }, [message, isUser, displayedText.length]); // 依赖 message, isUser, displayedText.length
 
     const avatarSrc = isUser ? "/path/to/default/user/avatar.png" : aiAvatarUrl || "/path/to/default/ai/avatar.png"; // 替换为实际的用户默认头像路径
-    const senderName = isUser ? userName || "用户" : aiPersonaName || message.senderName || "AI助手"; // AI消息优先使用 aiPersonaName
+    const senderName = isUser ? userName || "用户" : aiPersonaName || "AI助手"; // AI消息优先使用 aiPersonaName, 移除 message.senderName
 
     return (
         <div
             className={cn(
                 "flex flex-col mb-4",
-                isUser ? "items-end" : "items-start"
+                "items-start" // 统一靠左显示
             )}
         >
-            <div className={cn("flex items-center mb-2", isUser ? "flex-row-reverse space-x-reverse" : "space-x-2")}> {/* 头像和名称的容器 */}
+            <div className={cn("flex items-center mb-2", "space-x-2")}> {/* 头像和名称的容器，统一 avatar 在左，名称在右 */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={avatarSrc}
@@ -84,18 +84,16 @@ const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({ message, aiAvat
                 />
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
-            <div className={cn("relative p-[1px] max-w-[60%] rounded-lg overflow-hidden", gradientBorderClass, borderRadiusClass)}> {/* 渐变边框容器，修改 max-w-[70%] 为 max-w-[60%] */}
-                <div
-                    className={cn(
-                        "rounded-lg break-words",
-                        innerBgClass,
-                        borderRadiusClass
-                    )}
-                >
+            <div className={cn(
+                "relative p-[1px] max-w-[60%] rounded-lg overflow-hidden ml-10", // 为消息气泡添加左外边距，使其向右缩进 (ml-10)
+                gradientBorderClass,
+                borderRadiusClass,
+            )}>
+                <div className={cn("rounded-xl break-words", innerBgClass, borderRadiusClass)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={message.payload.imageUrl} alt="Chat Image" className="w-full h-auto object-cover" />
                     {message.payload.text && (
-                        <p className={cn("text-sm px-4 py-3 break-words", innerTextColorClass)}>{displayedText}</p>
+                        <p className={cn("text-sm px-4 py-2 break-words", innerTextColorClass)}>{displayedText}</p>
                     )}
                 </div>
             </div>

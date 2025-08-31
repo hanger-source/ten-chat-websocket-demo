@@ -6,6 +6,7 @@ import { parseWebSocketMessage } from '@/utils/messageParser';
 
 interface UseChatMessagesReturn {
     chatMessages: IChatMessage[];
+    addChatMessage: (message: IChatMessage) => void; // 添加 addChatMessage 函数到返回接口
 }
 
 export const useChatMessages = (): UseChatMessagesReturn => {
@@ -104,5 +105,8 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
     return {
         chatMessages,
+        addChatMessage: (message: IChatMessage) => {
+            setChatMessages(prev => [...prev, message]);
+        },
     };
 };

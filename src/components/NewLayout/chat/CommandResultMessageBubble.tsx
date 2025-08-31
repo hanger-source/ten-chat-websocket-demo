@@ -23,24 +23,22 @@ const CommandResultMessageBubble: React.FC<CommandResultMessageBubbleProps> = ({
     // 渐变边框和内部背景/文本颜色
     const gradientBorderClass = isSystem
         ? "bg-gradient-to-r from-blue-300 to-pink-300" // 系统消息的渐变色 (蓝粉渐变)
-        : "bg-gradient-to-r from-blue-400 to-indigo-400"; // 其他角色（如果未来有）的渐变色，这里保持与用户消息一致
+        : ""; // 非系统消息（用户消息）的边框，设置为空，移除边框
 
-    const innerBgClass = "bg-white"; // 内部消息内容的背景色统一改为白色
+    const innerBgClass = isSystem ? "bg-white" : "bg-gray-200"; // 内部消息内容的背景色
 
-    const innerTextColorClass = isSystem
-        ? (isSuccess === true ? "text-green-800" : isSuccess === false ? "text-red-800" : "text-blue-800")
-        : "text-primary-foreground"; // 根据成功/失败或默认设置内部文本颜色
+    const innerTextColorClass = "text-gray-800"; // 内部消息内容的文本颜色统一为灰色800（接近黑色）
 
-    const borderRadiusClass = "rounded-lg"; // 所有气泡都使用完全圆角
+    const borderRadiusClass = "rounded-xl"; // 所有气泡都使用更圆的圆角
 
     const avatarSrc = isSystem ? aiAvatarUrl || "/path/to/default/ai/avatar.png" : "/path/to/default/user/avatar.png"; // 系统消息使用AI头像，用户消息使用用户默认头像
-    const senderName = isSystem ? aiPersonaName || message.senderName || "系统" : userName || "用户"; // 系统消息优先使用 aiPersonaName
+    const senderName = isSystem ? aiPersonaName || "系统" : userName || "用户"; // 系统消息优先使用 aiPersonaName, 移除 message.senderName
 
     return (
         <div
-            className={cn("flex flex-col w-full mb-4", isSystem ? "items-start" : "items-end")}
+            className={cn("flex flex-col w-full mb-4", "items-start")} // 统一靠左显示
         >
-            <div className={cn("flex items-center mb-2", isSystem ? "space-x-2" : "flex-row-reverse space-x-reverse")}> {/* 头像和名称的容器 */}
+            <div className={cn("flex items-center mb-2", "space-x-2")}> {/* 头像和名称的容器，统一 avatar 在左，名称在右 */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={avatarSrc}
@@ -49,15 +47,12 @@ const CommandResultMessageBubble: React.FC<CommandResultMessageBubbleProps> = ({
                 />
                 <span className="text-sm font-semibold text-gray-700">{senderName}</span>
             </div>
-            <div className={cn("relative p-[1px] rounded-lg max-w-[60%]", gradientBorderClass, borderRadiusClass)}> {/* 渐变边框容器，修改 max-w-[70%] 为 max-w-[60%] */}
-                <div
-                    className={cn(
-                        "flex items-center px-4 py-3 rounded-lg text-sm break-words",
-                        innerBgClass,
-                        innerTextColorClass,
-                        borderRadiusClass
-                    )}
-                >
+            <div className={cn(
+                "relative p-[1px] rounded-xl max-w-[60%] ml-10", // 为命令结果消息气泡添加左外边距，使其向右缩进 (ml-10)
+                gradientBorderClass,
+                borderRadiusClass
+            )}>
+                <div className={cn("flex items-center px-4 py-2 rounded-xl text-sm break-words", innerBgClass, innerTextColorClass, borderRadiusClass)}> {/* 移除 ml-4，现在由父级容器处理 */}
                     <span className="mr-2">{icon}</span>
                     <div className="flex flex-col">
                         {/* 显示原始命令名称，如果有 */}

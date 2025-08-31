@@ -75,7 +75,13 @@ export function parseWebSocketMessage(rawMessage: Message): IChatMessage | null 
                 } as ITextMessage;
             }
 
+            // 如果是 DATA 消息，但文本、图片和 audio_text 都为空，则不处理这条消息
+            if (!text && !imageUrl && !properties.audio_text) {
+                console.log("Received DATA message with empty text, image, and audio_text, filtering out.", rawMessage);
+                return null;
+            }
             // 如果是 DATA 消息，但没有文本或图片，则返回未知消息
+            console.log("Received DATA message without text or image, returning as unknown:", rawMessage);
             return {
                 ...baseProps,
                 role: role as EMessageType,

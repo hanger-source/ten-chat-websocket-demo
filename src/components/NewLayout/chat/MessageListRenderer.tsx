@@ -34,7 +34,7 @@ const MessageListRenderer: React.FC<MessageListRendererProps> = ({ messages, aiA
     }, [messages]);
 
     return (
-        <div className="flex-1 overflow-y-auto px-6 py-6"> {/* 修改为 px-6 py-6 */}
+        <div className="flex-1 overflow-y-auto px-4 py-6"> {/* 修改 px-6 为 px-8，增加左右边距 */}
             {messages.map((message) => {
                 const Renderer = messageRenderers[message.type] || messageRenderers['unknown'];
                 return <Renderer key={message.id} message={message} aiAvatarUrl={aiAvatarUrl} userName={userName} aiPersonaName={aiPersonaName} />;

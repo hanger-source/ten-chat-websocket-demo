@@ -1,25 +1,19 @@
-import React from "react";
 import { useAppSelector, EMobileActiveTab } from "@/common";
 import Header from "@/components/Layout/Header";
 import Action from "@/components/Layout/Action";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import ChatCard from "@/components/Chat/ChatCard";
-import { useWebSocketSession } from "@/hooks/useWebSocketSession";
-import { performanceMonitor } from "@/common/utils";
 import AuthInitializer from "@/components/authInitializer"; // Add AuthInitializer import
 import RTCCard from "@/components/Dynamic/RTCCard"; // Import RTCCard
-import { RootState } from "@/store"; // Import RootState
-import { WebSocketConnectionState } from "@/types/websocket"; // Import WebSocketConnectionState
 import { useAudioRecorder } from "@/hooks/useAudioRecorder"; // 启用 useAudioRecorder hook
 import { VoiceSelection } from "@/components/Settings/VoiceSelection"; // Import VoiceSelection
+import HomeMainChat from "@/components/NewLayout/chat/HomeMainChat"; // 导入 HomeMainChat
 
 function Home() {
   try {
     const mobileActiveTab = useAppSelector(
       (state) => state.global.mobileActiveTab,
     );
-    const websocketConnectionState = useAppSelector((state: RootState) => state.global.websocketConnectionState); // Get from Redux
 
     const { recordedChunksCount, onAudioDataCaptured, downloadRecordedAudio } = useAudioRecorder(); // 启用 useAudioRecorder hook
 

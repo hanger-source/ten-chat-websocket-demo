@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
-import { Message, MessageType, CommandResult } from '@/types/websocket';
+import { Message, MessageType, CommandResult } from '@/types/message'; // 修改导入路径到 @/types/message
 import { toast } from 'sonner';
 
 /**
@@ -18,7 +18,7 @@ export const useWebSocketEvents = () => {
             }
 
             if (commandResult.success) {
-                toast.success(commandResult.detail || '命令执行成功！', { duration: 3000 });
+                // toast.success(commandResult.detail || '命令执行成功！', { duration: 3000 });
             } else {
                 toast.error(commandResult.errorMessage || '命令执行失败！', { duration: 5000 });
             }

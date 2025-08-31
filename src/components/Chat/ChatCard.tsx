@@ -174,7 +174,7 @@ export default function ChatCard(props: { className?: string }) {
       if (!commandResult.success && commandResult.errorMessage) {
         toast.error(commandResult.errorMessage, { duration: 5 });
       } else if (commandResult.success && commandResult.detail) {
-        toast.success(commandResult.detail, { duration: 5 });
+        // toast.success(commandResult.detail, { duration: 5 });
       } else if (commandResult.success) {
         toast.success('命令执行成功！', { duration: 5 });
       } else {

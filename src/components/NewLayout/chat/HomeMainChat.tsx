@@ -1,4 +1,4 @@
-import React from 'react'; // 移除了 useEffect 的导入，因为它将不再被用于处理 audioFrames
+import React, { useCallback } from 'react'; // 移除了 useEffect 的导入，因为它将不再被用于处理 audioFrames
 import { cn } from '@/lib/utils';
 import ChatCamera from "./ChatCamera";
 // import ChatCard from "@/components/Chat/ChatCard";
@@ -11,6 +11,9 @@ import { useWebSocketEvents } from '@/hooks/useWebSocketEvents';
 import MessageListRenderer from './MessageListRenderer';
 import { useSelectedScene } from '@/hooks/useSelectedScene'; // 导入 useSelectedScene
 import { isMobile } from '@/common/utils'; // 导入 isMobile 函数
+import ChatInput from './ChatInput'; // 导入 ChatInput 组件
+import { v4 as uuidv4 } from 'uuid'; // 导入 uuidv4 用于生成唯一 ID
+import { EMessageType, ITextMessage } from '@/types/chat'; // 导入 EMessageType 和 ITextMessage
 
 interface HomeMainChatProps {
   className?: string;
@@ -21,7 +24,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   const cameraRef = React.useRef<HTMLDivElement>(null);
 
   // 使用新的 Hooks
-  const { chatMessages } = useChatMessages();
+  const { chatMessages, addChatMessage } = useChatMessages(); // 获取 addChatMessage
   const { processAudioFrame, stopPlayback, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
@@ -30,6 +33,19 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   const aiAvatarUrl = selectedScene?.iconSrc; // 提取 AI 头像 URL
   const aiPersonaName = selectedScene?.aiPersonaName; // 提取 AI 角色名称
   const userName = "我"; // 临时用户名称，可以根据实际情况从全局状态或用户配置中获取
+
+  // 处理用户发送消息的回调函数
+  const handleUserSendMessage = useCallback((message: { text: string; role: 'user' }) => {
+    const newUserMessage: ITextMessage = {
+      id: uuidv4(), // 生成唯一 ID
+      role: EMessageType.USER,
+      timestamp: Date.now(),
+      type: 'text',
+      payload: { text: message.text },
+      isFinal: true, // 用户发送的消息通常是最终的
+    };
+    addChatMessage(newUserMessage); // 使用 addChatMessage 添加消息
+  }, [addChatMessage]);
 
   // 根据是否是手机端，设置不同的头像尺寸
   const avatarSize = isMobile() ? '30%' : '15%'; // 手机端设置为 30%，非手机端保持 15%
@@ -45,7 +61,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
       </Draggable>
 
       {/* 顶部 AI 形象和会话消息列表区域的容器 */}
-      <div className="flex flex-1 flex-col w-full relative"> {/* 确保 relative 定位 */}
+      <div className="flex flex-1 flex-col w-full min-h-0 relative"> {/* 确保 relative 定位 */}
         {/* 半透明的 AI 头像背景图片 */}
         {aiAvatarUrl && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -64,7 +80,11 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
           />
         )}
         {/* 会话消息列表区域 - 使用新的 MessageListRenderer */}
-        <MessageListRenderer messages={chatMessages} aiAvatarUrl={aiAvatarUrl} userName={userName} aiPersonaName={aiPersonaName} /> {/* 传递 aiAvatarUrl, userName, aiPersonaName */}
+        <div className="flex-1 overflow-y-auto w-full"> {/* 添加 min-h-0 确保消息列表在 flex 布局中正确滚动 */}
+          <MessageListRenderer messages={chatMessages} aiAvatarUrl={aiAvatarUrl} userName={userName} aiPersonaName={aiPersonaName} /> {/* 传递 aiAvatarUrl, userName, aiPersonaName */}
+        </div>
+        {/* 输入框组件 */}
+        <ChatInput className="mt-auto" onSendMessage={handleUserSendMessage} /> {/* 添加 ChatInput 组件，并设置 mt-auto 使其在底部，并传递 onSendMessage 回调 */}
       </div>
 
       {/* 底部声明 */}
