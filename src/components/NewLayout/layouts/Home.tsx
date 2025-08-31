@@ -15,7 +15,7 @@ const Home = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-pink-50">
       <HomeHeader />
-      <div className="flex flex-1 py-4 px-4 items-stretch lg:space-x-4">
+      <div className="flex flex-1 md:py-4 md:px-4 items-stretch lg:space-x-4">
         {/* 在小屏幕上，主区域占据全部宽度，侧边栏隐藏 */}
         <HomeMainArea className="flex-1" />
         {/* 侧边栏在桌面端正常显示，在移动端通过抽屉展示 */}

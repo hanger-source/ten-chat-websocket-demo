@@ -4,6 +4,9 @@ import { VideoSourceType } from "@/common/constant";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession";
 import { useAppSelector } from "@/common/hooks";
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
+import { isMobile } from "@/common/utils"; // 导入 isMobile 函数
+import { useDispatch } from 'react-redux'; // 导入 useDispatch
+import { setCameraMuted } from '@/store/reducers/global'; // 导入 setCameraMuted action
 
 interface ChatCameraProps {
   className?: string;
@@ -13,8 +16,16 @@ const ChatCamera = ({ className }: ChatCameraProps) => {
   const { isConnected } = useWebSocketSession(); // 只保留 isConnected，如果ChatCamera仅用于显示，其他props可能不需要
   const selectedCamDeviceId = useAppSelector(state => state.global.selectedCamDeviceId);
   const isCameraMuted = useAppSelector(state => state.global.isCameraMuted); // 从 Redux 获取 isCameraMuted
+  const dispatch = useDispatch(); // 获取 dispatch 函数
 
   const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
+
+  // 在组件挂载时检测是否为手机端，并设置摄像头静音状态
+  React.useEffect(() => {
+    if (isMobile()) {
+      dispatch(setCameraMuted(true));
+    }
+  }, [dispatch]); // 仅在组件挂载时运行一次
 
   React.useEffect(() => {
     const getCameraStream = async () => {

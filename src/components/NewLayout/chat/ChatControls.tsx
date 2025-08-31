@@ -26,19 +26,19 @@ const ChatControls = ({ className }: ChatControlsProps) => {
   return (
     <div className={cn("flex space-x-4", className)}>
       <button
-        className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center filter hover:brightness-125 transition-all duration-200"
+        className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center filter hover:brightness-125 transition-all duration-200 shadow-xl shadow-gray-320/50" // 添加阴影效果
         onClick={() => dispatch(setMicrophoneMuted(!isMicrophoneMuted))}
       >
         {isMicrophoneMuted ? <MicOffSvg className="h-12 w-12" /> : <MicOnSvg className="h-12 w-12" />}
       </button>
       <button
-        className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center filter hover:brightness-125 transition-all duration-200"
+        className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center filter hover:brightness-125 transition-all duration-200 shadow-xl shadow-gray-320/50" // 添加阴影效果
         onClick={() => dispatch(setCameraMuted(!isCameraMuted))}
       >
         {isCameraMuted ? <CamOffSvg className="h-12 w-12" /> : <CamOnSvg className="h-12 w-12" />}
       </button>
       <button
-        className="w-12 h-12 rounded-full flex items-center justify-center text-white filter hover:brightness-125 transition-all duration-200"
+        className="w-12 h-12 rounded-full flex items-center justify-center text-white filter hover:brightness-125 transition-all duration-200 shadow-xl shadow-gray-320/50" // 添加阴影效果，红色系阴影以匹配挂断按钮
         onClick={stopSession} // 添加 onClick 事件，调用 stopSession
       >
         <HangUpSvg className="h-12 w-12" />
