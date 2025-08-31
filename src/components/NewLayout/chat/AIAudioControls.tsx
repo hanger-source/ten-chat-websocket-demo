@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'; // 导入图标
 import { motion } from 'framer-motion'; // 导入 motion 用于动画
 import SiriWave from 'siriwave'; // 导入 siriwave 库
+import { useAppSelector } from '@/common/hooks'; // 导入 useAppSelector
 
 interface AIAudioControlsProps {
   isPlaying: boolean; // AI 是否正在播放音频
@@ -22,6 +23,7 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
 }) => {
   const siriwaveContainerRef = useRef<HTMLDivElement>(null);
   const siriwaveRef = useRef<SiriWave | null>(null);
+  const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted); // 获取麦克风静音状态
 
   // 初始化 SiriWave
   useEffect(() => {
@@ -63,11 +65,11 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   // 动态更新振幅
   useEffect(() => {
     if (siriwaveRef.current) {
-      // 根据 audioLevel 调整振幅，使其更灵敏，波动更大
-      const newAmplitude = Math.min(2.5, 0.5 + audioLevel * 25); // 大幅提高基础振幅，增强音量影响，最大 4
+      // 如果麦克风静音，则振幅为 0，否则根据 audioLevel 调整振幅
+      const newAmplitude = isMicrophoneMuted ? 0 : Math.min(2.5, 0.5 + audioLevel * 25); // 大幅提高基础振幅，增强音量影响，最大 2.5
       siriwaveRef.current.setAmplitude(newAmplitude);
     }
-  }, [audioLevel]);
+  }, [audioLevel, isMicrophoneMuted]); // 添加 isMicrophoneMuted 到依赖数组
 
   const renderUserMicStatus = () => {
     if (micPermission === 'denied') {

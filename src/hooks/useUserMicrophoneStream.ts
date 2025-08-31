@@ -23,9 +23,6 @@ interface UseUserMicrophoneStreamReturn {
   error?: string;
 }
 
-const VOICE_ACTIVITY_THRESHOLD = 0.025;
-const SILENCE_DURATION_THRESHOLD_MS = 1920;
-
 // 新增 VAD 常量，参考旧版本 Microphone.tsx
 const SILENCE_THRESHOLD = 0.005; // 定义静音阈值，根据需要调整
 const MAX_SILENT_FRAMES = 15; // 允许通过的最大连续静音帧数，增加以避免影响 ASR 断句
