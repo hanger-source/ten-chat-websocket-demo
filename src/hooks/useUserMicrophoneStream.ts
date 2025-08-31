@@ -27,6 +27,10 @@ interface UseUserMicrophoneStreamReturn {
 const VOICE_ACTIVITY_THRESHOLD = 0.025;
 const SILENCE_DURATION_THRESHOLD_MS = 1920;
 
+// 新增 VAD 常量，参考旧版本 Microphone.tsx
+const SILENCE_THRESHOLD = 0.005; // 定义静音阈值，根据需要调整
+const MAX_SILENT_FRAMES = 15; // 允许通过的最大连续静音帧数，增加以避免影响 ASR 断句
+
 export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUserMicrophoneStreamProps): UseUserMicrophoneStreamReturn => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'pending'>('pending');
@@ -42,6 +46,7 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
   
   const audioBufferRef = useRef<Uint8Array[]>([]);
   const unsubscribeRef = useRef<(() => void) | null>(null);
+  const silentFrameCountRef = useRef(0); // 新增：用于跟踪连续静音帧数
 
   const calculateRetryDelay = (retryCount: number): number => {
     const delay = Math.min(
@@ -140,6 +145,12 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
       const unsubscribe = audioManager.onInputMessage((message) => {
         if (!isAudioProcessingActiveRef.current) return;
 
+        // 只有当消息类型为 'audioFrame' 时才处理音频数据
+        if (message.type !== 'audioFrame') {
+          console.log('Received non-audioFrame message from AudioWorklet:', message);
+          return;
+        }
+
         const { frameId, data: audioData, audioLevel: currentAudioLevel } = message;
         
         setAudioLevel(currentAudioLevel || 0);
@@ -147,30 +158,48 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
         const currentSrcLoc: Location = defaultLocation;
         const currentDestLocs: Location[] = [defaultLocation];
         
-        if ((currentAudioLevel || 0) > VOICE_ACTIVITY_THRESHOLD) {
-          // audioData 现在是 Int16Array (48000Hz)，需要重采样到 16000Hz
-          const originalInt16Data = audioData as Int16Array;
-          const resampledInt16Data = resampleInt16Data(originalInt16Data, 48000, 16000);
+        // 音频数据现在是 Int16Array (48000Hz)，需要重采样到 16000Hz
+        const originalInt16Data = audioData as Int16Array;
+        const resampledInt16Data = resampleInt16Data(originalInt16Data, 48000, 16000);
  
-          // 将重采样后的 Int16Array 的 buffer 转换为 Uint8Array
-          const uint8AudioData = new Uint8Array(resampledInt16Data.buffer);
-          audioBufferRef.current.push(uint8AudioData);
-          
-          try {
-            webSocketManager.sendAudioFrame(
-              uint8AudioData,
-              currentSrcLoc,
-              currentDestLocs,
-              "pcm_frame",
-              16000, // 后端 ASR 采样率
-              1,
-              16,
-              false
-            );
-          } catch (error) {
-            console.error(`WebSocket发送失败: ${error}`);
-            setError(`WebSocket发送失败: ${error}`);
-          }
+        // 计算重采样后数据的平均绝对值，用于静音检测
+        let sumAbs = 0;
+        for (let i = 0; i < resampledInt16Data.length; i++) {
+          sumAbs += Math.abs(resampledInt16Data[i]);
+        }
+        const averageAbs = sumAbs / resampledInt16Data.length;
+ 
+        // 将重采样后的 Int16Array 的 buffer 转换为 Uint8Array
+        const uint8AudioData = new Uint8Array(resampledInt16Data.buffer);
+ 
+        // 如果平均绝对值低于阈值
+        if (averageAbs < SILENCE_THRESHOLD * 32767) { // 注意：这里 0x7fff 等价于 32767
+          silentFrameCountRef.current += 1;
+          if (silentFrameCountRef.current >= MAX_SILENT_FRAMES) {
+            // 连续静音帧数超过阈值，跳过发送
+            return; 
+          } 
+        } else {
+          // 检测到非静音帧，重置计数器
+          silentFrameCountRef.current = 0;
+        }
+ 
+        // 无论是否静音，只要未达到最大静音帧数，都发送
+        audioBufferRef.current.push(uint8AudioData);
+        try {
+          webSocketManager.sendAudioFrame(
+            uint8AudioData,
+            currentSrcLoc,
+            currentDestLocs,
+            "pcm_frame",
+            16000, // 后端 ASR 采样率
+            1,
+            16,
+            false
+          );
+        } catch (error) {
+          console.error(`WebSocket发送失败: ${error}`);
+          setError(`WebSocket发送失败: ${error}`);
         }
       });
       // TODO: 确保在组件卸载时取消订阅

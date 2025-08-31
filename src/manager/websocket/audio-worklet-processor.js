@@ -104,17 +104,6 @@ class AudioInputProcessor extends AudioWorkletProcessor {
       Math.max(-1, Math.min(1, sample)) * 32767
     ));
 
-    // 音量和静默检测
-    const audioLevel = this._sumSamples(channelData) / channelData.length;
-    if (audioLevel < AudioInputProcessor.SILENCE_THRESHOLD) {
-      this._consecutiveSilentFrames++;
-      if (this._consecutiveSilentFrames > AudioInputProcessor.SILENCE_FRAME_COUNT_THRESHOLD) {
-        return true;
-      }
-    } else {
-      this._consecutiveSilentFrames = 0;
-    }
-
     this._audioBuffer.push(int16DataChunk);
     this._currentBufferLength += int16DataChunk.length;
 
@@ -150,7 +139,7 @@ class AudioInputProcessor extends AudioWorkletProcessor {
           type: 'audioFrame', 
           frameId: this._frameCount, 
           data: combinedInt16Data, // 直接发送 Int16Array
-          audioLevel: audioLevel 
+          // audioLevel 不再在此处计算，由 useUserMicrophoneStream 处理
         });
 
         this._lastSentFrameSum = currentFrameSum;
