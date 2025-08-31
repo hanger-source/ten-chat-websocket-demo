@@ -150,7 +150,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
       {/* 输入框组件 */}
       <ChatInput
         ref={chatInputRef}
-        className="absolute bottom-12 left-12 z-20"
+        className="absolute bottom-12 left-10 z-20"
         onSendMessage={handleUserSendMessage}
         onExpandedChange={setIsChatInputExpanded}
         expanded={isChatInputExpanded}
@@ -159,7 +159,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
       <p className="text-xs text-gray-500 mt-4">AI生成内容由大模型生成，不能完全保障真实</p>
       {/* 工具栏 */}
       {!isMobileDevice || !isChatInputExpanded ? (
-        <ChatControls className="absolute bottom-12 right-12 z-20" />
+        <ChatControls className="absolute bottom-12 right-10 z-20" />
       ) : null} {/* 条件渲染 ChatControls */}
     </div>
   );

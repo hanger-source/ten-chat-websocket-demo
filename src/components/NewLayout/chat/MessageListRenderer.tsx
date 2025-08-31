@@ -3,6 +3,8 @@ import { IChatMessage } from '@/types/chat';
 import TextMessageBubble from './TextMessageBubble';
 import ImageMessageBubble from './ImageMessageBubble';
 import CommandResultMessageBubble from './CommandResultMessageBubble'; // 导入新组件
+import { cn } from '@/lib/utils'; // 导入 cn 工具函数
+import { isMobile } from '@/common/utils'; // 导入 isMobile 函数
 // 可以根据需要导入更多消息渲染组件
 
 interface MessageListRendererProps {
@@ -34,7 +36,7 @@ const MessageListRenderer: React.FC<MessageListRendererProps> = ({ messages, aiA
     }, [messages]);
 
     return (
-        <div className="flex-1 overflow-y-auto px-4 py-6"> {/* 修改 px-6 为 px-8，增加左右边距 */}
+        <div className={cn("flex-1", isMobile() ? "px-2" : "px-4", "overflow-y-auto py-6")}> {/* 根据设备类型调整 px，py-6 保持不变 */}
             {messages.map((message) => {
                 const Renderer = messageRenderers[message.type] || messageRenderers['unknown'];
                 return (

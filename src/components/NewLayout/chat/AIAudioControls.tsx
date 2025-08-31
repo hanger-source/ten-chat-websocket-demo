@@ -93,19 +93,21 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
         </svg>
       </div>
 
-      {/* 打断按钮 */}
-      <motion.button 
-        onClick={onInterrupt} 
-        className={cn("relative z-10 rounded-full px-4 py-2 text-white text-sm", {
-          "bg-red-500 hover:bg-red-600": isPlaying, 
-          "bg-gray-300 text-gray-700 cursor-not-allowed": !isPlaying,
-        })}
-        disabled={!isPlaying} 
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        打断 AI
-      </motion.button>
+      {isPlaying && ( // 仅当 isPlaying 为 true 时才展示打断按钮区块
+        <div className="flex items-center space-x-2 -mt-32 backdrop-blur-sm bg-white/30 rounded-md px-3 py-2"> {/* 添加模糊背景效果，增加圆角和内边距 */}
+          <span className="text-sm text-[#635bff]">语音打断 或</span>
+          <motion.button 
+            onClick={onInterrupt} 
+            className={cn("relative z-10 px-2 py-1 text-sm rounded-md", {
+              "bg-gray-200 text-[#635bff] hover:bg-gray-300": true, // AI播放时保持默认颜色，悬停时加深背景
+            })}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            点此打断
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 };
