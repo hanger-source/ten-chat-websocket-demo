@@ -19,7 +19,7 @@ const Home = () => {
         {/* 在小屏幕上，主区域占据全部宽度，侧边栏隐藏 */}
         <HomeMainArea className="flex-1" />
         {/* 侧边栏在桌面端正常显示，在移动端通过抽屉展示 */}
-        <HomeRightSidebar className="hidden lg:block w-75" /> {/* 桌面端侧边栏 */}
+        <HomeRightSidebar className="hidden lg:block w-80" /> {/* 桌面端侧边栏：将 w-75 替换为 w-80 */}
       </div>
       {/* 移动端侧边栏触发按钮 (仅在小屏幕显示) */}
       <div className="lg:hidden fixed top-14 right-4">

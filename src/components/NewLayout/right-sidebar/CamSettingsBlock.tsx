@@ -73,10 +73,10 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="选择摄像头" />
+      <SelectTrigger className="w-full min-w-0"> {/* Add min-w-0 */}
+        <SelectValue placeholder="选择摄像头" className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" /> {/* Add text truncation styles */}
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent> {/* Reverted: Removed max-w-xs min-w-0 */}
         {items.map((item) => (
           <SelectItem key={item.deviceId} value={item.value}>
             {item.label}
@@ -138,7 +138,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
   };
 
   return (
-    <div className="mb-2">
+    <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">摄像头</div>
@@ -160,10 +160,10 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
       </div>
       <div className="flex items-center gap-2 mb-2">
         <Select value={currentVideoSourceType} onValueChange={changeVideoSourceType} disabled={disabled}> {/* Update to currentVideoSourceType and changeVideoSourceType */}
-          <SelectTrigger className="w-[120px]">
-            <SelectValue />
+          <SelectTrigger className="w-[120px] min-w-0"> {/* Add min-w-0 */}
+            <SelectValue className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" /> {/* Add text truncation styles */}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent> {/* Reverted: Removed max-w-xs min-w-0 */}
             {VIDEO_SOURCE_OPTIONS.map((item) => (
               <SelectItem key={item.value} value={item.value}>
                 {item.label}
@@ -172,17 +172,18 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
           </SelectContent>
         </Select>
         {currentVideoSourceType === VideoSourceType.CAMERA && (
-          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={changeCameraDevice} disabled={disabled} />
+        <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={changeCameraDevice} disabled={disabled} />
         )}
       </div>
       {!isConnected && (
-        <div className="my-3 h-40 w-full overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg">
+        <div className="my-3 w-64 mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]">
           {isCameraMuted || !hasActiveStream || !localStream ? ( // Check hasActiveStream and localStream
             <p className="text-white text-sm">视频已关闭或无可用视频源</p>
           ) : (
             <LocalVideoStreamPlayer
               stream={localStream} // Use useUnifiedCamera provided localStream
               muted={true}
+              fit="cover"
             />
           )}
         </div>
