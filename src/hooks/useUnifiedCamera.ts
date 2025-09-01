@@ -40,17 +40,14 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
 
   const { defaultLocation } = useWebSocketSession();
 
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null); // Use useState for the actual MediaStream instance
+  const streamRef = useRef<MediaStream | null>(null); // useRef to hold the MediaStream instance
+  const [isStreamCurrentlyActive, setIsStreamCurrentlyActive] = useState(false); // New useState for UI rendering signal
   const lastRequestedStreamDetailsRef = useRef<{ deviceId: string | undefined; sourceType: VideoSourceType } | null>(null); // Store last requested stream details
-  const localStreamRefForCurrentValue = useRef<MediaStream | null>(null); // New useRef to track the current value of localStream
-  const currentEffectStreamRef = useRef<MediaStream | null>(null); // 局部 ref，用于跟踪当前 useEffect 实例所管理的流
-  const debouncedGetStreamRef = useRef<(() => Promise<void>) | null>(null); // 用于存储防抖后的 getStreamInternal 函数
+  const currentEffectAbortControllerRef = useRef<AbortController | null>(null); // 局部 ref，用于跟踪当前 useEffect 实例的 AbortController
 
   useEffect(() => {
-    localStreamRefForCurrentValue.current = localStream;
-  }, [localStream]);
+    currentEffectAbortControllerRef.current?.abort(); // Abort any previous effect's pending requests
 
-  useEffect(() => {
     const abortController = new AbortController(); // 为每个 useEffect 实例创建 AbortController
     const signal = abortController.signal;
     console.log(`[DEBUG] useEffect triggered. currentVideoSourceType: ${currentVideoSourceType}, selectedCamDeviceId: ${selectedCamDeviceId}`);
@@ -59,7 +56,7 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
       let stream: MediaStream | null = null;
 
       // 延迟清理旧流，直到新流成功获取或确定获取失败
-      const previousStream = localStreamRefForCurrentValue.current;
+      const previousStream = streamRef.current;
 
       // 避免重复请求相同的流
       const detailsMatch = lastRequestedStreamDetailsRef.current &&
@@ -86,9 +83,10 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
             stream.getVideoTracks().forEach(track => {
               track.onended = () => {
                 console.log("[DEBUG] Screen share stream ended by user.");
-                if (localStreamRefForCurrentValue.current === stream) {
-                  localStreamRefForCurrentValue.current?.getTracks().forEach(t => t.stop());
-                  setLocalStream(null);
+                if (streamRef.current === stream) {
+                  streamRef.current?.getTracks().forEach(t => t.stop());
+                  streamRef.current = null; // 清理引用
+                  setIsStreamCurrentlyActive(false); // 更新 UI 信号
                   lastRequestedStreamDetailsRef.current = null;
                 }
               };
@@ -113,9 +111,8 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
           }
           const mediaStream = stream as MediaStream;
           mediaStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
-          setLocalStream(mediaStream); // 更新 localStream 状态
-          currentEffectStreamRef.current = mediaStream; // 记录当前效果负责的流
-          localStreamRefForCurrentValue.current = mediaStream; // 同步更新 useRef
+          streamRef.current = mediaStream; // 更新 streamRef
+          setIsStreamCurrentlyActive(true); // 更新 UI 信号
           lastRequestedStreamDetailsRef.current = { deviceId: selectedCamDeviceId, sourceType: currentVideoSourceType };
           console.log(`[DEBUG] Stream acquired and set to localStream. ID: ${mediaStream.id}`);
         } else {
@@ -124,8 +121,8 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
             console.log("[DEBUG] Stopping previous stream tracks due to no new stream.");
             previousStream.getTracks().forEach(track => track.stop());
           }
-          setLocalStream(null);
-          localStreamRefForCurrentValue.current = null;
+          streamRef.current = null; // 更新 streamRef
+          setIsStreamCurrentlyActive(false); // 更新 UI 信号
           lastRequestedStreamDetailsRef.current = null;
           console.log("[DEBUG] Stream not acquired, localStream set to null.");
         }
@@ -139,14 +136,14 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
             console.log("[DEBUG] Stopping previous stream tracks due to acquisition error.");
             previousStream.getTracks().forEach(track => track.stop());
           }
-          setLocalStream(null);
-          localStreamRefForCurrentValue.current = null;
+          streamRef.current = null; // 更新 streamRef
+          setIsStreamCurrentlyActive(false); // 更新 UI 信号
           lastRequestedStreamDetailsRef.current = null;
         }
       } finally {
         // 移除 isDisplayMediaActiveCall 相关的日志
         const acquiredStreamId = stream ? stream.id : 'null';
-        console.log(`[DEBUG] getStream finished. acquiredStreamId: ${acquiredStreamId}, localStreamRefValue: ${localStreamRefForCurrentValue.current ? localStreamRefForCurrentValue.current.id : 'null'}`);
+        console.log(`[DEBUG] getStream finished. acquiredStreamId: ${acquiredStreamId}, streamRefValue: ${streamRef.current ? streamRef.current.id : 'null'}`);
       }
     };
 
@@ -155,17 +152,18 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
     return () => {
       console.log("[DEBUG] useEffect cleanup: Aborting any pending media stream requests.");
       abortController.abort(); // 清理时中止任何正在进行的请求
+      // 在清理时停止由当前 useEffect 实例管理的流，如果它仍然存在且未被新的流替换
+      // 记录当前 AbortController，以便在下次 useEffect 触发时中止它
+      currentEffectAbortControllerRef.current = abortController;
 
-      // 只有当这个效果实例负责的流，仍然是当前全局活跃的流时，才执行清理
-      // 并且只有当新的 useEffect 没有成功设置流时才清理。
-      // 在这里不再执行 setLocalStream(null)，避免瞬时闪烁
-      if (currentEffectStreamRef.current && currentEffectStreamRef.current === localStreamRefForCurrentValue.current) {
+      // 在清理时停止由当前 useEffect 实例管理的流，如果它仍然存在且未被新的流替换
+      if (streamRef.current && currentEffectAbortControllerRef.current === abortController) {
         console.log("[DEBUG] useEffect cleanup: Stopping current stream tracks.");
-        currentEffectStreamRef.current.getTracks().forEach(track => {
-          track.stop();
-        });
-        // setLocalStream(null); // 不在此处设置 null，等待新流的设置或错误处理
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null; // 清理引用
+        setIsStreamCurrentlyActive(false); // 更新 UI 信号
       }
+      currentEffectAbortControllerRef.current = null;
       lastRequestedStreamDetailsRef.current = null;
       // 移除 isDisplayMediaActiveCall 的清理
     };
@@ -173,17 +171,17 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
 
   // Effect to handle muting/unmuting tracks
   useEffect(() => {
-    if (localStreamRefForCurrentValue.current) { // 使用 localStreamRefForCurrentValue.current
-      localStreamRefForCurrentValue.current.getVideoTracks().forEach(track => {
+    if (streamRef.current) {
+      streamRef.current.getVideoTracks().forEach(track => {
         track.enabled = !isCameraMuted;
       });
     }
-  }, [isCameraMuted, localStreamRefForCurrentValue.current]); 
+  }, [isCameraMuted, streamRef.current]); 
 
-  const getMediaStreamInstance = useCallback(() => localStream, [localStream]); // 重新引入 getMediaStreamInstance，并直接返回 localStream
+  const getMediaStreamInstance = useCallback(() => streamRef.current, []); // 返回 streamRef.current
 
   const { videoRef, canvasRef } = useVideoFrameSender({
-    getMediaStreamInstance: getMediaStreamInstance, // 将 getMediaStreamInstance 函数本身传递给 useVideoFrameSender
+    getMediaStreamInstance: getMediaStreamInstance, // 将返回 streamRef.current 的函数传递给 useVideoFrameSender
     srcLoc: defaultLocation,
     destLocs: [defaultLocation],
     intervalMs: videoSenderIntervalMs,
@@ -201,21 +199,16 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
     dispatch(setVideoSourceType(type));
   }, [dispatch]);
 
-  // 计算 hasActiveStream
-  const hasActiveStream = !!localStreamRefForCurrentValue.current &&
-                          localStreamRefForCurrentValue.current.active &&
-                          localStreamRefForCurrentValue.current.getVideoTracks().some(track => track.readyState === 'live' && track.enabled);
-
   return {
-    hasActiveStream, // 返回计算属性
     isCameraMuted,
     selectedCamDeviceId,
     currentVideoSourceType,
     toggleCameraMute,
     changeCameraDevice,
     changeVideoSourceType,
-    localStream, // 直接返回 localStream
-    getMediaStreamInstance, // 返回 getMediaStreamInstance 函数
+    isStreamCurrentlyActive, // 返回 UI 渲染信号
+    stream: streamRef.current, // 直接返回 streamRef.current
+    getMediaStreamInstance, // 依然返回函数，但其内部返回 streamRef.current
     videoRef, // Expose videoRef
     canvasRef, // Expose canvasRef
   };

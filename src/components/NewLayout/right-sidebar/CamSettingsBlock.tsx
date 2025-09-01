@@ -106,19 +106,17 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
 
   // Use useUnifiedCamera Hook to get all video related data and control functions
   const {
-    hasActiveStream,
     isCameraMuted,
     selectedCamDeviceId,
     currentVideoSourceType,
     toggleCameraMute,
     changeCameraDevice,
     changeVideoSourceType,
-    localStream: localStreamFromHook, // 直接解构 localStream
+    isStreamCurrentlyActive, // New UI rendering signal
+    stream, // The actual MediaStream instance (from useRef)
   } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
 
-  const localStream = localStreamFromHook; // 直接使用从 Hook 返回的 localStream
-
-  console.log(`[DEBUG] localStream: ${localStream ? localStream.id : 'null'}, hasActiveStream: ${hasActiveStream}, isCameraMuted: ${isCameraMuted}`);
+  console.log(`[DEBUG] isStreamCurrentlyActive: ${isStreamCurrentlyActive}, isCameraMuted: ${isCameraMuted}, stream: ${stream ? stream.id : 'null'}`);
 
   
   const { isConnected } = useWebSocketSession(); // Get connection state
@@ -155,8 +153,8 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
   };
 
   // 调试日志：在条件渲染前捕捉最终状态
-  const displayCondition = isCameraMuted || !hasActiveStream || !localStream;
-  console.log(`[DEBUG] CamSettingsBlock rendering final state: localStream=${localStream ? localStream.id : 'null'}, hasActiveStream=${hasActiveStream}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}`);
+  const displayCondition = isCameraMuted || !isStreamCurrentlyActive;
+  console.log(`[DEBUG] CamSettingsBlock rendering final state: isStreamCurrentlyActive=${isStreamCurrentlyActive}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}`);
 
   return (
     <div className="mb-4">
@@ -204,11 +202,11 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
       </div>
       {!isConnected && (
         <div className="my-3 w-full mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]"> {/* Change w-64 to w-full */}
-          {isCameraMuted || !hasActiveStream || !localStream ? ( // Check hasActiveStream and localStream
+          {isCameraMuted || !isStreamCurrentlyActive ? ( // Check isStreamCurrentlyActive only
             <p className="text-white text-sm">视频已关闭或无可用视频源</p>
           ) : (
             <LocalVideoStreamPlayer
-              stream={localStream} // Use useUnifiedCamera provided localStream
+              stream={stream} // Use useUnifiedCamera provided stream
               muted={true}
               fit="cover"
             />
