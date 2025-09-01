@@ -234,6 +234,17 @@ export const globalSlice = createSlice({
     setVideoSourceType: (state, action: PayloadAction<VideoSourceType>) => { // 新增 reducer
       state.currentVideoSourceType = action.payload;
     },
+    setVideoSourceTypeAndClearDeviceId: (
+      state,
+      action: PayloadAction<VideoSourceType>,
+    ) => {
+      state.currentVideoSourceType = action.payload;
+      // 当切换到屏幕共享时，清除选定的摄像头设备ID
+      if (action.payload === VideoSourceType.SCREEN) {
+        state.selectedCamDeviceId = undefined;
+      }
+      // 如果从屏幕共享切换回摄像头，selectedCamDeviceId 应该保留，或者在其他地方处理默认值
+    },
   },
 });
 
@@ -315,6 +326,7 @@ export const {
   setCameraMuted, // 新增导出
   setSelectedMicDeviceId, // 新增导出
   setVideoSourceType, // 新增导出
+  setVideoSourceTypeAndClearDeviceId, // 新增导出
 } = globalSlice.actions;
 
 export { initializeGraphData };

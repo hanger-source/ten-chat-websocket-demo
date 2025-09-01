@@ -7,6 +7,11 @@ import { MonitorIcon, MonitorXIcon } from "lucide-react";
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Still needed for isConnected
 import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
+import { useDispatch } from 'react-redux'; // Import useDispatch
+import {
+  setVideoSourceType,
+  setVideoSourceTypeAndClearDeviceId,
+} from '@/store/reducers/global'; // 从正确的路径导入 actions
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -90,6 +95,7 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 // CamSettingsBlock 主组件
 const CamSettingsBlock = (props: { disabled?: boolean }) => {
   const { disabled } = props;
+  const dispatch = useDispatch(); // Get dispatch
 
   React.useEffect(() => {
     console.log('[DEBUG] CamSettingsBlock mounted');
@@ -174,7 +180,13 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
         </Button>
       </div>
       <div className="flex items-center gap-2 mb-2">
-        <Select value={currentVideoSourceType} onValueChange={changeVideoSourceType} disabled={disabled}> {/* Update to currentVideoSourceType and changeVideoSourceType */}
+        <Select value={currentVideoSourceType} onValueChange={(value: string) => {
+          if (value === VideoSourceType.SCREEN) {
+            dispatch(setVideoSourceTypeAndClearDeviceId(value as VideoSourceType)); // 使用新 action，并进行类型断言
+          } else {
+            dispatch(setVideoSourceType(value as VideoSourceType)); // 类型断言
+          }
+        }} disabled={disabled}> {/* Update to currentVideoSourceType and changeVideoSourceType */}
           <SelectTrigger className="w-[120px] min-w-0"> {/* Add min-w-0 */}
             <SelectValue className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" /> {/* Add text truncation styles */}
           </SelectTrigger>
