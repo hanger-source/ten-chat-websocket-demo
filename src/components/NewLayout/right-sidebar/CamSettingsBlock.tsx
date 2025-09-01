@@ -176,7 +176,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
         )}
       </div>
       {!isConnected && (
-        <div className="my-3 w-64 mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]">
+        <div className="my-3 w-full mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]"> {/* Change w-64 to w-full */}
           {isCameraMuted || !hasActiveStream || !localStream ? ( // Check hasActiveStream and localStream
             <p className="text-white text-sm">视频已关闭或无可用视频源</p>
           ) : (
