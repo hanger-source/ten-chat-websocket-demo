@@ -58,7 +58,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       dispatch(setActiveAppUri(""));
       dispatch(setSessionConnectionState(SessionConnectionState.IDLE));
       // 只有在 AudioManager 已经初始化时才关闭，防止竞态条件
-      if (audioManager.getIsInitialized()) { 
+      if (audioManager.getIsInitialized()) {
         audioManager.close();
         console.log("AudioManager closed due to WebSocket CLOSED.");
       }

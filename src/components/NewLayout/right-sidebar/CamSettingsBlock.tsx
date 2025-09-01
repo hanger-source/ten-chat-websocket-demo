@@ -5,9 +5,8 @@ import { VideoSourceType, VIDEO_SOURCE_OPTIONS } from "@/common/constant";
 import { CamIconByStatus } from "@/components/Icon";
 import { MonitorIcon, MonitorXIcon } from "lucide-react";
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
-import { useAppDispatch, useAppSelector } from "@/common/hooks";
-import { setSelectedCamDeviceId, setCameraMuted } from "@/store/reducers/global"; // 导入 setCameraMuted action
-import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // 导入 useWebSocketSession
+import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Still needed for isConnected
+import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -62,7 +61,7 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
     }).catch(error => {
       console.error("[VIDEO_LOG] Error enumerating devices:", error);
     });
-  }, [currentDeviceId]); // Remove items from dependency array, match old UI
+  }, [currentDeviceId]);
 
   const onChange = (selectedValue: string) => {
     const target = items.find((item) => item.value === selectedValue);
@@ -91,16 +90,24 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 // CamSettingsBlock 主组件
 const CamSettingsBlock = (props: { disabled?: boolean }) => {
   const { disabled } = props;
-  const dispatch = useAppDispatch();
-  const selectedCamDeviceId = useAppSelector(state => state.global.selectedCamDeviceId);
-  const isCameraMuted = useAppSelector(state => state.global.isCameraMuted); // 从 Redux 获取 isCameraMuted 状态
-  const [videoSourceType, setVideoSourceType] = React.useState<VideoSourceType>(VideoSourceType.CAMERA);
-  const [cameraStream, setCameraStream] = React.useState<MediaStream | null>(null);
-  const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
-  const { isConnected } = useWebSocketSession(); // 获取连接状态
+  // Use useUnifiedCamera Hook to get all video related data and control functions
+  const {
+    hasActiveStream,
+    isCameraMuted,
+    selectedCamDeviceId,
+    currentVideoSourceType,
+    toggleCameraMute,
+    changeCameraDevice,
+    changeVideoSourceType,
+    getMediaStreamInstance, // Get the getter function
+  } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
+
+  const localStream = getMediaStreamInstance(); // Get the MediaStream instance here
+
+  const { isConnected } = useWebSocketSession(); // Get connection state
 
   // 处理摄像头权限请求和状态显示
-  const [camPermission, setCamPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt'); // Include 'prompt' state
+  const [camPermission, setCamPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt');
   React.useEffect(() => {
     const checkCamPermission = async () => {
       try {
@@ -110,82 +117,20 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
           setCamPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         };
       } catch (error) {
-        console.error("Error querying camera permission:", error);
+        console.error("[VIDEO_LOG] Error querying camera permission:", error);
         setCamPermission('denied');
       }
     };
     checkCamPermission();
   }, []);
 
-  // 获取摄像头和屏幕共享流
-  React.useEffect(() => {
-    const getCameraStream = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: selectedCamDeviceId ? { deviceId: selectedCamDeviceId } : true,
-        });
-        setCameraStream(stream);
-        console.log("[VIDEO_LOG] 摄像头流获取成功");
-      } catch (error) {
-        console.error("[VIDEO_LOG] 摄像头访问失败:", error);
-        setCameraStream(null);
-      }
-    };
-
-    const getScreenStream = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        setScreenStream(stream);
-        console.log("[VIDEO_LOG] 屏幕共享流获取成功");
-      } catch (error) {
-        console.error("[VIDEO_LOG] 屏幕共享访问失败:", error);
-        setScreenStream(null);
-      }
-    };
-
-    // 清理旧的媒体流
-    const cleanupStreams = () => {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        setCameraStream(null);
-      }
-      if (screenStream) {
-        screenStream.getTracks().forEach(track => track.stop());
-        setScreenStream(null);
-      }
-    };
-
-    cleanupStreams(); // 在每次 effect 运行前清理
-
-    if (videoSourceType === VideoSourceType.CAMERA) {
-      getCameraStream();
-    } else if (videoSourceType === VideoSourceType.SCREEN) {
-      getScreenStream();
-    }
-
-    return () => {
-      cleanupStreams(); // 组件卸载时清理
-    };
-  }, [videoSourceType, selectedCamDeviceId, dispatch]);
-
-  // 静音/取消静音逻辑
-  React.useEffect(() => {
-    if (videoSourceType === VideoSourceType.CAMERA && cameraStream) {
-      console.log(`[VIDEO_LOG] Camera mute status changed to: ${isCameraMuted}`);
-      cameraStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
-    } else if (videoSourceType === VideoSourceType.SCREEN && screenStream) {
-      console.log(`[VIDEO_LOG] Screen mute status changed to: ${isCameraMuted}`);
-      screenStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
-    }
-  }, [isCameraMuted, cameraStream, screenStream, videoSourceType]);
-
-  const getPermissionStatusText = (status: 'granted' | 'denied' | 'prompt') => { // Update status type
+  const getPermissionStatusText = (status: 'granted' | 'denied' | 'prompt') => {
     switch (status) {
       case 'granted':
         return '已授权';
       case 'denied':
         return '已拒绝';
-      case 'prompt': // Handle 'prompt' state
+      case 'prompt':
         return '待授权';
       default:
         return '未知';
@@ -203,10 +148,10 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
           variant="outline"
           size="icon"
           className="border-secondary bg-transparent"
-          onClick={() => dispatch(setCameraMuted(!isCameraMuted))}
+          onClick={toggleCameraMute} // Use useUnifiedCamera provided function
           disabled={disabled}
         >
-          {videoSourceType === VideoSourceType.CAMERA ? (
+          {currentVideoSourceType === VideoSourceType.CAMERA ? (
             <CamIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
           ) : (
             <ScreenIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
@@ -214,7 +159,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
         </Button>
       </div>
       <div className="flex items-center gap-2 mb-2">
-        <Select value={videoSourceType} onValueChange={(value: VideoSourceType) => setVideoSourceType(value)} disabled={disabled}>
+        <Select value={currentVideoSourceType} onValueChange={changeVideoSourceType} disabled={disabled}> {/* Update to currentVideoSourceType and changeVideoSourceType */}
           <SelectTrigger className="w-[120px]">
             <SelectValue />
           </SelectTrigger>
@@ -226,17 +171,17 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
             ))}
           </SelectContent>
         </Select>
-        {videoSourceType === VideoSourceType.CAMERA && (
-          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={(deviceId) => dispatch(setSelectedCamDeviceId(deviceId))} disabled={disabled} />
+        {currentVideoSourceType === VideoSourceType.CAMERA && (
+          <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={changeCameraDevice} disabled={disabled} />
         )}
       </div>
       {!isConnected && (
         <div className="my-3 h-40 w-full overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg">
-          {isCameraMuted || (!cameraStream && !screenStream) ? (
+          {isCameraMuted || !hasActiveStream || !localStream ? ( // Check hasActiveStream and localStream
             <p className="text-white text-sm">视频已关闭或无可用视频源</p>
           ) : (
             <LocalVideoStreamPlayer
-              stream={videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream}
+              stream={localStream} // Use useUnifiedCamera provided localStream
               muted={true}
             />
           )}

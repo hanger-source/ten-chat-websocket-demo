@@ -14,7 +14,7 @@ interface AIAudioControlsProps {
   className?: string;
 }
 
-const AIAudioControls: React.FC<AIAudioControlsProps> = ({
+export const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   isPlaying,
   onInterrupt,
   audioLevel,
@@ -125,4 +125,4 @@ const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   );
 };
 
-export default AIAudioControls;
+export default React.memo(AIAudioControls);

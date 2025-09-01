@@ -105,10 +105,16 @@ export class WebSocketManager {
 
     // 断开连接
     public disconnect(): void {
-        if (this.ws) {
+        if (this.ws && this.connectionState === WebSocketConnectionState.OPEN) {
             this.setConnectionState(WebSocketConnectionState.CLOSING);
             this.ws.close();
             this.ws = null;
+        } else if (this.ws && this.connectionState === WebSocketConnectionState.CONNECTING) {
+            // If still connecting, force close without setting CLOSING state first to avoid onclose triggering reconnect
+            this.ws.close();
+            this.ws = null;
+            this.setConnectionState(WebSocketConnectionState.CLOSED); // Directly set to closed
+        } else {
         }
     }
 
@@ -144,8 +150,8 @@ export class WebSocketManager {
             src_loc: srcLoc,
             dest_locs: destLocs,
             timestamp: Date.now(),
-            properties: { 
-              text: text, 
+            properties: {
+              text: text,
               is_final: true,
               content_type: 'text/plain',
               encoding: 'UTF-8',
@@ -163,7 +169,7 @@ export class WebSocketManager {
             src_loc: srcLoc,
             dest_locs: destLocs,
             timestamp: Date.now(),
-            properties: { 
+            properties: {
               json_data: jsonData, // 将 JSON 数据本身作为属性发送
               content_type: 'application/json',
               encoding: 'UTF-8',
@@ -212,6 +218,11 @@ export class WebSocketManager {
         pixel_fmt: number = 0, // Changed from pixelFormat to pixel_fmt
         isEof: boolean = false,
     ): void {
+        if (this.connectionState !== WebSocketConnectionState.OPEN) {
+            console.warn('Cannot send video frame: WebSocket not OPEN.', { currentConnectionState: this.connectionState });
+            return;
+        }
+
         const videoFrameMessage: VideoFrame = {
             id: this.generateMessageId(),
             type: MessageType.VIDEO_FRAME,
@@ -237,6 +248,11 @@ export class WebSocketManager {
         properties: Record<string, any> = {},
         commandId?: string // Change type to string
     ): void {
+        if (this.connectionState !== WebSocketConnectionState.OPEN) {
+            console.error('WebSocket not OPEN, cannot send command:', commandName);
+            return;
+        }
+
         const baseCommand: Command = {
             id: this.generateMessageId(),
             type: MessageType.CMD, // 初始设置为 CMD
@@ -314,7 +330,6 @@ export class WebSocketManager {
                 const index = handlers.indexOf(handler);
                 if (index > -1) {
                     handlers.splice(index, 1);
-                    // console.log(`Unregistered handler for type: ${type}. Remaining handlers: ${handlers.length}`);
                 }
             }
         };
@@ -327,7 +342,6 @@ export class WebSocketManager {
             const index = handlers.indexOf(handler);
             if (index > -1) {
                 handlers.splice(index, 1);
-                // console.log(`Unregistered handler for type: ${type}. Remaining handlers: ${handlers.length}`);
             }
         }
     }
@@ -339,7 +353,6 @@ export class WebSocketManager {
             const index = this.connectionStateHandlers.indexOf(handler);
             if (index > -1) {
                 this.connectionStateHandlers.splice(index, 1);
-                // console.log(`Unregistered connection state handler. Remaining handlers: ${this.connectionStateHandlers.length}`);
             }
         };
     }
@@ -348,7 +361,6 @@ export class WebSocketManager {
         const index = this.connectionStateHandlers.indexOf(handler);
         if (index > -1) {
             this.connectionStateHandlers.splice(index, 1);
-            // console.log(`Unregistered connection state handler. Remaining handlers: ${this.connectionStateHandlers.length}`);
         }
     }
 
@@ -358,12 +370,8 @@ export class WebSocketManager {
     }
 
     // 处理接收到的消息
-    private handleMessage(event: MessageEvent): void { // 改回同步方法
-        console.log('Received raw message event:', event);
-        
-        // 确保 data 是 ArrayBuffer 类型，因为 binaryType 已设置为 "arraybuffer"
-        const arrayBufferData: ArrayBuffer = event.data as ArrayBuffer; 
-        // console.log('Received ArrayBuffer size:', arrayBufferData.byteLength);
+    private handleMessage(event: MessageEvent): void {
+        const arrayBufferData: ArrayBuffer = event.data as ArrayBuffer;
 
         try {
             const message = this.decodeMessage(arrayBufferData);
@@ -381,7 +389,7 @@ export class WebSocketManager {
             if (error instanceof RangeError) {
                 console.error('RangeError: 数据可能被截断或格式不正确。');
             }
-            // 确保错误被捕获和打印
+            throw error;
         }
     }
 
@@ -415,35 +423,26 @@ export class WebSocketManager {
         }
     }
 
-    // 生成命令 ID
-    private generateCommandId(): string { // Change return type to string
-        return Date.now().toString() + Math.random().toString().substring(2, 8); // Generate a string ID
+    private generateCommandId(): string {
+        return Date.now().toString() + Math.random().toString().substring(2, 8);
     }
 
-    // 生成消息 ID (使用 Date.now() + Math.random())
     private generateMessageId(): string {
         return Date.now().toString() + Math.random().toString().substring(2, 8);
     }
 
-    // 编码消息为 TEN 自定义 MsgPack 格式
     private encodeMessage(message: Message): ArrayBuffer {
-        // 使用扩展编解码器尝试编码
         const extData = extensionCodec.tryToEncode(message, undefined);
         if (extData) {
-            // 创建扩展类型消息
             const encoded = encode(extData);
             return encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
         } else {
-            // 如果扩展编码失败，使用普通编码
             const encoded = encode(message);
             return encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
         }
     }
 
-    // 解码消息
     private decodeMessage(data: ArrayBuffer): Message {
-        // console.log('Message to decode (Uint8Array length):', new Uint8Array(data).length);
-        // console.log('Message to decode (first 20 bytes):', new Uint8Array(data).slice(0, 20)); // 打印前20个字节
         try {
             const decoded = decode(new Uint8Array(data), { extensionCodec });
             return decoded as Message;

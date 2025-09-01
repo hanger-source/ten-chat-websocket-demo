@@ -4,6 +4,7 @@ import {
   Language,
   VoiceType,
 } from "@/types";
+import { VideoSourceType } from "@/common/constant"; // Corrected VideoSourceType import path
 import { WebSocketConnectionState, SessionConnectionState } from "@/types/websocket"; // Corrected import path for WebSocketConnectionState
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
@@ -44,6 +45,7 @@ export interface InitialState {
   isMicrophoneMuted: boolean; // 新增：麦克风是否静音
   isCameraMuted: boolean; // 新增：摄像头是否静音
   selectedMicDeviceId: string | undefined; // 新增：选定的麦克风设备 ID
+  currentVideoSourceType: VideoSourceType; // 新增：当前视频源类型 (摄像头/屏幕)
 }
 
 const getInitialState = (): InitialState => {
@@ -69,6 +71,7 @@ const getInitialState = (): InitialState => {
     isMicrophoneMuted: false, // 初始化麦克风为非静音
     isCameraMuted: false, // 初始化摄像头为非静音
     selectedMicDeviceId: undefined, // 初始化选定的麦克风设备 ID
+    currentVideoSourceType: VideoSourceType.CAMERA, // 初始化视频源为摄像头
   };
 };
 
@@ -228,8 +231,16 @@ export const globalSlice = createSlice({
     setSelectedMicDeviceId: (state, action: PayloadAction<string | undefined>) => { // 新增 reducer
       state.selectedMicDeviceId = action.payload;
     },
+    setVideoSourceType: (state, action: PayloadAction<VideoSourceType>) => { // 新增 reducer
+      state.currentVideoSourceType = action.payload;
+    },
   },
 });
+
+// Selectors
+export const selectIsCameraMuted = (state: { global: InitialState }) => state.global.isCameraMuted;
+export const selectSelectedCamDeviceId = (state: { global: InitialState }) => state.global.selectedCamDeviceId;
+export const selectVideoSourceType = (state: { global: InitialState }) => state.global.currentVideoSourceType;
 
 // Initialize graph data
 const initializeGraphData = createAsyncThunk(
@@ -303,6 +314,7 @@ export const {
   setMicrophoneMuted, // 新增导出
   setCameraMuted, // 新增导出
   setSelectedMicDeviceId, // 新增导出
+  setVideoSourceType, // 新增导出
 } = globalSlice.actions;
 
 export { initializeGraphData };
