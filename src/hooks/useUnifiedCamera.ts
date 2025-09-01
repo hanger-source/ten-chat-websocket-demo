@@ -30,43 +30,30 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   const lastRequestedStreamDetailsRef = useRef<{ deviceId: string | undefined; sourceType: VideoSourceType } | null>(null); // Store last requested stream details
 
   useEffect(() => {
-
     const getStream = async () => {
-      // Check if we need to get a new stream at all
-      const currentStreamActive = localStreamRef.current && localStreamRef.current.getTracks().some(track => track.readyState === 'live');
+      const currentStreamExists = localStreamRef.current !== null;
       const detailsMatch = lastRequestedStreamDetailsRef.current &&
                            lastRequestedStreamDetailsRef.current.deviceId === selectedCamDeviceId &&
                            lastRequestedStreamDetailsRef.current.sourceType === currentVideoSourceType;
 
-      // If camera is muted, stop any existing stream and return
-      if (isCameraMuted) {
-        if (localStreamRef.current) {
-          localStreamRef.current.getTracks().forEach(track => track.stop());
-          localStreamRef.current = null;
-          lastRequestedStreamDetailsRef.current = null;
-          // Only set state to false if it's not already false to prevent unnecessary re-renders
-          if (hasActiveStream) {
-            setHasActiveStream(false);
-          }
+      // If stream exists and details match, no need to re-acquire or clean up the stream itself.
+      // Mute/unmute state will be handled by the separate useEffect.
+      if (currentStreamExists && detailsMatch) {
+        // Ensure hasActiveStream is true if stream exists, regardless of mute state for this effect
+        if (!hasActiveStream) {
+          setHasActiveStream(true);
         }
         return;
       }
 
-      // If stream is active and details match, no need to re-acquire a new MediaStream
-      if (currentStreamActive && detailsMatch) {
-        // Just ensure tracks are enabled (if they were previously disabled due to mute)
-        localStreamRef.current?.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted)); // Correctly respond to mute state
-        // No need to call setHasActiveStream as the logical stream state hasn't changed (it's already active)
-        return;
-      }
-
-      // If we reach here, we either don't have an active stream, or the details don't match,
-      // so we need to acquire a new stream. First, clean up any existing one.
+      // If we reach here, we either don't have an existing stream, or the details don't match.
+      // So, we need to acquire a new stream. First, clean up any existing one if present.
       if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+        });
         localStreamRef.current = null;
         lastRequestedStreamDetailsRef.current = null;
-        // Only set state to false if it's not already false to prevent unnecessary re-renders
         if (hasActiveStream) {
           setHasActiveStream(false);
         }
@@ -92,22 +79,20 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
           // @ts-ignore: Property 'id' does not exist on type 'never'.
           if (localStreamRef.current !== null && localStreamRef.current.id === newStreamId) {
             stream.getTracks().forEach(track => track.stop()); // Stop the redundant new stream
-            // Ensure the existing stream's tracks are enabled/disabled correctly
-            // @ts-ignore: Property 'getVideoTracks' does not exist on type 'never'. Parameter 'track' implicitly has an 'any' type.
-            localStreamRef.current.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
+            // Tracks' enabled state will be managed by the separate mute/unmute effect.
             // No need to update hasActiveStream state or lastRequestedStreamDetailsRef as it's the same logical stream.
             return;
           }
 
           // If we reach here, it's a truly new or missing stream, so set it up.
-          mediaStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted)); // Ensure tracks are enabled for new stream, respecting mute state
+          // Initialize tracks' enabled state based on current isCameraMuted
+          mediaStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
           localStreamRef.current = mediaStream;
           setHasActiveStream(true); // Notify consumers that an active stream is present
           lastRequestedStreamDetailsRef.current = { deviceId: selectedCamDeviceId, sourceType: currentVideoSourceType };
         } else {
           localStreamRef.current = null;
           lastRequestedStreamDetailsRef.current = null;
-          // Only set state to false if it's not already false to prevent unnecessary re-renders
           if (hasActiveStream) {
             setHasActiveStream(false);
           }
@@ -116,7 +101,6 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
         console.error("[VIDEO_LOG] 获取媒体流失败:", error);
         localStreamRef.current = null;
         lastRequestedStreamDetailsRef.current = null;
-        // Only set state to false if it's not already false to prevent unnecessary re-renders
         if (hasActiveStream) {
           setHasActiveStream(false);
         }
@@ -127,13 +111,33 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
 
     return () => {
       if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+        });
         localStreamRef.current = null;
-        // Do NOT setHasActiveStream(false) here, as hasActiveStream is managed by getStream for state updates
       }
       lastRequestedStreamDetailsRef.current = null; // Clear details on cleanup
     };
-  }, [isCameraMuted, selectedCamDeviceId, currentVideoSourceType, dispatch]); // Removed hasActiveStream from dependencies
+  }, [selectedCamDeviceId, currentVideoSourceType, dispatch]); // Removed isCameraMuted and hasActiveStream from dependencies
+
+  // New effect to handle muting/unmuting independently
+  useEffect(() => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach(track => {
+        track.enabled = !isCameraMuted;
+      });
+      // Update hasActiveStream based on whether any track is now enabled
+      const anyTrackEnabled = localStreamRef.current.getVideoTracks().some(track => track.enabled);
+      if (anyTrackEnabled !== hasActiveStream) {
+        setHasActiveStream(anyTrackEnabled);
+      }
+    } else {
+      // If there's no stream, ensure hasActiveStream is false
+      if (hasActiveStream) {
+        setHasActiveStream(false);
+      }
+    }
+  }, [isCameraMuted, hasActiveStream]);
 
   // New getter function for the MediaStream instance, wrapped in useCallback for stability
   const getMediaStreamInstance = useCallback(() => {
@@ -141,8 +145,9 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
     if (!currentStream) {
       return null;
     }
-    const hasLiveVideoTrack = currentStream.getVideoTracks().some(track => track.readyState === 'live');
-    if (!hasLiveVideoTrack) {
+    const videoTracksInfo = currentStream.getVideoTracks().map(track => ({ id: track.id, enabled: track.enabled, readyState: track.readyState }));
+    const hasLiveAndEnabledVideoTrack = currentStream.getVideoTracks().some(track => track.readyState === 'live' && track.enabled);
+    if (!hasLiveAndEnabledVideoTrack) {
       return null;
     }
     return currentStream;
