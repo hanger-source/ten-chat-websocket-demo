@@ -86,8 +86,22 @@ export default function VideoBlock(props: {
   const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<string | undefined>(undefined);
 
+  // Memoized getter for the active MediaStream instance
+  const getMediaStreamInstance = React.useCallback((): MediaStream | null => {
+    if (videoMute) {
+      return null;
+    }
+    const currentStream = videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream;
+    if (!currentStream) {
+      return null;
+    }
+    // Ensure the stream has at least one live and enabled video track
+    const hasLiveAndEnabledVideoTrack = currentStream.getVideoTracks().some(track => track.readyState === 'live' && track.enabled);
+    return hasLiveAndEnabledVideoTrack ? currentStream : null;
+  }, [videoMute, videoSourceType, cameraStream, screenStream]);
+
   const { canvasRef } = useVideoFrameSender({
-    videoStream: videoMute ? null : (videoSourceType === VideoSourceType.CAMERA ? cameraStream : screenStream),
+    getMediaStreamInstance: getMediaStreamInstance,
     srcLoc,
     destLocs,
   });
