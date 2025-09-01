@@ -125,4 +125,4 @@ export const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   );
 };
 
-export default React.memo(AIAudioControls);
+export default AIAudioControls;

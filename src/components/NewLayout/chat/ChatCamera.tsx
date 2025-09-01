@@ -44,4 +44,4 @@ export const ChatCamera = ({ className }: ChatCameraProps) => {
   );
 };
 
-export default React.memo(ChatCamera);
+export default ChatCamera;
