@@ -14,6 +14,13 @@ const HomeRightSidebar = ({ className }: HomeRightSidebarProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false); // State to control drawer visibility
   const { isConnected } = useWebSocketSession(); // 获取连接状态
 
+  React.useEffect(() => {
+    console.log('[DEBUG] HomeRightSidebar mounted');
+    return () => {
+      console.log('[DEBUG] HomeRightSidebar unmounted');
+    };
+  }, []);
+
   const aiPersonaName = selectedSceneAiPersonaName;
   const aiCapabilities = selectedScene?.aiCapabilities || [
     "视觉理解",

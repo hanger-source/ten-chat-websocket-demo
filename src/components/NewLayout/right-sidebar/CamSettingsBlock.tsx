@@ -90,6 +90,14 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
 // CamSettingsBlock 主组件
 const CamSettingsBlock = (props: { disabled?: boolean }) => {
   const { disabled } = props;
+
+  React.useEffect(() => {
+    console.log('[DEBUG] CamSettingsBlock mounted');
+    return () => {
+      console.log('[DEBUG] CamSettingsBlock unmounted');
+    };
+  }, []);
+
   // Use useUnifiedCamera Hook to get all video related data and control functions
   const {
     hasActiveStream,
@@ -99,11 +107,14 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     toggleCameraMute,
     changeCameraDevice,
     changeVideoSourceType,
-    getMediaStreamInstance, // Get the getter function
+    localStream: localStreamFromHook, // 直接解构 localStream
   } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
 
-  const localStream = getMediaStreamInstance(); // Get the MediaStream instance here
+  const localStream = localStreamFromHook; // 直接使用从 Hook 返回的 localStream
 
+  console.log(`[DEBUG] localStream: ${localStream ? localStream.id : 'null'}, hasActiveStream: ${hasActiveStream}, isCameraMuted: ${isCameraMuted}`);
+
+  
   const { isConnected } = useWebSocketSession(); // Get connection state
 
   // 处理摄像头权限请求和状态显示
@@ -117,7 +128,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
           setCamPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
         };
       } catch (error) {
-        console.error("[VIDEO_LOG] Error querying camera permission:", error);
+        console.error("[DEBUG] Error querying camera permission:", error);
         setCamPermission('denied');
       }
     };
@@ -136,6 +147,10 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
         return '未知';
     }
   };
+
+  // 调试日志：在条件渲染前捕捉最终状态
+  const displayCondition = isCameraMuted || !hasActiveStream || !localStream;
+  console.log(`[DEBUG] CamSettingsBlock rendering final state: localStream=${localStream ? localStream.id : 'null'}, hasActiveStream=${hasActiveStream}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}`);
 
   return (
     <div className="mb-4">

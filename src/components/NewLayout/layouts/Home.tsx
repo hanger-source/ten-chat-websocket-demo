@@ -8,6 +8,14 @@ import MobileRightSidebarSheet from "@/components/NewLayout/right-sidebar/Mobile
 
 const Home = () => {
   const dispatch = useAppDispatch();
+
+  React.useEffect(() => {
+    console.log('[DEBUG] Home mounted');
+    return () => {
+      console.log('[DEBUG] Home unmounted');
+    };
+  }, []);
+
   useEffect(() => {
     dispatch(initializeGraphData());
   }, [dispatch]);

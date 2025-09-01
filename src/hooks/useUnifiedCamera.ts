@@ -12,6 +12,8 @@ import { useVideoFrameSender } from './useVideoFrameSender';
 import { useWebSocketSession } from '@/hooks/useWebSocketSession';
 import { VideoSourceType } from '@/common/constant';
 
+let isDisplayMediaActiveCall = false; // 模块级别标志
+
 interface UseUnifiedCameraOptions {
   enableVideoSending?: boolean;
   videoSenderIntervalMs?: number;
@@ -25,116 +27,118 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   const currentVideoSourceType = useSelector(selectVideoSourceType);
   const { defaultLocation } = useWebSocketSession();
 
-  const [hasActiveStream, setHasActiveStream] = useState<boolean>(false); // Changed to boolean state
-  const localStreamRef = useRef<MediaStream | null>(null); // Use useRef for the actual MediaStream instance
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null); // Use useState for the actual MediaStream instance
   const lastRequestedStreamDetailsRef = useRef<{ deviceId: string | undefined; sourceType: VideoSourceType } | null>(null); // Store last requested stream details
+  const activeScreenStreamRef = useRef<MediaStream | null>(null); // Track the active screen share stream
+  const localStreamRefForCurrentValue = useRef<MediaStream | null>(null); // New useRef to track the current value of localStream
+  const currentEffectStreamRef = useRef<MediaStream | null>(null); // 局部 ref，用于跟踪当前 useEffect 实例所管理的流
 
   useEffect(() => {
+    localStreamRefForCurrentValue.current = localStream;
+  }, [localStream]);
+
+  useEffect(() => {
+    console.log(`[DEBUG] useEffect triggered. currentVideoSourceType: ${currentVideoSourceType}, selectedCamDeviceId: ${selectedCamDeviceId}`);
+
     const getStream = async () => {
-      const currentStreamExists = localStreamRef.current !== null;
+      let stream: MediaStream | null = null; // 将 stream 变量的定义移到此处，使其在整个函数中可用
+
+      const currentStreamExists = localStreamRefForCurrentValue.current !== null;
       const detailsMatch = lastRequestedStreamDetailsRef.current &&
                            lastRequestedStreamDetailsRef.current.deviceId === selectedCamDeviceId &&
                            lastRequestedStreamDetailsRef.current.sourceType === currentVideoSourceType;
 
       if (currentStreamExists && detailsMatch) {
-        if (!hasActiveStream) {
-          setHasActiveStream(true);
-        }
         return;
       }
 
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(track => {
+      if (localStreamRefForCurrentValue.current) {
+        localStreamRefForCurrentValue.current.getTracks().forEach(track => {
           track.stop();
         });
-        localStreamRef.current = null;
+        setLocalStream(null);
         lastRequestedStreamDetailsRef.current = null;
-        setHasActiveStream(false); // Set to false immediately on cleanup
       }
 
       try {
-        let stream: MediaStream | null = null;
         if (currentVideoSourceType === VideoSourceType.CAMERA) {
           stream = await navigator.mediaDevices.getUserMedia({
             video: selectedCamDeviceId && selectedCamDeviceId !== "default-cam-item" ? { deviceId: selectedCamDeviceId } : true,
           }) as MediaStream;
         } else if (currentVideoSourceType === VideoSourceType.SCREEN) {
+          if (isDisplayMediaActiveCall) {
+            return; 
+          }
+          isDisplayMediaActiveCall = true; 
           stream = await navigator.mediaDevices.getDisplayMedia({ video: true }) as MediaStream;
+          if (stream) {
+            stream.getVideoTracks().forEach(track => {
+              track.onended = () => {
+                if (localStreamRefForCurrentValue.current === stream) { // 使用 localStreamRefForCurrentValue.current 进行比较
+                  localStreamRefForCurrentValue.current?.getTracks().forEach(t => t.stop()); // 停止所有轨道
+                  setLocalStream(null);
+                  lastRequestedStreamDetailsRef.current = null;
+                }
+              };
+            });
+          }
         }
 
         if (stream) {
           const mediaStream = stream as MediaStream;
-          // @ts-ignore: Property 'id' does not exist on type 'never'. This is a known TS issue with complex control flow.
-          const newStreamId = mediaStream.id;
-
-          // @ts-ignore: Property 'id' does not exist on type 'never'.
-          if (localStreamRef.current !== null && localStreamRef.current.id === newStreamId) {
-            stream.getTracks().forEach(track => track.stop()); // Stop the redundant new stream
-            return;
-          }
-
           mediaStream.getVideoTracks().forEach(track => (track.enabled = !isCameraMuted));
-          localStreamRef.current = mediaStream;
-          setHasActiveStream(true); // Notify consumers that an active stream is present
+          setLocalStream(mediaStream); // 更新 localStream 状态
+          currentEffectStreamRef.current = mediaStream; // 记录当前效果负责的流
+          localStreamRefForCurrentValue.current = mediaStream; // 同步更新 useRef
           lastRequestedStreamDetailsRef.current = { deviceId: selectedCamDeviceId, sourceType: currentVideoSourceType };
+          console.log(`[DEBUG] Stream acquired and set to localStream. ID: ${mediaStream.id}`);
         } else {
-          localStreamRef.current = null;
+          setLocalStream(null);
+          localStreamRefForCurrentValue.current = null; // 同步更新 useRef
           lastRequestedStreamDetailsRef.current = null;
-          setHasActiveStream(false); // If no stream is acquired, ensure hasActiveStream is false
         }
       } catch (error) {
-        console.error("[VIDEO_LOG] 获取媒体流失败:", error);
-        localStreamRef.current = null;
+        console.error("[DEBUG] 获取媒体流失败:", error);
+        setLocalStream(null);
+        localStreamRefForCurrentValue.current = null; // 同步更新 useRef
         lastRequestedStreamDetailsRef.current = null;
-        setHasActiveStream(false); // On error, ensure hasActiveStream is false
+      } finally {
+        isDisplayMediaActiveCall = false; 
+        const acquiredStreamId = stream ? stream.id : 'null'; 
+        console.log(`[DEBUG] getStream finished. isDisplayMediaActiveCall: ${isDisplayMediaActiveCall}, acquiredStreamId: ${acquiredStreamId}, localStreamRefValue: ${localStreamRefForCurrentValue.current ? localStreamRefForCurrentValue.current.id : 'null'}`);
       }
     };
 
     getStream();
 
     return () => {
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(track => {
+      // 只有当这个效果实例负责的流，仍然是当前全局活跃的流时，才执行清理
+      if (currentEffectStreamRef.current && currentEffectStreamRef.current === localStreamRefForCurrentValue.current) {
+        currentEffectStreamRef.current.getTracks().forEach(track => {
           track.stop();
         });
-        localStreamRef.current = null;
+        setLocalStream(null);
       }
-      lastRequestedStreamDetailsRef.current = null; // Clear details on cleanup
-      setHasActiveStream(false); // Ensure hasActiveStream is false on cleanup
+      lastRequestedStreamDetailsRef.current = null; 
+      if (isDisplayMediaActiveCall && currentVideoSourceType === VideoSourceType.SCREEN) {
+        isDisplayMediaActiveCall = false; 
+      }
     };
-  }, [selectedCamDeviceId, currentVideoSourceType, dispatch]); // Removed isCameraMuted from dependencies as mute/unmute is handled in a separate effect
+  }, [selectedCamDeviceId, currentVideoSourceType, dispatch]); 
 
   // Effect to handle muting/unmuting tracks
   useEffect(() => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getVideoTracks().forEach(track => {
+    if (localStreamRefForCurrentValue.current) { // 使用 localStreamRefForCurrentValue.current
+      localStreamRefForCurrentValue.current.getVideoTracks().forEach(track => {
         track.enabled = !isCameraMuted;
       });
-      const anyTrackEnabledAndLive = localStreamRef.current.getVideoTracks().some(track => track.readyState === 'live' && track.enabled);
-      if (anyTrackEnabledAndLive !== hasActiveStream) {
-        setHasActiveStream(anyTrackEnabledAndLive); // Sync hasActiveStream with actual track status
-      }
-    } else {
-      if (hasActiveStream) {
-        setHasActiveStream(false);
-      }
     }
-  }, [isCameraMuted]); // Removed hasActiveStream from dependencies here to prevent loops and ensure main useEffect drives primary state
+  }, [isCameraMuted, localStreamRefForCurrentValue.current]); 
 
-  const getMediaStreamInstance = useCallback(() => {
-    const currentStream = localStreamRef.current;
-    if (!currentStream) {
-      return null;
-    }
-    const hasLiveAndEnabledVideoTrack = currentStream.getVideoTracks().some(track => track.readyState === 'live' && track.enabled);
-    if (!hasLiveAndEnabledVideoTrack) {
-      return null;
-    }
-    return currentStream;
-  }, []);
+  const getMediaStreamInstance = useCallback(() => localStream, [localStream]); // 重新引入 getMediaStreamInstance，并直接返回 localStream
 
   const { videoRef, canvasRef } = useVideoFrameSender({
-    getMediaStreamInstance: getMediaStreamInstance, // Pass the function itself
+    getMediaStreamInstance: getMediaStreamInstance, // 将 getMediaStreamInstance 函数本身传递给 useVideoFrameSender
     srcLoc: defaultLocation,
     destLocs: [defaultLocation],
     intervalMs: videoSenderIntervalMs,
@@ -152,15 +156,21 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
     dispatch(setVideoSourceType(type));
   }, [dispatch]);
 
+  // 计算 hasActiveStream
+  const hasActiveStream = !!localStreamRefForCurrentValue.current &&
+                          localStreamRefForCurrentValue.current.active &&
+                          localStreamRefForCurrentValue.current.getVideoTracks().some(track => track.readyState === 'live' && track.enabled);
+
   return {
-    hasActiveStream, // Return the boolean state
+    hasActiveStream, // 返回计算属性
     isCameraMuted,
     selectedCamDeviceId,
     currentVideoSourceType,
     toggleCameraMute,
     changeCameraDevice,
     changeVideoSourceType,
-    getMediaStreamInstance, // Return the getter function
+    localStream, // 直接返回 localStream
+    getMediaStreamInstance, // 返回 getMediaStreamInstance 函数
     videoRef, // Expose videoRef
     canvasRef, // Expose canvasRef
   };
