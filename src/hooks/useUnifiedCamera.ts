@@ -24,7 +24,7 @@ interface UseUnifiedCameraOptions {
 export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   const { enableVideoSending = true, videoSenderIntervalMs } = options || {};
   const dispatch = useDispatch();
-  console.log("[DEBUG_UNIFIED_CAMERA] useUnifiedCamera hook called.");
+  console.log("[DEBUG_SCREEN_SHARE] useUnifiedCamera hook called.");
 
   const { defaultLocation } = useWebSocketSession();
 
@@ -39,12 +39,14 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   // 用户交互回调 (dispatch intent 或属性)
   const toggleCameraMute = useCallback(
     () => {
+      console.log('[DEBUG_SCREEN_SHARE] toggleCameraMute called. Current isCameraMuted: {}', isCameraMuted);
       dispatch(setCameraMuted(!isCameraMuted)); // 直接派发 setCameraMuted action
     },
     [dispatch, isCameraMuted],
   );
 
   const changeCameraDevice = useCallback((deviceId: string) => {
+    console.log('[DEBUG_SCREEN_SHARE] changeCameraDevice called with deviceId: {}', deviceId);
     // 确保只传递 StreamDetails 中定义的属性
     const currentDetails: StreamDetails = {
       videoSourceType: lastRequestedDetails?.videoSourceType || VideoSourceType.CAMERA,
@@ -55,6 +57,7 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   }, [dispatch, lastRequestedDetails]);
 
   const changeVideoSourceType = useCallback((type: VideoSourceType) => {
+    console.log('[DEBUG_SCREEN_SHARE] changeVideoSourceType called with type: {}', type);
     // 确保只传递 StreamDetails 中定义的属性
     const currentDetails: StreamDetails = {
       videoSourceType: type,
@@ -70,7 +73,7 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
     destLocs: [defaultLocation],
     intervalMs: videoSenderIntervalMs,
   });
-  console.log("[DEBUG_UNIFIED_CAMERA] useVideoFrameSender returned. videoRef.current:", videoRef.current, "canvasRef.current:", canvasRef.current);
+  console.log("[DEBUG_SCREEN_SHARE] useVideoFrameSender returned. videoRef.current:", videoRef.current, "canvasRef.current:", canvasRef.current);
 
   return {
     isCameraMuted: isCameraMuted, // 直接从 Redux 获取独立的 isCameraMuted

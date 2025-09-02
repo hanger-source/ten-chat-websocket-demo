@@ -9,18 +9,18 @@ interface ChatCameraProps {
 }
 
 export const ChatCamera = ({ className }: ChatCameraProps) => {
-  console.log("[DEBUG_CHAT_CAMERA] ChatCamera rendered.");
+  console.log("[DEBUG_SCREEN_SHARE] ChatCamera rendered.");
   const { isCameraMuted, canvasRef, streamStatus, stream, streamError, isStreamCurrentlyActive } = useUnifiedCamera(); // Get canvasRef here and new state machine vars
 
   React.useEffect(() => {
-    console.log('[DEBUG_CHAT_CAMERA] ChatCamera mounted.');
+    console.log('[DEBUG_SCREEN_SHARE] ChatCamera mounted.');
     return () => {
-      console.log('[DEBUG_CHAT_CAMERA] ChatCamera unmounted.');
+      console.log('[DEBUG_SCREEN_SHARE] ChatCamera unmounted.');
     };
   }, []);
 
   React.useEffect(() => {
-    console.log('[DEBUG_CHAT_CAMERA] ChatCamera useEffect: Stream status changed:', streamStatus, ', Stream ID:', stream?.id, ', isStreamCurrentlyActive:', isStreamCurrentlyActive);
+    console.log('[DEBUG_SCREEN_SHARE] ChatCamera useEffect: Stream status changed:', streamStatus, ', Stream ID:', stream?.id, ', isStreamCurrentlyActive:', isStreamCurrentlyActive);
   }, [streamStatus, stream, isStreamCurrentlyActive]);
 
   if (isCameraMuted) {
