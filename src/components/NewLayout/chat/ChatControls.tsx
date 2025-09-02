@@ -7,7 +7,7 @@ import MicOffSvg from "@/assets/chat/audio_off.svg?react"; // 导入 MicOffSvg
 import CamOffSvg from "@/assets/chat/video_off.svg?react"; // 导入 CamOffSvg
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // 导入 useWebSocketSession
 import { useAppDispatch, useAppSelector } from "@/common/hooks"; // 导入 useAppDispatch 和 useAppSelector
-import { setMicrophoneMuted, setCameraMuted } from "@/store/reducers/global"; // 导入 setMicrophoneMuted 和 setCameraMuted action
+import { setMicrophoneMuted } from "@/store/reducers/global"; // 导入 setMicrophoneMuted
 import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // 导入 useUnifiedCamera Hook
 
 interface ChatControlsProps {

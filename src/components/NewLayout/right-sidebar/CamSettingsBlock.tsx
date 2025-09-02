@@ -8,11 +8,7 @@ import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlaye
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Still needed for isConnected
 import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
 import { useDispatch } from 'react-redux'; // Import useDispatch
-import {
-  setVideoSourceType,
-  setVideoSourceTypeAndClearDeviceId,
-} from '@/store/reducers/global'; // 从正确的路径导入 actions
-import { StreamStatus } from '../../../hooks/types'; // Import StreamStatus
+import { StreamStatus } from '@/store/reducers/mediaStream'; // 更新 StreamStatus 导入路径
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -65,7 +61,7 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
         }
       }
     }).catch(error => {
-      console.error("[VIDEO_LOG] Error enumerating devices:", error);
+      console.error("[DEBUG_CAMERA] Error enumerating devices:", error);
     });
   }, [currentDeviceId]);
 
@@ -99,9 +95,9 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
   const dispatch = useDispatch(); // Get dispatch
 
   React.useEffect(() => {
-    console.log('[DEBUG] CamSettingsBlock mounted');
+    console.log('[DEBUG_CAMERA] CamSettingsBlock mounted');
     return () => {
-      console.log('[DEBUG] CamSettingsBlock unmounted');
+      console.log('[DEBUG_CAMERA] CamSettingsBlock unmounted');
     };
   }, []);
 
@@ -112,20 +108,22 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     currentVideoSourceType,
     toggleCameraMute,
     changeCameraDevice,
-    streamStatus, // 新增：从状态机获取流状态
-    stream, // 实际的 MediaStream 实例
-    streamError, // 新增：从状态机获取错误信息
-    isStreamCurrentlyActive, // 从状态机派生
-    changeVideoSourceType, // 新增：从 unified hook 获取 changeVideoSourceType
+    streamStatus,
+    stream,
+    streamError,
+    isStreamCurrentlyActive,
+    changeVideoSourceType,
   } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
 
-  console.log(`[DEBUG] isStreamCurrentlyActive: ${isStreamCurrentlyActive}, isCameraMuted: ${isCameraMuted}, stream: ${stream ? stream.id : 'null'}`);
+  React.useEffect(() => {
+    console.log(`[DEBUG_CAMERA] isStreamCurrentlyActive: ${isStreamCurrentlyActive}, isCameraMuted: ${isCameraMuted}, stream: ${stream ? stream.id : 'null'}`);
+  }, [isStreamCurrentlyActive, isCameraMuted, stream]);
 
   const { isConnected } = useWebSocketSession(); // Get connection state
 
   // 调试日志：在条件渲染前捕捉最终状态
-  const displayCondition = isCameraMuted || !isStreamCurrentlyActive;
-  console.log(`[DEBUG] CamSettingsBlock rendering final state: isStreamCurrentlyActive=${isStreamCurrentlyActive}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}`);
+  const displayCondition = isCameraMuted || !isStreamCurrentlyActive; // displayCondition 依然用于 UI 的整体显示逻辑
+  console.log(`[DEBUG_CAMERA] CamSettingsBlock rendering final state: isStreamCurrentlyActive=${isStreamCurrentlyActive}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}, streamIsNull=${stream === null}`);
 
   let videoStatusText = '视频已关闭或无可用视频源';
   if (streamStatus === StreamStatus.PENDING) {
@@ -134,10 +132,10 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     videoStatusText = '权限被拒绝，请检查浏览器设置';
   } else if (streamStatus === StreamStatus.ERROR) {
     videoStatusText = `获取视频失败: ${streamError}`;
+  } else if (isStreamCurrentlyActive && stream && !isCameraMuted) {
+    videoStatusText = '视频已激活';
   } else if (isCameraMuted) {
     videoStatusText = '视频已静音';
-  } else if (isStreamCurrentlyActive) {
-    videoStatusText = '视频已激活'; // Should not reach here if stream is active and not muted, as it would render the video
   }
 
   return (
@@ -182,7 +180,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
       </div>
       {!isConnected && (
         <div className="my-3 w-full mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]"> {/* Change w-64 to w-full */}
-          {isStreamCurrentlyActive && !isCameraMuted && stream ? ( // Check isStreamCurrentlyActive, isCameraMuted and stream
+          {isStreamCurrentlyActive && !isCameraMuted && stream ? ( // 使用 stream 是否存在来判断
             <LocalVideoStreamPlayer
               stream={stream} // Use useUnifiedCamera provided stream
               muted={true}

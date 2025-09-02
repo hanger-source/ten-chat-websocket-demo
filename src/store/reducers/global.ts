@@ -41,11 +41,8 @@ export interface InitialState {
   activeGraphId: string;
   activeAppUri: string; // New: To store the active app_uri from backend
   modeOptions: IModeOption[]; // 添加 modeOptions 字段
-  selectedCamDeviceId: string | undefined; // Add this line
   isMicrophoneMuted: boolean; // 新增：麦克风是否静音
-  isCameraMuted: boolean; // 新增：摄像头是否静音
   selectedMicDeviceId: string | undefined; // 新增：选定的麦克风设备 ID
-  currentVideoSourceType: VideoSourceType; // 新增：当前视频源类型 (摄像头/屏幕)
 }
 
 const getInitialState = (): InitialState => {
@@ -67,11 +64,8 @@ const getInitialState = (): InitialState => {
     activeGraphId: "", // Initialize activeGraphId
     activeAppUri: "", // Initialize activeAppUri
     modeOptions: [], // 初始化 modeOptions 为空数组
-    selectedCamDeviceId: undefined, // Initialize selectedCamDeviceId
     isMicrophoneMuted: false, // 初始化麦克风为非静音
-    isCameraMuted: false, // 初始化摄像头为非静音
     selectedMicDeviceId: undefined, // 初始化选定的麦克风设备 ID
-    currentVideoSourceType: VideoSourceType.CAMERA, // 初始化视频源为摄像头
   };
 };
 
@@ -216,42 +210,20 @@ export const globalSlice = createSlice({
       state.modeOptions = action.payload;
       // console.log('Redux: modeOptions updated', action.payload);
     },
-    setSelectedCamDeviceId: (state, action: PayloadAction<string | undefined>) => {
-      state.selectedCamDeviceId = action.payload;
-    },
     setSessionConnectionState: (state, action: PayloadAction<SessionConnectionState>) => {
       state.sessionConnectionState = action.payload;
     },
     setMicrophoneMuted: (state, action: PayloadAction<boolean>) => { // 新增 reducer
       state.isMicrophoneMuted = action.payload;
     },
-    setCameraMuted: (state, action: PayloadAction<boolean>) => { // 新增 reducer
-      state.isCameraMuted = action.payload;
-    },
     setSelectedMicDeviceId: (state, action: PayloadAction<string | undefined>) => { // 新增 reducer
       state.selectedMicDeviceId = action.payload;
-    },
-    setVideoSourceType: (state, action: PayloadAction<VideoSourceType>) => { // 新增 reducer
-      state.currentVideoSourceType = action.payload;
-    },
-    setVideoSourceTypeAndClearDeviceId: (
-      state,
-      action: PayloadAction<VideoSourceType>,
-    ) => {
-      state.currentVideoSourceType = action.payload;
-      // 当切换到屏幕共享时，清除选定的摄像头设备ID
-      if (action.payload === VideoSourceType.SCREEN) {
-        state.selectedCamDeviceId = undefined;
-      }
-      // 如果从屏幕共享切换回摄像头，selectedCamDeviceId 应该保留，或者在其他地方处理默认值
     },
   },
 });
 
-// Selectors
-export const selectIsCameraMuted = (state: { global: InitialState }) => state.global.isCameraMuted;
-export const selectSelectedCamDeviceId = (state: { global: InitialState }) => state.global.selectedCamDeviceId;
-export const selectVideoSourceType = (state: { global: InitialState }) => state.global.currentVideoSourceType;
+// Selectors (Removed as they will be in mediaStreamSlice if needed)
+// No longer needed here as media stream state is moved
 
 // Initialize graph data
 const initializeGraphData = createAsyncThunk(
@@ -320,13 +292,9 @@ export const {
   setActiveGraphId,
   setActiveAppUri,
   setModeOptions,
-  setSelectedCamDeviceId, // Add this line
   setSessionConnectionState,
   setMicrophoneMuted, // 新增导出
-  setCameraMuted, // 新增导出
   setSelectedMicDeviceId, // 新增导出
-  setVideoSourceType, // 新增导出
-  setVideoSourceTypeAndClearDeviceId, // 新增导出
 } = globalSlice.actions;
 
 export { initializeGraphData };

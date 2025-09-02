@@ -15,15 +15,15 @@ export const LocalVideoStreamPlayer = React.forwardRef(
     const videoRef = React.useRef<HTMLVideoElement>(null);
 
     React.useEffect(() => {
-      console.log(`[DEBUG] useEffect triggered. Stream prop: ${stream ? stream.id : 'null'}, videoRef.current: ${videoRef.current ? 'exists' : 'null'}`);
+      console.log(`[DEBUG_CAMERA] LocalVideoStreamPlayer: useEffect triggered. Stream prop: ${stream ? stream.id : 'null'}, videoRef.current: ${videoRef.current ? 'exists' : 'null'}`);
       if (videoRef.current && stream) {
         videoRef.current.srcObject = stream;
-        console.log(`[DEBUG] srcObject set for stream: ${stream.id}`);
+        console.log(`[DEBUG_CAMERA] LocalVideoStreamPlayer: srcObject set for stream: ${stream.id}`);
       }
     }, [stream]);
 
     const handlePlay = () => {
-      console.log(`[DEBUG] Video started playing. Stream ID: ${stream ? stream.id : 'null'}`);
+      console.log(`[DEBUG_CAMERA] LocalVideoStreamPlayer: Video started playing. Stream ID: ${stream ? stream.id : 'null'}`);
     };
 
     return (

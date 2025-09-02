@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
 import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
-import { StreamStatus } from '../../../hooks/types'; // Import StreamStatus
+import { StreamStatus } from '@/store/reducers/mediaStream'; // 更新 StreamStatus 导入路径
 
 interface ChatCameraProps {
   className?: string;
