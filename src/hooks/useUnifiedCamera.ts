@@ -24,6 +24,7 @@ interface UseUnifiedCameraOptions {
 export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   const { enableVideoSending = true, videoSenderIntervalMs } = options || {};
   const dispatch = useDispatch();
+  console.log("[DEBUG_UNIFIED_CAMERA] useUnifiedCamera hook called.");
 
   const { defaultLocation } = useWebSocketSession();
 
@@ -69,6 +70,7 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
     destLocs: [defaultLocation],
     intervalMs: videoSenderIntervalMs,
   });
+  console.log("[DEBUG_UNIFIED_CAMERA] useVideoFrameSender returned. videoRef.current:", videoRef.current, "canvasRef.current:", canvasRef.current);
 
   return {
     isCameraMuted: isCameraMuted, // 直接从 Redux 获取独立的 isCameraMuted

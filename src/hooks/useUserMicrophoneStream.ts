@@ -136,7 +136,6 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
 
     // 如果麦克风被静音，则不启动流
     if (isMicrophoneMuted) {
-      console.log("麦克风已静音，不启动麦克风流。");
       stopMicrophoneStream(); // 确保停止任何可能的现有流
       return;
     }
@@ -163,12 +162,12 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
 
         // 只有当消息类型为 'audioFrame' 时才处理音频数据
         if (message.type !== 'audioFrame') {
-          console.log('Received non-audioFrame message from AudioWorklet:', message);
+          // console.log('Received non-audioFrame message from AudioWorklet:', message);
           return;
         }
 
         const { frameId, data: audioData, audioLevel: currentAudioLevel } = message;
-        
+      
         setAudioLevel(currentAudioLevel || 0);
  
         const currentSrcLoc: Location = defaultLocation;
@@ -214,7 +213,7 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
             false
           );
         } catch (error) {
-          console.error(`WebSocket发送失败: ${error}`);
+          console.error(`[DEBUG_MICROPHONE_STREAM] WebSocket发送失败: ${error}`);
           setError(`WebSocket发送失败: ${error}`);
         }
       });
@@ -259,11 +258,9 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
     // 统一在这里根据 sessionState 和 isMicrophoneMuted 状态来控制流的启停
     if (sessionState === SessionConnectionState.SESSION_ACTIVE && !isMicrophoneMuted) {
       if (!isStreaming) {
-        console.log("排查日志: 会话激活且麦克风未静音，启动麦克风流。");
         startMicrophoneStreamInternal();
       }
     } else if (isStreaming) { // 如果麦克风静音或会话未激活，且当前正在流式传输，则停止流
-      console.log("排查日志: 会话未激活或麦克风已静音，停止麦克风流。");
       stopMicrophoneStream();
     }
  
@@ -272,6 +269,8 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
+      // 确保在组件卸载时停止流，即使它正在重试
+      stopMicrophoneStream();
     };
   }, [sessionState, isStreaming, isMicrophoneMuted, startMicrophoneStreamInternal, stopMicrophoneStream]);
 
@@ -284,7 +283,7 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
       } else {
         setMicPermission('pending');
       }
-    }).catch(() => {
+    }).catch((error) => {
       setMicPermission('denied');
     });
   }, []);

@@ -4,26 +4,27 @@ import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'; // 导入图标
 import { motion } from 'framer-motion'; // 导入 motion 用于动画
 import SiriWave from 'siriwave'; // 导入 siriwave 库
-import { useAppSelector } from '@/common/hooks'; // 导入 useAppSelector
+import { useAppSelector } from '@/common/hooks';
+import {useUserMicrophoneStream} from "@/hooks/useUserMicrophoneStream";
+import {useWebSocketSession} from "@/hooks/useWebSocketSession"; // 导入 useAppSelector
 
 interface AIAudioControlsProps {
   isPlaying: boolean; // AI 是否正在播放音频
   onInterrupt: () => void; // 打断 AI 播放的回调函数
-  audioLevel: number; // 用户麦克风实时音量 (0-1)
-  micPermission: 'granted' | 'denied' | 'pending'; // 麦克风权限状态
   className?: string;
 }
 
 export const AIAudioControls: React.FC<AIAudioControlsProps> = ({
   isPlaying,
   onInterrupt,
-  audioLevel,
-  micPermission,
   className,
 }) => {
   const siriwaveContainerRef = useRef<HTMLDivElement>(null);
   const siriwaveRef = useRef<SiriWave | null>(null);
   const isMicrophoneMuted = useAppSelector(state => state.global.isMicrophoneMuted); // 获取麦克风静音状态
+
+  const { sessionState, defaultLocation } = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
+  const { audioLevel, micPermission } = useUserMicrophoneStream({ defaultLocation, sessionState}); // 使用 useUserMicrophoneStream 并传递 activeAppUri 和 activeGraphId
 
   // 初始化 SiriWave
   useEffect(() => {

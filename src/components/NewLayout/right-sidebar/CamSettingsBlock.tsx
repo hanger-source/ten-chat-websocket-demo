@@ -115,15 +115,10 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     changeVideoSourceType,
   } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
 
-  React.useEffect(() => {
-    console.log(`[DEBUG_CAMERA] isStreamCurrentlyActive: ${isStreamCurrentlyActive}, isCameraMuted: ${isCameraMuted}, stream: ${stream ? stream.id : 'null'}`);
-  }, [isStreamCurrentlyActive, isCameraMuted, stream]);
-
   const { isConnected } = useWebSocketSession(); // Get connection state
 
   // 调试日志：在条件渲染前捕捉最终状态
   const displayCondition = isCameraMuted || !isStreamCurrentlyActive; // displayCondition 依然用于 UI 的整体显示逻辑
-  console.log(`[DEBUG_CAMERA] CamSettingsBlock rendering final state: isStreamCurrentlyActive=${isStreamCurrentlyActive}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}, streamIsNull=${stream === null}`);
 
   let videoStatusText = '视频已关闭或无可用视频源';
   if (streamStatus === StreamStatus.PENDING) {

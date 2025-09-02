@@ -13,6 +13,7 @@ interface HomeMainAreaProps {
 
 const HomeMainArea = ({ className }: HomeMainAreaProps) => {
   const { isConnected } = useWebSocketSession();
+  console.log("[DEBUG_HOME_MAIN_AREA] HomeMainArea rendered. isConnected:", isConnected);
 
   return (
     <main className={cn("flex-1 bg-white shadow-none rounded-[16px] flex flex-col items-center justify-center md:px-4 relative", className)}>

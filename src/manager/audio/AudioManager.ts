@@ -103,7 +103,7 @@ class AudioManager {
     this.inputWorkletNode.connect(this.audioContext.destination);
     this.mediaStreamSourceNode.connect(this.inputWorkletNode);
     this.inputWorkletNode.port.postMessage('start');
-    console.log("Microphone stream started.");
+    // console.log("Microphone stream started.");
   }
 
   public stopMicrophoneStream(): void {
@@ -123,7 +123,7 @@ class AudioManager {
       this.inputWorkletNode.disconnect();
       this.inputWorkletNode = null;
     }
-    console.log("Microphone stream stopped.");
+    // console.log("Microphone stream stopped.");
   }
 
   public playAudioFrame(audioData: Float32Array): void {

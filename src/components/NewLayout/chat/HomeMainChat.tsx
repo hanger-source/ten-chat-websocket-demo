@@ -24,6 +24,7 @@ interface HomeMainChatProps {
 }
 
 const HomeMainChat = ({ className }: HomeMainChatProps) => {
+  console.log("[DEBUG_HOME_MAIN_CHAT] HomeMainChat rendered.");
   const mainRef = React.useRef<HTMLDivElement>(null);
   const cameraRef = React.useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLFormElement>(null); // 创建 chatInputRef
@@ -35,7 +36,6 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   const { chatMessages, addChatMessage, clearMessages } = useChatMessages(); // 获取 addChatMessage 和 clearMessages
   const { processAudioFrame, stopPlayback, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
   const { sessionState, defaultLocation } = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
-  const { audioLevel, micPermission } = useUserMicrophoneStream({ defaultLocation, sessionState}); // 使用 useUserMicrophoneStream 并传递 activeAppUri 和 activeGraphId
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
   useWebSocketEvents();
@@ -142,8 +142,6 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
       <AIAudioControls 
         isPlaying={isPlaying} // 传递 AI 播放状态
         onInterrupt={stopPlayback} // 传递打断 AI 播放的函数
-        audioLevel={audioLevel} // 传递用户麦克风音量
-        micPermission={micPermission} // 传递麦克风权限状态
         className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20"
       />
 
