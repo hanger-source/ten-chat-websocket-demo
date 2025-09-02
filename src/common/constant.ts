@@ -43,6 +43,7 @@ export const VOICE_OPTIONS: VoiceOptionItem[] = [
 export enum VideoSourceType {
   CAMERA = "camera",
   SCREEN = "screen",
+  NONE = "none", // 新增 NONE 类型
 }
 
 export const VIDEO_SOURCE_OPTIONS = [

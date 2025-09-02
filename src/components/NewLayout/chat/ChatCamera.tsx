@@ -2,17 +2,30 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
 import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
+import { StreamStatus } from '../../../hooks/types'; // Import StreamStatus
 
 interface ChatCameraProps {
   className?: string;
 }
 
 export const ChatCamera = ({ className }: ChatCameraProps) => {
-  const { isCameraMuted, getMediaStreamInstance, canvasRef } = useUnifiedCamera(); // Get canvasRef here
-  const localStream = getMediaStreamInstance();
+  const { isCameraMuted, canvasRef, streamStatus, stream, streamError, isStreamCurrentlyActive } = useUnifiedCamera(); // Get canvasRef here and new state machine vars
 
   if (isCameraMuted) {
     return null;
+  }
+
+  let videoStatusText = '摄像头已静音或无可用视频源';
+  if (streamStatus === StreamStatus.PENDING) {
+    videoStatusText = '正在请求视频...';
+  } else if (streamStatus === StreamStatus.PERMISSION_DENIED) {
+    videoStatusText = '权限被拒绝，请检查浏览器设置';
+  } else if (streamStatus === StreamStatus.ERROR) {
+    videoStatusText = `获取视频失败: ${streamError}`;
+  } else if (isCameraMuted) {
+    videoStatusText = '摄像头已静音'; // 如果静音，显示此信息
+  } else if (!isStreamCurrentlyActive) {
+    videoStatusText = '无可用视频源';
   }
 
   return (
@@ -23,14 +36,12 @@ export const ChatCamera = ({ className }: ChatCameraProps) => {
       <div className="flex flex-col items-center justify-between w-full text-white text-sm"> {/* 视频和文字的共同容器 */}
         {/* Video stream or placeholder */}
         <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden bg-gray-800 rounded-t-lg"> {/* 视频流容器 */}
-          {isCameraMuted ? (
-            <p>摄像头已静音</p>
-          ) : localStream ? (
+          {isStreamCurrentlyActive && !isCameraMuted && stream ? ( // Check isStreamCurrentlyActive, isCameraMuted and stream
             <div className="w-full h-full object-cover flex items-center justify-center"> {/* 包裹 LocalVideoStreamPlayer，并应用样式 */}
-            <LocalVideoStreamPlayer stream={localStream} muted={true} />
+            <LocalVideoStreamPlayer stream={stream} muted={true} />
             </div>
           ) : (
-            <p>正在加载视频流...</p>
+            <p>{videoStatusText}</p>
           )}
         </div>
         {/* Text display block */}

@@ -12,6 +12,7 @@ import {
   setVideoSourceType,
   setVideoSourceTypeAndClearDeviceId,
 } from '@/store/reducers/global'; // 从正确的路径导入 actions
+import { StreamStatus } from '../../../hooks/types'; // Import StreamStatus
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -111,50 +112,33 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     currentVideoSourceType,
     toggleCameraMute,
     changeCameraDevice,
-    changeVideoSourceType,
-    isStreamCurrentlyActive, // New UI rendering signal
-    stream, // The actual MediaStream instance (from useRef)
+    streamStatus, // 新增：从状态机获取流状态
+    stream, // 实际的 MediaStream 实例
+    streamError, // 新增：从状态机获取错误信息
+    isStreamCurrentlyActive, // 从状态机派生
+    changeVideoSourceType, // 新增：从 unified hook 获取 changeVideoSourceType
   } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
 
   console.log(`[DEBUG] isStreamCurrentlyActive: ${isStreamCurrentlyActive}, isCameraMuted: ${isCameraMuted}, stream: ${stream ? stream.id : 'null'}`);
 
-  
   const { isConnected } = useWebSocketSession(); // Get connection state
-
-  // 处理摄像头权限请求和状态显示
-  const [camPermission, setCamPermission] = React.useState<'granted' | 'denied' | 'prompt'>('prompt');
-  React.useEffect(() => {
-    const checkCamPermission = async () => {
-      try {
-        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
-        setCamPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
-        permissionStatus.onchange = () => {
-          setCamPermission(permissionStatus.state as 'granted' | 'denied' | 'prompt');
-        };
-      } catch (error) {
-        console.error("[DEBUG] Error querying camera permission:", error);
-        setCamPermission('denied');
-      }
-    };
-    checkCamPermission();
-  }, []);
-
-  const getPermissionStatusText = (status: 'granted' | 'denied' | 'prompt') => {
-    switch (status) {
-      case 'granted':
-        return '已授权';
-      case 'denied':
-        return '已拒绝';
-      case 'prompt':
-        return '待授权';
-      default:
-        return '未知';
-    }
-  };
 
   // 调试日志：在条件渲染前捕捉最终状态
   const displayCondition = isCameraMuted || !isStreamCurrentlyActive;
   console.log(`[DEBUG] CamSettingsBlock rendering final state: isStreamCurrentlyActive=${isStreamCurrentlyActive}, isCameraMuted=${isCameraMuted}, displayCondition=${displayCondition}`);
+
+  let videoStatusText = '视频已关闭或无可用视频源';
+  if (streamStatus === StreamStatus.PENDING) {
+    videoStatusText = '正在请求视频...';
+  } else if (streamStatus === StreamStatus.PERMISSION_DENIED) {
+    videoStatusText = '权限被拒绝，请检查浏览器设置';
+  } else if (streamStatus === StreamStatus.ERROR) {
+    videoStatusText = `获取视频失败: ${streamError}`;
+  } else if (isCameraMuted) {
+    videoStatusText = '视频已静音';
+  } else if (isStreamCurrentlyActive) {
+    videoStatusText = '视频已激活'; // Should not reach here if stream is active and not muted, as it would render the video
+  }
 
   return (
     <div className="mb-4">
@@ -179,11 +163,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
       </div>
       <div className="flex items-center gap-2 mb-2">
         <Select value={currentVideoSourceType} onValueChange={(value: string) => {
-          if (value === VideoSourceType.SCREEN) {
-            dispatch(setVideoSourceTypeAndClearDeviceId(value as VideoSourceType)); // 使用新 action，并进行类型断言
-          } else {
-            dispatch(setVideoSourceType(value as VideoSourceType)); // 类型断言
-          }
+          changeVideoSourceType(value as VideoSourceType);
         }} disabled={disabled}> {/* Update to currentVideoSourceType and changeVideoSourceType */}
           <SelectTrigger className="w-[120px] min-w-0"> {/* Add min-w-0 */}
             <SelectValue className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" /> {/* Add text truncation styles */}
@@ -202,18 +182,18 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
       </div>
       {!isConnected && (
         <div className="my-3 w-full mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]"> {/* Change w-64 to w-full */}
-          {isCameraMuted || !isStreamCurrentlyActive ? ( // Check isStreamCurrentlyActive only
-            <p className="text-white text-sm">视频已关闭或无可用视频源</p>
-          ) : (
+          {isStreamCurrentlyActive && !isCameraMuted && stream ? ( // Check isStreamCurrentlyActive, isCameraMuted and stream
             <LocalVideoStreamPlayer
               stream={stream} // Use useUnifiedCamera provided stream
               muted={true}
               fit="cover"
             />
+          ) : (
+            <p className="text-white text-sm">{videoStatusText}</p>
           )}
         </div>
       )}
-      {camPermission === 'denied' && (
+      {streamStatus === StreamStatus.PERMISSION_DENIED && (
         <p className="text-xs text-right mt-2 text-red-500">无权限</p>
       )}
     </div>
