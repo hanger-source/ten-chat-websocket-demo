@@ -31,20 +31,11 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
   // Helper function to check if currentStream matches desiredDetails (only intent-related parts)
   const streamMatchesDesiredDetails = useCallback((current: MediaStream | null, desired: StreamDetails | null): boolean => {
     if (!current || !desired) {
-      console.log("[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: One of current or desired is null/undefined. Returning false.");
       return false;
     }
 
     const currentVideoTrack: MediaStreamTrack | undefined = current.getVideoTracks()[0];
     const currentAudioTrack: MediaStreamTrack | undefined = current.getAudioTracks()[0];
-
-    // 调试：打印视频/音频轨道信息
-    if (currentVideoTrack) {
-      console.log(`[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: Current video track - ID: ${currentVideoTrack.id}, Label: ${currentVideoTrack.label}, Kind: ${currentVideoTrack.kind}`);
-    }
-    if (currentAudioTrack) {
-      console.log(`[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: Current audio track - ID: ${currentAudioTrack.id}, Label: ${currentAudioTrack.label}, Kind: ${currentAudioTrack.kind}`);
-    }
 
     // 1. 判断视频源类型是否匹配
     let videoTypeMatches = false;
@@ -61,7 +52,6 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
       // 期望是屏幕共享，当前轨道必须是视频类型且是屏幕共享
       videoTypeMatches = currentVideoTrack && currentVideoTrack.kind === 'video' && isCurrentTrackScreenShare;
     }
-    console.log(`[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: videoTypeMatches: ${videoTypeMatches}, Desired Video Source Type: ${desired.videoSourceType}, isCurrentTrackScreenShare: ${isCurrentTrackScreenShare}`);
 
     // 2. 判断摄像头设备ID是否匹配
     let camDeviceIdMatches = false;
@@ -72,24 +62,18 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
       // 否则，精确匹配设备ID
       camDeviceIdMatches = !desired.camDeviceId || (currentVideoTrack && currentVideoTrack.getSettings().deviceId === desired.camDeviceId);
     }
-    console.log(`[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: camDeviceIdMatches: ${camDeviceIdMatches}, Desired Cam Device ID: ${desired.camDeviceId}, Current Cam Device ID: ${currentVideoTrack?.getSettings().deviceId}`);
 
     // 3. 判断麦克风设备ID是否匹配
     const micDeviceIdMatches = !desired.micDeviceId || (currentAudioTrack && currentAudioTrack.getSettings().deviceId === desired.micDeviceId);
-    console.log(`[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: micDeviceIdMatches: ${micDeviceIdMatches}, Desired Mic Device ID: ${desired.micDeviceId}, Current Mic Device ID: ${currentAudioTrack?.getSettings().deviceId}`);
 
     // 移除对静音状态的匹配，因为它现在是独立的属性
-    const finalMatch = videoTypeMatches && camDeviceIdMatches && micDeviceIdMatches; // && cameraMuteStateMatches && microphoneMuteStateMatches;
-    console.log(`[DEBUG_STREAM_LIFECYCLE] streamMatchesDesiredDetails: Final match result: ${finalMatch}`);
+    const finalMatch = videoTypeMatches && camDeviceIdMatches && micDeviceIdMatches;
     return finalMatch;
   }, []);
 
   const performStreamAcquisition = useCallback(
     async (details: StreamDetails, abortSignal: AbortController['signal']) => {
-      console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: ENTRY POINT. Details:', JSON.stringify(details), 'Redux Status:', status, 'Abort Signal Aborted (at entry):', abortSignal.aborted);
-
       if (abortSignal.aborted) {
-        console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Aborted IMMEDIATELY upon entry before any API call.');
         return;
       }
 
@@ -102,13 +86,10 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
         };
 
         if (details.videoSourceType === VideoSourceType.SCREEN) {
-          console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Calling navigator.mediaDevices.getDisplayMedia.');
           acquiredStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, signal: abortSignal } as DisplayMediaStreamOptions);
-          console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: navigator.mediaDevices.getDisplayMedia returned.', acquiredStream ? 'Stream ID: ' + acquiredStream.id : 'null');
           if (acquiredStream) {
             acquiredStream.getVideoTracks().forEach((track: MediaStreamTrack) => {
               track.onended = () => {
-                console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Screen share stream ended by user or system for stream:', acquiredStream?.id, '. Dispatching stopStream.');
                 if (mediaStreamRef.current === acquiredStream) {
                   mediaStreamRef.current = null;
                   dispatch(stopStream());
@@ -117,14 +98,10 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
             });
           }
         } else if (details.videoSourceType === VideoSourceType.CAMERA) {
-          console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Calling navigator.mediaDevices.getUserMedia with constraints:', JSON.stringify(constraints));
           acquiredStream = await navigator.mediaDevices.getUserMedia({ ...constraints, signal: abortSignal } as MediaStreamConstraints);
-          console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: navigator.mediaDevices.getUserMedia returned.', acquiredStream ? 'Stream ID: ' + acquiredStream.id : 'null');
           if (acquiredStream) {
-            console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Acquired Camera Stream Details - ID:', acquiredStream.id, ', Active:', acquiredStream.active);
             acquiredStream.getVideoTracks().forEach((track: MediaStreamTrack) => {
               track.onended = () => {
-                console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Video track ended for stream:', acquiredStream?.id, '. Dispatching stopStream.');
                 if (mediaStreamRef.current === acquiredStream) {
                   mediaStreamRef.current = null;
                   dispatch(stopStream());
@@ -133,7 +110,6 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
             });
             acquiredStream.getAudioTracks().forEach((track: MediaStreamTrack) => {
               track.onended = () => {
-                console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Audio track ended for stream:', acquiredStream?.id, '. Dispatching stopStream.');
                 if (mediaStreamRef.current === acquiredStream) {
                   mediaStreamRef.current = null;
                   dispatch(stopStream());
@@ -144,13 +120,11 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
         }
 
         if (abortSignal.aborted) {
-          console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Aborted AFTER getMediaStream but BEFORE processing.');
           if (acquiredStream) acquiredStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
           return;
         }
 
         if (acquiredStream) {
-          // 只有当获取到的流与最新的期望匹配时才更新 mediaStreamRef.current 和 Redux 状态
           // 移除竞态条件检查，由 useEffect 的 lastLaunchedDetailsRef 和 AbortController 处理
           // if (JSON.stringify(details) === JSON.stringify(lastRequestedDetails)) {
             // 如果有旧流，则停止它。这里的停止应由 useEffect 负责
@@ -159,22 +133,17 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
             // }
             mediaStreamRef.current = acquiredStream;
             // 在这里不应用静音状态，因为静音现在由 useCameraMute Hook 处理
-            console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Stream acquired. Dispatching streamAcquired. Stream ID:', acquiredStream.id);
             dispatch(streamAcquired({ details }));
           // } else {
-          //   console.warn('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Acquired stream details do not match last requested (race condition). Stopping and ignoring.', details, lastRequestedDetails);
           //   acquiredStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
           // }
         } else {
-          console.warn('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: No stream acquired, user might have cancelled or permission denied implicitly.');
           dispatch(permissionDenied());
         }
       } catch (error: any) {
         if (error.name === 'AbortError') {
-          console.log('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Media stream acquisition aborted by signal. Ignoring error and not dispatching.');
           return; // It's a cancellation, not an error to report to Redux
         }
-        console.error('[DEBUG_STREAM_LIFECYCLE] performStreamAcquisition: Failed to acquire media stream. Details:', error.name, error.message, error);
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
           dispatch(permissionDenied());
         } else {
@@ -193,11 +162,8 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
     const desiredDetails = lastRequestedDetails;
     const currentStream = mediaStreamRef.current;
 
-    console.log('[DEBUG_STREAM_LIFECYCLE] Main useEffect triggered. Desired:', JSON.stringify(desiredDetails), '. Current Ref Stream:', currentStream?.id, '. Redux Status:', status);
-
     const stopAndClearStream = (streamToStop: MediaStream | null) => {
       if (streamToStop) {
-        console.log('[DEBUG_STREAM_LIFECYCLE] Stopping actual MediaStream:', streamToStop.id);
         streamToStop.getTracks().forEach((track: MediaStreamTrack) => track.stop());
       }
       mediaStreamRef.current = null;
@@ -206,11 +172,9 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
     // Scenario 1: No stream desired (lastRequestedDetails is null or videoSourceType is NONE)
     if (!desiredDetails || desiredDetails.videoSourceType === VideoSourceType.NONE) {
       if (currentStream) { // If there's an active physical stream, stop it
-        console.log('[DEBUG_STREAM_LIFECYCLE] No stream desired. Stopping current physical stream.');
         stopAndClearStream(currentStream);
       }
       if (status !== StreamStatus.IDLE) { // If Redux state is not IDLE, dispatch stopStream
-        console.log('[DEBUG_STREAM_LIFECYCLE] No stream desired, but Redux status not IDLE. Dispatching stopStream to reset Redux state.');
         dispatch(stopStream());
       }
       // Reset last launched details when no stream is desired
@@ -224,7 +188,6 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
     // Only consider stream active if mediaStreamRef.current actually holds a stream AND Redux status is ACTIVE.
     if (currentStream && streamMatchesDesiredDetails(currentStream, desiredDetails) &&
         (status === StreamStatus.ACTIVE_CAMERA || status === StreamStatus.ACTIVE_SCREEN)) {
-      console.log('[DEBUG_STREAM_LIFECYCLE] Current stream already matches desired intent AND Redux status is ACTIVE. Nothing to do for lifecycle.');
       // Reset last launched details since we are already active and matching
       lastLaunchedDetailsRef.current = desiredDetails;
       return; // Nothing more to do for stream lifecycle
@@ -236,11 +199,9 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
       const stringifiedLastLaunched = JSON.stringify(lastLaunchedDetailsRef.current);
 
       if (stringifiedDesired !== stringifiedLastLaunched) {
-        console.log('[DEBUG_STREAM_LIFECYCLE] Redux Status is PENDING and desiredDetails have changed or no acquisition launched yet. Aborting previous if any, and attempting to acquire new stream.');
 
         // Abort any existing acquisition (which would be for old desiredDetails or a previous PENDING state)
         if (currentAcquisitionAbortControllerRef.current) {
-          console.log('[DEBUG_STREAM_LIFECYCLE] Aborting previous acquisition controller.');
           currentAcquisitionAbortControllerRef.current.abort();
         }
 
@@ -249,7 +210,6 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
         performStreamAcquisition(desiredDetails, newAbortController.signal);
         lastLaunchedDetailsRef.current = desiredDetails; // Mark these details as "in-flight" for performStreamAcquisition
       } else {
-        console.log('[DEBUG_STREAM_LIFECYCLE] Redux Status is PENDING and acquisition for these desiredDetails is already in progress. Waiting for resolution.');
       }
       return; // Regardless, if PENDING, we manage here and return.
     }
@@ -257,9 +217,7 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
     // Scenario 4: Other states (IDLE, ERROR, PERMISSION_DENIED) or current physical stream doesn't match,
     // AND Redux state is NOT PENDING. We need to dispatch `requestStream` to initiate the PENDING state.
     if (status !== StreamStatus.PENDING) {
-        console.log('[DEBUG_STREAM_LIFECYCLE] Redux status is not PENDING, but a stream is desired. Dispatching requestStream to initiate PENDING.');
         if (currentStream && !streamMatchesDesiredDetails(currentStream, desiredDetails)) {
-            console.log('[DEBUG_STREAM_LIFECYCLE] Existing physical stream does not match desired intent. Stopping old stream before dispatching new request.');
             stopAndClearStream(currentStream);
         }
         // 显式过滤 desiredDetails，确保只包含 StreamDetails 中定义的属性
@@ -268,22 +226,18 @@ export const useStreamLifecycle = (): UseStreamLifecycleResult => {
           ...(desiredDetails.camDeviceId && { camDeviceId: desiredDetails.camDeviceId }),
           ...(desiredDetails.micDeviceId && { micDeviceId: desiredDetails.micDeviceId }),
         };
-        console.log('[DEBUG_STREAM_LIFECYCLE] Dispatching requestStream with CLEANED desiredDetails. Keys:', Object.keys(cleanedDesiredDetails || {}), '. Details:', cleanedDesiredDetails);
         dispatch(requestStream(cleanedDesiredDetails));
         return; // Request dispatched, now wait for Redux state to become PENDING
     }
 
     return () => {
-      console.log('[DEBUG_STREAM_LIFECYCLE] Main useEffect cleanup function running for this instance.');
       // Abort any ongoing acquisition when the component unmounts or dependencies change significantly.
       if (currentAcquisitionAbortControllerRef.current) {
-        console.log('[DEBUG_STREAM_LIFECYCLE] Aborting ongoing acquisition on cleanup.');
         currentAcquisitionAbortControllerRef.current.abort();
         currentAcquisitionAbortControllerRef.current = null;
       }
       // Stop the currently active physical stream when the hook instance is cleaned up.
       if (mediaStreamRef.current) {
-        console.log('[DEBUG_STREAM_LIFECYCLE] Stopping physical MediaStream on cleanup (ID:', mediaStreamRef.current.id, ').');
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
         mediaStreamRef.current = null;
       }

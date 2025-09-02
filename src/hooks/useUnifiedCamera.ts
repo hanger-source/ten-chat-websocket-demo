@@ -38,14 +38,12 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   // 用户交互回调 (dispatch intent 或属性)
   const toggleCameraMute = useCallback(
     () => {
-      console.log('[DEBUG_UNIFIED_CAMERA] Toggling camera mute. Current isCameraMuted:', isCameraMuted);
       dispatch(setCameraMuted(!isCameraMuted)); // 直接派发 setCameraMuted action
     },
     [dispatch, isCameraMuted],
   );
 
   const changeCameraDevice = useCallback((deviceId: string) => {
-    console.log('[DEBUG_UNIFIED_CAMERA] Changing camera device to:', deviceId);
     // 确保只传递 StreamDetails 中定义的属性
     const currentDetails: StreamDetails = {
       videoSourceType: lastRequestedDetails?.videoSourceType || VideoSourceType.CAMERA,
@@ -56,7 +54,6 @@ export const useUnifiedCamera = (options?: UseUnifiedCameraOptions) => {
   }, [dispatch, lastRequestedDetails]);
 
   const changeVideoSourceType = useCallback((type: VideoSourceType) => {
-    console.log('[DEBUG_UNIFIED_CAMERA] Changing video source type to:', type);
     // 确保只传递 StreamDetails 中定义的属性
     const currentDetails: StreamDetails = {
       videoSourceType: type,

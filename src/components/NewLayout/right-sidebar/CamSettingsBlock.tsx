@@ -1,9 +1,9 @@
-import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useMemo } from 'react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { VideoSourceType, VIDEO_SOURCE_OPTIONS } from "@/common/constant";
 import { CamIconByStatus } from "@/components/Icon";
-import { MonitorIcon, MonitorXIcon } from "lucide-react";
+import { MonitorIcon, MonitorXIcon, AlertCircle } from "lucide-react";
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Still needed for isConnected
 import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
