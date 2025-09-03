@@ -109,7 +109,7 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
               <div className="grid grid-cols-3 gap-4 py-4 max-h-[calc(100vh-350px)] overflow-y-auto"> {/* Changed to grid layout with 3 columns, added max height and scroll */}
                 {models.map((model: ISelectedModelOption) => (
                   <div
-                    key={model.name}
+                    key={model.model}
                     onClick={() => handleSelectModel(model.model)}
                     onMouseEnter={() => setHoveredModelId(model.model)}
                     onMouseLeave={() => setHoveredModelId(null)}
