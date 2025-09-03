@@ -128,8 +128,10 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     videoStatusText = `获取视频失败: ${error}`;
   } else if (activeStream && isVideoEnabled) {
     videoStatusText = '视频已激活';
-  } else if (!isVideoEnabled) {
-    videoStatusText = '视频已关闭';
+  } else if (!isVideoEnabled && selectedVideoSource == VideoSourceType.CAMERA) {
+    videoStatusText = '摄像头视频源已关闭';
+  } else if (!isVideoEnabled && selectedVideoSource == VideoSourceType.SCREEN) {
+    videoStatusText = '屏幕共享视频源已关闭';
   } else if (!activeStream) {
     videoStatusText = '无可用视频源';
   }
