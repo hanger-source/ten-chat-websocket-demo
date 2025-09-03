@@ -22,7 +22,7 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: AI_ASSISTANT_SUBTEXT,
     prompt: AI_ASSISTANT_PROMPT,
     selectedModels: {
-      text_model: 'qwen-max',
+      text_model: 'qwen3-30b-a3b-instruct-2507',
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
