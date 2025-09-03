@@ -5,24 +5,18 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import NewHome from "@/components/NewLayout/layouts/Home";
 import { useDispatch } from "react-redux";
-import { requestStream, StreamDetails } from "@/store/reducers/mediaStream";
-import { VideoSourceType } from "./common/constant";
+import useMediaStreamManager from '@/hooks/media/useMediaStreamManager'; // 导入新的 useMediaStreamManager Hook
+import { requestCamera } from "@/store/reducers/localMediaStream"; // 导入新的 requestCamera action
 
 // 新增的 AppInitializer 组件，用于处理媒体流初始化
 function AppInitializer() {
   const dispatch = useDispatch();
-
+  useMediaStreamManager(); // 在应用的根组件中调用 useMediaStreamManager
   useEffect(() => {
-    const defaultDetails: StreamDetails = {
-      videoSourceType: VideoSourceType.CAMERA,
-      camDeviceId: undefined,
-      micDeviceId: undefined,
-    };
-    console.log('[DEBUG] AppInitializer: Initializing media stream request with default camera (COLD START).');
-    dispatch(requestStream(defaultDetails));
+    // 初始启动时请求默认摄像头
+    dispatch(requestCamera({ camDeviceId: null }));
   }, [dispatch]);
-
-  return null; // 这个组件不渲染任何UI
+  return null;
 }
 
 function App() {

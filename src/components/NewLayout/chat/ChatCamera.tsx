@@ -1,8 +1,10 @@
-import React from 'react';
+import React, {useRef} from 'react';
 import { cn } from '@/lib/utils';
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
-import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
-import { StreamStatus } from '@/store/reducers/mediaStream'; // 更新 StreamStatus 导入路径
+import useActiveMediaStream from '@/hooks/media/useActiveMediaStream'; // 导入新的 useActiveMediaStream hook
+import useMediaState from '@/hooks/media/useMediaState'; // 导入新的 useMediaState hook
+import { StreamStatus } from '@/store/reducers/localMediaStream'; // 更新 StreamStatus 导入路径
+import { useVideoFrameSender } from '@/hooks/useVideoFrameSender'; // 导入 useVideoFrameSender hook
 
 interface ChatCameraProps {
   className?: string;
@@ -10,7 +12,10 @@ interface ChatCameraProps {
 
 export const ChatCamera = ({ className }: ChatCameraProps) => {
   console.log("[DEBUG_SCREEN_SHARE] ChatCamera rendered.");
-  const { isCameraMuted, canvasRef, streamStatus, stream, streamError, isStreamCurrentlyActive } = useUnifiedCamera(); // Get canvasRef here and new state machine vars
+  const stream = useActiveMediaStream(); // 使用新的 hook 获取 stream
+  const { status, error, isVideoEnabled } = useMediaState(); // 使用新的 hook 获取媒体状态
+  // 调用 useVideoFrameSender
+  const { canvasRef } = useVideoFrameSender({});
 
   React.useEffect(() => {
     console.log('[DEBUG_SCREEN_SHARE] ChatCamera mounted.');
@@ -20,35 +25,33 @@ export const ChatCamera = ({ className }: ChatCameraProps) => {
   }, []);
 
   React.useEffect(() => {
-    console.log('[DEBUG_SCREEN_SHARE] ChatCamera useEffect: Stream status changed:', streamStatus, ', Stream ID:', stream?.id, ', isStreamCurrentlyActive:', isStreamCurrentlyActive);
-  }, [streamStatus, stream, isStreamCurrentlyActive]);
+    console.log('[DEBUG_SCREEN_SHARE] ChatCamera useEffect: Stream status changed:', status, ', Stream ID:', stream?.id, ', isVideoEnabled:', isVideoEnabled);
+  }, [status, stream, isVideoEnabled]);
 
-  if (isCameraMuted) {
+  if (!isVideoEnabled) {
     return null;
   }
 
-  let videoStatusText = '摄像头已静音或无可用视频源';
-  if (streamStatus === StreamStatus.PENDING) {
+  let videoStatusText = '摄像头已关闭或无可用视频源';
+  if (status === StreamStatus.PENDING) {
     videoStatusText = '正在请求视频...';
-  } else if (streamStatus === StreamStatus.PERMISSION_DENIED) {
+  } else if (status === StreamStatus.PERMISSION_DENIED) {
     videoStatusText = '权限被拒绝，请检查浏览器设置';
-  } else if (streamStatus === StreamStatus.ERROR) {
-    videoStatusText = `获取视频失败: ${streamError}`;
-  } else if (isCameraMuted) {
-    videoStatusText = '摄像头已静音'; // 如果静音，显示此信息
-  } else if (!isStreamCurrentlyActive) {
+  } else if (status === StreamStatus.ERROR) {
+    videoStatusText = `获取视频失败: ${error}`;
+  } else if (!stream) {
     videoStatusText = '无可用视频源';
   }
 
   return (
     <div className={cn("flex flex-col items-center w-full h-full border border-gray-300 rounded-lg", className)}> {/* 最外层容器 */}
       {/* Hidden canvas for video frame processing */}
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} /> {/* 重新添加 canvas 元素 */}
       {/* Container for video and text, manages vertical layout */}
       <div className="flex flex-col items-center justify-between w-full text-white text-sm"> {/* 视频和文字的共同容器 */}
         {/* Video stream or placeholder */}
         <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden bg-gray-800 rounded-t-lg"> {/* 视频流容器 */}
-          {isStreamCurrentlyActive && !isCameraMuted && stream ? ( // Check isStreamCurrentlyActive, isCameraMuted and stream
+          {stream && isVideoEnabled && status === StreamStatus.ACTIVE ? ( // 检查 stream, isVideoEnabled 和 status
             <div className="w-full h-full object-cover flex items-center justify-center"> {/* 包裹 LocalVideoStreamPlayer，并应用样式 */}
             <LocalVideoStreamPlayer stream={stream} muted={true} />
             </div>

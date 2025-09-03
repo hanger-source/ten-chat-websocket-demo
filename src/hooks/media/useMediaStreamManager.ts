@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {RootState} from "@/store";
 import {mediaStreamManager} from "@/manager/media/LocalMediaStreamManager";
-import {mediaFailed, mediaReady} from "@/store/reducers/localMediaStream";
-import {permissionDenied} from "@/store/reducers/mediaStream";
+import {mediaFailed, mediaReady, permissionDenied} from "@/store/reducers/localMediaStream";
+import {stopMedia} from "@/store/reducers/localMediaStream";
 
 /**
  * 核心副作用 Hook，负责将 Redux 状态与底层媒体流服务同步。
@@ -13,11 +13,7 @@ const useMediaStreamManager = () => {
   const dispatch = useDispatch();
 
   // 监听 Redux 状态中所有驱动媒体流生命周期和视频状态的属性。
-  const { requestedVideoSource, selectedCamDeviceId, isVideoEnabled } = useSelector((state: RootState) => ({
-    requestedVideoSource: state.localMediaStream.requestedVideoSource,
-    selectedCamDeviceId: state.localMediaStream.selectedCamDeviceId,
-    isVideoEnabled: state.localMediaStream.isVideoEnabled,
-  }));
+  const { requestedVideoSource, selectedCamDeviceId, isVideoEnabled } = useSelector((state: RootState) => (state.localMediaStream));
 
   /**
    * 主要的 useEffect，负责流的创建和销毁。
@@ -28,10 +24,10 @@ const useMediaStreamManager = () => {
     const getStream = async () => {
       try {
         if (requestedVideoSource === 'camera') {
-          const stream = await mediaStreamManager.getCameraStream(selectedCamDeviceId);
+          await mediaStreamManager.getCameraStream(selectedCamDeviceId);
           dispatch(mediaReady());
         } else if (requestedVideoSource === 'screen') {
-          const stream = await mediaStreamManager.getScreenStream();
+          await mediaStreamManager.getScreenStream();
           dispatch(mediaReady());
         }
       } catch (error: any) {
@@ -66,6 +62,25 @@ const useMediaStreamManager = () => {
         stream.getVideoTracks().forEach(track => (track.enabled = isVideoEnabled));
     }
   }, [isVideoEnabled]);
+
+  /**
+   * 第三个 useEffect，用于监听 LocalMediaStreamManager 的流变更事件，
+   * 并在流停止时同步 Redux 状态。
+   */
+  useEffect(() => {
+    const handleStreamChange = (newStream: MediaStream | null) => {
+      if (!newStream) {
+        // 如果流变为 null，表示流已停止，同步 Redux 状态
+        dispatch(stopMedia());
+      }
+    };
+
+    mediaStreamManager.addChangeListener(handleStreamChange);
+
+    return () => {
+      mediaStreamManager.removeChangeListener(handleStreamChange);
+    };
+  }, [dispatch]);
 };
 
 export default useMediaStreamManager;

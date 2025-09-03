@@ -21,8 +21,8 @@ export interface MediaState {
   // 用户的意图：始终代表用户想要什么流。这是副作用 Hook 的驱动源。
   requestedVideoSource: VideoSource | null;
 
-  // 应用的现实：代表当前实际激活的流。这是 UI 渲染的唯一依据。
-  activeVideoSource: VideoSource | null;
+  // 应用的现实：代表当前实际选择的流类型，但并不一定激活。这是 UI 渲染的唯一依据。
+  selectedVideoSource: VideoSource | null;
 
   // 选中的设备 ID，作为配置参数
   selectedCamDeviceId: string | null;
@@ -37,7 +37,7 @@ export interface MediaState {
 
 const initialState: MediaState = {
   requestedVideoSource: null,
-  activeVideoSource: null,
+  selectedVideoSource: null,
   selectedCamDeviceId: null,
   //   视频轨道启用状态，用于控制静音/关闭摄像头
   isVideoEnabled: true,
@@ -56,6 +56,7 @@ const mediaSlice = createSlice({
     requestCamera: (state, action: PayloadAction<{ camDeviceId: string | null; }>) => {
       // 更新用户的意图和配置
       state.requestedVideoSource = 'camera';
+      state.selectedVideoSource = 'camera';
       state.selectedCamDeviceId = action.payload.camDeviceId || state.selectedCamDeviceId;
       // 更新状态，表示正在处理请求
       state.status = StreamStatus.PENDING;
@@ -66,6 +67,7 @@ const mediaSlice = createSlice({
     requestScreen: (state, action: PayloadAction<{}>) => {
       // 更新用户的意图和配置
       state.requestedVideoSource = 'screen';
+      state.selectedVideoSource = 'screen'
       state.selectedCamDeviceId = null; 
       // 更新状态，表示正在处理请求
       state.status = StreamStatus.PENDING;
@@ -80,8 +82,6 @@ const mediaSlice = createSlice({
     // 【用户操作】停止所有流
     stopMedia: (state) => {
       // 清除意图和现实，重置状态
-      state.requestedVideoSource = null;
-      state.activeVideoSource = null;
       state.status = StreamStatus.IDLE;
       state.error = null;
     },
@@ -89,7 +89,7 @@ const mediaSlice = createSlice({
     // 【副作用 Hook 调用】流成功获取
     mediaReady: (state) => {
       // 只有在成功时，才将意图同步到现实中
-      state.activeVideoSource = state.requestedVideoSource;
+      state.selectedVideoSource = state.requestedVideoSource;
       state.status = StreamStatus.ACTIVE;
       state.error = null;
     },
@@ -100,7 +100,6 @@ const mediaSlice = createSlice({
       state.error = action.payload;
       // 失败后，清除意图和现实
       state.requestedVideoSource = null;
-      state.activeVideoSource = null;
     },
     
     // 【副作用 Hook 调用】权限被拒绝
@@ -109,7 +108,6 @@ const mediaSlice = createSlice({
       state.error = 'Permission Denied';
       // 权限拒绝后，清除意图和现实
       state.requestedVideoSource = null;
-      state.activeVideoSource = null;
     },
 
     // 完整的状态重置

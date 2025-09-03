@@ -32,7 +32,7 @@ export class LocalMediaStreamManager implements IMediaStreamManager {
      * 获取摄像头流。
      */
     public async getCameraStream(camDeviceId: string | null): Promise<MediaStream> {
-        const constraints = {
+        const constraints: MediaStreamConstraints = {
             video: camDeviceId ? { deviceId: { exact: camDeviceId } } : true,
             audio: false,
         };
@@ -47,7 +47,7 @@ export class LocalMediaStreamManager implements IMediaStreamManager {
      * 获取屏幕共享流。
      */
     public async getScreenStream(): Promise<MediaStream> {
-        const constraints = {
+        const constraints: DisplayMediaStreamOptions = {
             video: true,
             audio: false,
         };

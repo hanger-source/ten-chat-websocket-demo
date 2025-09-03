@@ -6,9 +6,13 @@ import { CamIconByStatus } from "@/components/Icon";
 import { MonitorIcon, MonitorXIcon, AlertCircle } from "lucide-react";
 import { LocalVideoStreamPlayer } from "@/components/Agent/LocalVideoStreamPlayer";
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // Still needed for isConnected
-import { useUnifiedCamera } from '@/hooks/useUnifiedCamera'; // Import the new unified hook
+import useMediaState from '@/hooks/media/useMediaState'; // 导入新的 useMediaState hook
+import useMediaDevices from '@/hooks/media/useMediaDevices'; // 导入新的 useMediaDevices hook
+import useMediaControls from '@/hooks/media/useMediaControls'; // 导入新的 useMediaControls hook
+import useMediaTrackControls from '@/hooks/media/useMediaTrackControls'; // 导入新的 useMediaTrackControls hook
+import useActiveMediaStream from '@/hooks/media/useActiveMediaStream'; // 导入新的 useActiveMediaStream hook
 import { useDispatch } from 'react-redux'; // Import useDispatch
-import { StreamStatus } from '@/store/reducers/mediaStream'; // 更新 StreamStatus 导入路径
+import { StreamStatus, requestCamera, requestScreen } from '@/store/reducers/localMediaStream'; // 更新 StreamStatus 及相关 action 导入路径
 
 // 定义用于设备选择的通用接口
 interface SelectItem {
@@ -34,10 +38,25 @@ const ScreenIconByStatus = React.memo((props: React.SVGProps<SVGSVGElement> & { 
 });
 
 // CamSelect 组件
-const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId: string) => void, disabled?: boolean }) => {
+const CamSelect = (props: { currentDeviceId: string | null, onDeviceChange: (deviceId: string | null) => void, disabled?: boolean }) => {
   const { currentDeviceId, onDeviceChange, disabled } = props;
   const [items, setItems] = React.useState<SelectItem[]>([DEFAULT_CAM_ITEM]);
-  const [value, setValue] = React.useState("default");
+  // 使用 currentDeviceId 初始化 value，并监听其变化
+  const [value, setValue] = React.useState(currentDeviceId === null ? DEFAULT_CAM_ITEM.value : currentDeviceId);
+
+  React.useEffect(() => {
+    // 当 currentDeviceId 变化时，更新内部 value 状态
+    if (currentDeviceId === null) {
+      setValue(DEFAULT_CAM_ITEM.value);
+    } else {
+      const selected = items.find(d => d.deviceId === currentDeviceId);
+      if (selected) {
+        setValue(selected.value);
+      } else {
+        setValue(DEFAULT_CAM_ITEM.value);
+      }
+    }
+  }, [currentDeviceId, items]);
 
   React.useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
@@ -52,24 +71,17 @@ const CamSelect = (props: { currentDeviceId?: string, onDeviceChange: (deviceId:
         DEFAULT_CAM_ITEM,
         ...processedDevices,
       ]);
-      if (currentDeviceId) {
-        const selected = processedDevices.find(d => d.deviceId === currentDeviceId);
-        if (selected) {
-          setValue(selected.value);
-        } else {
-          setValue(DEFAULT_CAM_ITEM.value);
-        }
-      }
     }).catch(error => {
       console.error("[DEBUG_CAMERA] Error enumerating devices:", error);
     });
-  }, [currentDeviceId]);
+  }, []); // 仅在挂载时枚举设备一次，设备变化通过 useMediaDevices 处理
 
   const onChange = (selectedValue: string) => {
     const target = items.find((item) => item.value === selectedValue);
     if (target) {
       setValue(target.value);
-      onDeviceChange(target.deviceId);
+      // 调用上层 hook 提供的设备切换函数
+      onDeviceChange(target.deviceId === DEFAULT_CAM_ITEM.deviceId ? null : target.deviceId);
     }
   };
 
@@ -101,63 +113,61 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
     };
   }, []);
 
-  // Use useUnifiedCamera Hook to get all video related data and control functions
-  const {
-    isCameraMuted,
-    selectedCamDeviceId,
-    currentVideoSourceType,
-    toggleCameraMute,
-    changeCameraDevice,
-    streamStatus,
-    stream,
-    streamError,
-    isStreamCurrentlyActive,
-    changeVideoSourceType,
-  } = useUnifiedCamera({ enableVideoSending: false }); // CamSettingsBlock only for display, not sending frames
+  // 使用新的 Hooks 来获取状态和控制函数
+  const { status, error, selectedVideoSource, isVideoEnabled } = useMediaState();
+  const { selectedCamDeviceId, setSelectedCamera } = useMediaDevices();
+  const { toggleCamera, toggleScreen } = useMediaControls(); // 暂时保留，但我们会用 requestCamera/Screen 替代
+  const { toggleVideoEnabled } = useMediaTrackControls();
+  const activeStream = useActiveMediaStream(); // 获取实际的媒体流
 
   const { isConnected } = useWebSocketSession(); // Get connection state
 
-  // 调试日志：在条件渲染前捕捉最终状态
-  const displayCondition = isCameraMuted || !isStreamCurrentlyActive; // displayCondition 依然用于 UI 的整体显示逻辑
-
   let videoStatusText = '视频已关闭或无可用视频源';
-  if (streamStatus === StreamStatus.PENDING) {
+  if (status === StreamStatus.PENDING) {
     videoStatusText = '正在请求视频...';
-  } else if (streamStatus === StreamStatus.PERMISSION_DENIED) {
+  } else if (status === StreamStatus.PERMISSION_DENIED) {
     videoStatusText = '权限被拒绝，请检查浏览器设置';
-  } else if (streamStatus === StreamStatus.ERROR) {
-    videoStatusText = `获取视频失败: ${streamError}`;
-  } else if (isStreamCurrentlyActive && stream && !isCameraMuted) {
+  } else if (status === StreamStatus.ERROR) {
+    videoStatusText = `获取视频失败: ${error}`;
+  } else if (activeStream && isVideoEnabled) {
     videoStatusText = '视频已激活';
-  } else if (isCameraMuted) {
-    videoStatusText = '视频已静音';
+  } else if (!isVideoEnabled) {
+    videoStatusText = '视频已关闭';
+  } else if (!activeStream) {
+    videoStatusText = '无可用视频源';
   }
+
+  const handleVideoSourceChange = (value: string) => {
+    if (value === VideoSourceType.CAMERA) {
+      dispatch(requestCamera({ camDeviceId: selectedCamDeviceId }));
+    } else if (value === VideoSourceType.SCREEN) {
+      dispatch(requestScreen({}));
+    }
+  };
 
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">摄像头</div>
-          <div className={`w-2 h-2 rounded-full ${isCameraMuted ? 'bg-red-500' : 'bg-green-500'}`}></div>
+          <div className={`w-2 h-2 rounded-full ${!isVideoEnabled ? 'bg-red-500' : 'bg-green-500'}`}></div>
         </div>
         <Button
           variant="outline"
           size="icon"
           className="border-secondary bg-transparent"
-          onClick={toggleCameraMute} // Use useUnifiedCamera provided function
+          onClick={toggleVideoEnabled} // 使用新的 toggleVideoEnabled
           disabled={disabled}
         >
-          {currentVideoSourceType === VideoSourceType.CAMERA ? (
-            <CamIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
+          {selectedVideoSource === VideoSourceType.CAMERA ? (
+            <CamIconByStatus className="h-5 w-5" active={isVideoEnabled} color="purple"/>
           ) : (
-            <ScreenIconByStatus className="h-5 w-5" active={!isCameraMuted} color="purple"/>
+            <ScreenIconByStatus className="h-5 w-5" active={isVideoEnabled} color="purple"/>
           )}
         </Button>
       </div>
       <div className="flex items-center gap-2 mb-2">
-        <Select value={currentVideoSourceType} onValueChange={(value: string) => {
-          changeVideoSourceType(value as VideoSourceType);
-        }} disabled={disabled}> {/* Update to currentVideoSourceType and changeVideoSourceType */}
+        <Select value={selectedVideoSource || "none"} onValueChange={handleVideoSourceChange} disabled={disabled}> {/* 使用 requestedVideoSource */}
           <SelectTrigger className="w-[120px] min-w-0"> {/* Add min-w-0 */}
             <SelectValue className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" /> {/* Add text truncation styles */}
           </SelectTrigger>
@@ -169,15 +179,15 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
             ))}
           </SelectContent>
         </Select>
-        {currentVideoSourceType === VideoSourceType.CAMERA && (
-        <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={changeCameraDevice} disabled={disabled} />
+        {selectedVideoSource === VideoSourceType.CAMERA && (
+        <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={setSelectedCamera} disabled={disabled} />
         )}
       </div>
       {!isConnected && (
         <div className="my-3 w-full mx-auto overflow-hidden rounded-lg border border-gray-200 bg-black flex items-center justify-center shadow-lg aspect-[4/3]"> {/* Change w-64 to w-full */}
-          {isStreamCurrentlyActive && !isCameraMuted && stream ? ( // 使用 stream 是否存在来判断
+          {activeStream && isVideoEnabled && status === StreamStatus.ACTIVE ? ( // 使用 activeStream, isVideoEnabled 和 status
             <LocalVideoStreamPlayer
-              stream={stream} // Use useUnifiedCamera provided stream
+              stream={activeStream} // Use activeStream
               muted={true}
               fit="cover"
             />
@@ -186,7 +196,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
           )}
         </div>
       )}
-      {streamStatus === StreamStatus.PERMISSION_DENIED && (
+      {status === StreamStatus.PERMISSION_DENIED && (
         <p className="text-xs text-right mt-2 text-red-500">无权限</p>
       )}
     </div>

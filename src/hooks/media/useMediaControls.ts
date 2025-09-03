@@ -8,10 +8,7 @@ const useMediaControls = () => {
 
   // 从 Redux 状态中获取当前用户意图和设备配置
   const { requestedVideoSource, selectedCamDeviceId } = useSelector(
-    (state: RootState) => ({
-      requestedVideoSource: state.localMediaStream.requestedVideoSource,
-      selectedCamDeviceId: state.localMediaStream.selectedCamDeviceId,
-    })
+    (state: RootState) => (state.localMediaStream)
   );
 
   /**

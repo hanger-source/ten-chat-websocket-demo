@@ -50,7 +50,7 @@ const useMediaDevices = () => {
      * 用户选择一个新摄像头时调用的回调。
      * 它只负责更新 Redux 中的 selectedCamDeviceId 状态，不触发任何流请求。
      */
-    const setSelectedCamera = useCallback((deviceId: string) => {
+    const setSelectedCamera = useCallback((deviceId: string | null) => {
         dispatch(requestCamera({ camDeviceId: deviceId }));
     }, [dispatch]);
 

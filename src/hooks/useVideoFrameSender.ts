@@ -1,53 +1,46 @@
 import React, { useEffect, useRef } from 'react';
 import { webSocketManager } from '@/manager/websocket/websocket';
-import { WebSocketConnectionState } from '@/types/websocket';
-import { MESSAGE_CONSTANTS } from '@/common/constant';
-import { Location, MessageType } from "@/types/message";
 import { useWebSocketSession } from '@/hooks/useWebSocketSession';
+import useMediaState from './media/useMediaState';
+import useActiveMediaStream from "@/hooks/media/useActiveMediaStream"; // 导入新的 useMediaState hook
 
 interface UseVideoFrameSenderProps {
-  getMediaStreamInstance: () => MediaStream | null;
   intervalMs?: number;
-  srcLoc: Location;
-  destLocs: Location[];
 }
 
-export const useVideoFrameSender = ({ getMediaStreamInstance, intervalMs = 2000, srcLoc, destLocs }: UseVideoFrameSenderProps) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+export const useVideoFrameSender = ({ intervalMs = 2000 }: UseVideoFrameSenderProps) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null); // 用于将传入的 stream 绘制到 canvas 的隐藏 video 元素
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const intervalIdRef = useRef<number | null>(null);
-  const { isConnected } = useWebSocketSession();
+  const { isConnected,defaultLocation } = useWebSocketSession();
+  const stream = useActiveMediaStream();
+  const { isVideoEnabled } = useMediaState(); // 获取视频启用状态
 
   useEffect(() => {
-    // Ensure `getMediaStreamInstance` is a function before calling it
-    if (typeof getMediaStreamInstance !== 'function') {
-      return;
-    }
-
-    const videoStream = getMediaStreamInstance();
-
-    if (videoStream && isConnected) {
+    if (stream && isConnected && isVideoEnabled) {
       if (!videoRef.current) {
         videoRef.current = document.createElement('video');
         videoRef.current.autoplay = true;
         videoRef.current.playsInline = true;
         videoRef.current.muted = true;
+        videoRef.current.style.display = 'none'; // 隐藏这个 video 元素
       }
 
       const videoElement = videoRef.current;
-      videoElement.srcObject = videoStream;
+      videoElement.srcObject = stream;
 
       videoElement.onloadedmetadata = async () => {
-        if (isConnected && videoElement.paused) {
+        if (isConnected && isVideoEnabled && videoElement.paused) {
           try {
             await videoElement.play();
           } catch (error) {
+            // Handle play error if necessary
           }
         }
       };
 
       videoElement.onplay = () => {
-        if (canvasRef.current && isConnected) {
+        if (canvasRef.current && isConnected && isVideoEnabled) {
           const canvas = canvasRef.current;
           const ctx = canvas.getContext('2d');
           if (ctx) {
@@ -74,8 +67,7 @@ export const useVideoFrameSender = ({ getMediaStreamInstance, intervalMs = 2000,
             }
 
             intervalIdRef.current = window.setInterval(() => {
-              const currentVideoStream = getMediaStreamInstance();
-              if (!currentVideoStream || !isConnected) {
+              if (!stream || !isConnected || !isVideoEnabled) { // 检查 stream, isConnected, isVideoEnabled
                 if (intervalIdRef.current) {
                   clearInterval(intervalIdRef.current);
                   intervalIdRef.current = null;
@@ -100,8 +92,8 @@ export const useVideoFrameSender = ({ getMediaStreamInstance, intervalMs = 2000,
                         uint8Array,
                         canvas.width,
                         canvas.height,
-                        srcLoc,
-                        destLocs,
+                          defaultLocation,
+                        [defaultLocation],
                         "video_frame",
                         1,
                         false
@@ -109,13 +101,16 @@ export const useVideoFrameSender = ({ getMediaStreamInstance, intervalMs = 2000,
                     };
                     reader.readAsArrayBuffer(blob);
                   } else {
+                    // console.warn("Failed to create blob from canvas.");
                   }
                 }, 'image/jpeg', 0.8);
               } else {
+                // console.warn("Video not ready or paused, skipping frame capture.");
               }
             }, intervalMs);
           }
         } else {
+          // console.warn("Canvas or connection not ready, or video is disabled.");
         }
       };
 
@@ -125,7 +120,7 @@ export const useVideoFrameSender = ({ getMediaStreamInstance, intervalMs = 2000,
           intervalIdRef.current = null;
         }
       };
-    } else {
+    } else { // 当 stream 不存在，或未连接，或视频被禁用时，停止所有发送
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
         intervalIdRef.current = null;
@@ -148,7 +143,7 @@ export const useVideoFrameSender = ({ getMediaStreamInstance, intervalMs = 2000,
         videoRef.current = null;
       }
     };
-  }, [getMediaStreamInstance, intervalMs, srcLoc, destLocs, isConnected]);
+  }, [stream, isVideoEnabled, intervalMs, defaultLocation, isConnected]);
 
-  return { videoRef, canvasRef };
+  return { canvasRef }; // 只返回 canvasRef，videoRef 由内部管理
 };
