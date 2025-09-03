@@ -42,7 +42,7 @@ export const sceneCards: ISceneCard[] = [
     welcomeSubText: SMART_TOY_SUBTEXT,
     prompt: SMART_TOY_PROMPT,
     selectedModels: {
-      text_model: 'qwen-max',
+      text_model: 'qwen-flash',
       vision_model: 'qwen-vl-max',
     },
     selectedModelsOptions: {
