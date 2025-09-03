@@ -19,7 +19,7 @@ export const useSelectedScene = () => {
   );
 
   // 监听 lastSavedSceneTimestamp 的变化
-  const [lastSavedTimestamp] = useLocalStorage(LAST_SAVED_SCENE_TIMESTAMP_KEY, '0');
+  const [lastSavedTimestamp, setLastSavedTimestamp] = useLocalStorage(LAST_SAVED_SCENE_TIMESTAMP_KEY, '0');
 
   const modeOptions =  useSelector((state: RootState) => state.global.modeOptions);
 
@@ -121,5 +121,6 @@ export const useSelectedScene = () => {
     switchSelectedScene,
     getSceneSetting, // 导出 getSceneSetting
     getDisplayVoiceName, // 导出新的 getDisplayVoiceName 函数
+    setLastSavedTimestamp, // 导出 setLastSavedTimestamp
   };
 };

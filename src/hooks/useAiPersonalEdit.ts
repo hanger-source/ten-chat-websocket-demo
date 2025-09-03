@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect } from 'react'; // 重新引入 useEffect
 import { useLocalStorage } from 'usehooks-ts'; // 导入 useLocalStorage
 import { ISceneCard } from '@/types';
-import { loadSceneByNameFromLocal, saveSceneByNameToLocal, updateLastSavedSceneTimestamp, getEditingSceneKey, LAST_SAVED_SCENE_TIMESTAMP_KEY } from '@/common/localSceneStorage'; // 导入本地存储辅助函数和 getEditingSceneKey
+import { loadSceneByNameFromLocal, saveSceneByNameToLocal, getEditingSceneKey } from '@/common/localSceneStorage'; // 导入本地存储辅助函数和 getEditingSceneKey
 import { useSelectedScene } from './useSelectedScene'; // 导入 useSelectedScene
 import {
   IModeOption,
@@ -23,7 +23,7 @@ import {RootState} from "@/store"; // 导入模式选项数据
  */
 export const useAiPersonalEdit = () => {
   // 直接使用 useSelectedScene 的值，避免重复的 localStorage 管理
-  const { selectedSceneAiPersonaName, switchSelectedScene } = useSelectedScene();
+  const { selectedSceneAiPersonaName, switchSelectedScene, setLastSavedTimestamp } = useSelectedScene();
   const editingSceneAiPersonaName = selectedSceneAiPersonaName;
 
   const modeOptions =  useSelector((state: RootState) => state.global.modeOptions);
@@ -51,13 +51,13 @@ export const useAiPersonalEdit = () => {
   const saveEditingScene = useCallback(() => {
     if (editingScene && editingScene.aiPersonaName && editingScene.aiPersonaName === editingSceneAiPersonaName) {
       saveSceneByNameToLocal(editingScene, 'saved'); // 保存为 "saved" 类型
-      updateLastSavedSceneTimestamp(); // 更新时间戳
+      setLastSavedTimestamp(Date.now().toString()); // 通过 setLastSavedTimestamp 更新时间戳
       // 保存后，将当前的 editingScene 也更新到编辑状态，保持同步
       const updatedSavedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved');
       saveSceneByNameToLocal(updatedSavedScene, 'editing'); // 更新 editing 状态为 saved 状态
       setEditingScene(updatedSavedScene); // 更新当前 state
     }
-  }, [editingScene, editingSceneAiPersonaName, setEditingScene]);
+  }, [editingScene, editingSceneAiPersonaName, setEditingScene, setLastSavedTimestamp]); // 添加 setLastSavedTimestamp 作为依赖
 
   // --- 更新 editingScene 内部状态的方法 ---
 
