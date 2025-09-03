@@ -5,6 +5,7 @@ import { RootState } from '../../../../store'; // 导入 RootState
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button'; // Only import Button here
 import ChangeModelDialog from "./ChangeModelDialog"; // Import the new component
+import ConfigModelOptionDialog from "./ConfigModelOptionDialog"; // Import the new component
 import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 
 interface EditAIModelModeProps {
@@ -12,10 +13,12 @@ interface EditAIModelModeProps {
 }
 
 const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
-  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelConfig, getPersonaModelDescription, derivedModeConfiguration } = useAiPersonalEdit();
+  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelOptions, getPersonaModelDescription, derivedModeConfiguration } = useAiPersonalEdit();
 
   const [showModal, setShowModal] = useState(false);
   const [modelKeyToSelect, setModelKeyToSelect] = useState<string | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [modelKeyToConfig, setModelKeyToConfig] = useState<string | null>(null);
 
   // 从 Redux store 获取 modeOptions
   const modeOptions = useAppSelector((state: RootState) => state.global.modeOptions);
@@ -30,11 +33,19 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
   };
 
   const handleChangeModelClick = (key: string) => {
-    if (!editingScene || !getAvailableModelConfig(key)) {
+    if (!editingScene || !getAvailableModelOptions(key)) {
       return;
     }
     setModelKeyToSelect(key);
     setShowModal(true);
+  };
+
+  const handleConfigModelClick = (key: string) => {
+    if (!editingScene || !getAvailableModelOptions(key)) {
+      return;
+    }
+    setModelKeyToConfig(key);
+    setShowConfigModal(true);
   };
 
   const replaceableModels: IReplaceableModelOption[] = derivedModeConfiguration?.metadata?.replaceableModels || [];
@@ -72,6 +83,7 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
                       <h4 className="font-semibold mb-1">{replaceableModel.type}：{selectedModelName}</h4>
                       {getPersonaModelDescription(selectedModelName) && <p className="text-xs text-gray-500">{getPersonaModelDescription(selectedModelName)}</p>}
                     </div>
+                    <div className="flex flex-col space-y-2">
                     <Button 
                       onClick={() => handleChangeModelClick(replaceableModel.key)} 
                       disabled={isChangeButtonDisabled} 
@@ -79,6 +91,16 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
                     >
                       <span className="bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">更换模型</span>
                     </Button>
+                    {getAvailableModelOptions(replaceableModel.key)?.configurableOptions && getAvailableModelOptions(replaceableModel.key)!.configurableOptions!.length > 0 && (
+                    <Button 
+                      onClick={() => handleConfigModelClick(replaceableModel.key)} 
+                      disabled={isChangeButtonDisabled} // Same disabled logic as ChangeModel button
+                      className="bg-gradient-to-br from-green-100 to-white border-none hover:border-b-[1px] hover:border-gray-300" // Green-white gradient background
+                    >
+                      <span className="bg-gradient-to-r from-green-700 to-teal-700 bg-clip-text text-transparent">配置</span>
+                    </Button>
+                    )}
+                    </div>
                   </div>
                 );
               })}
@@ -91,6 +113,11 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
         showModal={showModal}
         setShowModal={setShowModal}
         modelKeyToSelect={modelKeyToSelect}
+      />
+      <ConfigModelOptionDialog
+        showModal={showConfigModal}
+        setShowModal={setShowConfigModal}
+        modelKeyToConfig={modelKeyToConfig}
       />
     </div>
   );

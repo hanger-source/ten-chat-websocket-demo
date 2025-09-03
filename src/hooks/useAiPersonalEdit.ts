@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect } from 'react'; // 重新引入 useEffect
 import { useLocalStorage } from 'usehooks-ts'; // 导入 useLocalStorage
 import { ISceneCard } from '@/types';
-import { loadSceneByNameFromLocal, saveSceneByNameToLocal, updateLastSavedSceneTimestamp, getEditingSceneKey } from '@/common/localSceneStorage'; // 导入本地存储辅助函数和 getEditingSceneKey
+import { loadSceneByNameFromLocal, saveSceneByNameToLocal, updateLastSavedSceneTimestamp, getEditingSceneKey, LAST_SAVED_SCENE_TIMESTAMP_KEY } from '@/common/localSceneStorage'; // 导入本地存储辅助函数和 getEditingSceneKey
 import { useSelectedScene } from './useSelectedScene'; // 导入 useSelectedScene
 import {
   IModeOption,
@@ -92,6 +92,16 @@ export const useAiPersonalEdit = () => {
     });
   }, [setEditingScene]);
 
+  const updateEditingModelOptions = useCallback((modelKey: string, config: Record<string, any>) => {
+    setEditingScene(prevEditingScene => {
+      const newSelectedModelsOptions = {
+        ...(prevEditingScene.selectedModelsOptions || {}),
+        [modelKey]: config,
+      };
+      return { ...prevEditingScene, selectedModelsOptions: newSelectedModelsOptions };
+    });
+  }, [setEditingScene]);
+
   // --- 模式相关的逻辑：根据 editingScene 的 defaultModeValue 派生 currentMode ---
   const derivedModeConfiguration: IModeOption | undefined = useMemo(
     () => modeOptions.find(mode => mode.value === editingScene.defaultModeValue),
@@ -143,7 +153,7 @@ export const useAiPersonalEdit = () => {
     return derivedModeConfiguration.metadata.voices || [];
   }, [derivedModeConfiguration, editingScene]);
 
-  const getAvailableModelConfig = useCallback((modelKey: string | null): IReplaceableModelOption | undefined => {
+  const getAvailableModelOptions = useCallback((modelKey: string | null): IReplaceableModelOption | undefined => {
     if (!derivedModeConfiguration || !modelKey || !derivedModeConfiguration.metadata?.replaceableModels || !editingScene) return undefined;
     return derivedModeConfiguration.metadata.replaceableModels.find((rm: IReplaceableModelOption) => rm.key === modelKey);
   }, [derivedModeConfiguration, editingScene]);
@@ -182,6 +192,7 @@ export const useAiPersonalEdit = () => {
     updateEditingSceneField,
     updateEditingSelectedModel,
     updateEditingSelectedVoice,
+    updateEditingModelOptions, // New: Add this method
     setEditingSceneMode, // 提供更新模式的方法
     getPrompt,
     getAiResponseGreeting,
@@ -190,7 +201,7 @@ export const useAiPersonalEdit = () => {
     getEditingDefaultModeValue, // 提供获取模式的方法
     getModelsForAvailableKey,
     getVoicesForAvailableKey,
-    getAvailableModelConfig,
+    getAvailableModelOptions, // Rename this
     getAvailableVoiceConfig,
     getPersonaModelDescription,
     getPersonaVoiceDisplayName,

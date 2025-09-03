@@ -1,5 +1,6 @@
 import { ISceneCard } from '@/types';
-import { sceneCards } from '@/common/sceneData'; // 导入 sceneData 作为最终默认值的来源
+import { sceneCards } from '@/common/sceneData';
+import {useLocalStorage} from "usehooks-ts"; // 导入 sceneData 作为最终默认值的来源
 
 // Function to get a dynamic key for local storage
 export const getEditingSceneKey = (aiPersonaName: string): string => `editingAiPersonaScene_${aiPersonaName}`;
@@ -10,7 +11,7 @@ const getDefaultSceneFromData = (): ISceneCard => {
   return sceneCards.length > 0 ? sceneCards[0] : {
     tag: null, bgColor: null, iconSrc: '', text: '', aiPersonaName: 'default-persona', // 确保有默认名称
     aiCapabilities: [], uiGreeting: '', aiResponseGreeting: '', welcomeSubText: '', prompt: '',
-    selectedModels: {}, selectedVoices: {}, defaultModeValue: '',
+    selectedModels: {}, selectedVoices: {}, selectedModelsOptions: {}, defaultModeValue: '',
   };
 };
 
@@ -49,6 +50,7 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' 
       prompt: loadedScene.prompt || '',
       selectedModels: loadedScene.selectedModels || {},
       selectedVoices: loadedScene.selectedVoices || {},
+      selectedModelsOptions: loadedScene.selectedModelsOptions || {},
       defaultModeValue: loadedScene.defaultModeValue || '',
     };
   } catch (error) {
@@ -74,12 +76,6 @@ export const saveSceneByNameToLocal = (scene: ISceneCard, type: 'editing' | 'sav
     console.error(`Error saving scene '${scene.aiPersonaName}' (${type}) to local storage:`, error);
   }
 };
-
-/**
- * Returns the default ISceneCard from sceneData.ts.
- */
-export const getDefaultScene = (): ISceneCard => getDefaultSceneFromData();
-
 // Key for storing the selected scene's aiPersonaName globally
 const SELECTED_SCENE_AI_PERSONA_NAME_KEY = 'selectedAiPersonaName';
 
@@ -100,22 +96,6 @@ export const loadSelectedSceneNameFromLocal = (): string => {
     return getDefaultSceneFromData().aiPersonaName;
   }
 };
-
-/**
- * Saves the given aiPersonaName as the selected scene's name to local storage.
- * @param aiPersonaName The aiPersonaName to save as selected.
- */
-export const saveSelectedSceneNameToLocal = (aiPersonaName: string): void => {
-  if (typeof window === 'undefined' || !aiPersonaName) {
-    return;
-  }
-  try {
-    localStorage.setItem(SELECTED_SCENE_AI_PERSONA_NAME_KEY, aiPersonaName);
-  } catch (error) {
-    console.error(`Error saving selected scene name '${aiPersonaName}' to local storage:`, error);
-  }
-};
-
 export const LAST_SAVED_SCENE_TIMESTAMP_KEY = 'lastSavedSceneTimestamp';
 
 /**

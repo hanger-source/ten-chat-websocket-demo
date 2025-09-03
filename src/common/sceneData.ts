@@ -45,6 +45,11 @@ export const sceneCards: ISceneCard[] = [
       text_model: 'qwen-max',
       vision_model: 'qwen-vl-max',
     },
+    selectedModelsOptions: {
+      text_model: {
+        enable_search: true,
+      },
+    },
     selectedVoices: {
       cosy_voice_name: 'longjielidou_v2',
     },

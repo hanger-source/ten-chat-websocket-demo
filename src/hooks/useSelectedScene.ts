@@ -64,6 +64,21 @@ export const useSelectedScene = () => {
         }
       }
     }
+
+    // 打平 selectedModelsOptions
+    if (selectedScene.selectedModelsOptions) {
+      for (const modelKey in selectedScene.selectedModelsOptions) {
+        if (Object.prototype.hasOwnProperty.call(selectedScene.selectedModelsOptions, modelKey)) {
+          const options = selectedScene.selectedModelsOptions[modelKey];
+          for (const optionKey in options) {
+            if (Object.prototype.hasOwnProperty.call(options, optionKey)) {
+              setting[`${modelKey}_${optionKey}`] = options[optionKey];
+            }
+          }
+        }
+      }
+    }
+
     return setting;
   }, [selectedScene]);
 

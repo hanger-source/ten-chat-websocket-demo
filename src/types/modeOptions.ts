@@ -14,6 +14,13 @@ export interface IModeMetadata {
   voices?: ISelectedVoiceOption[];
 }
 
+export interface IConfigurableOption {
+  name: string;
+  description: string;
+  key: string;
+  type: ConfigurableOptionType
+}
+
 export interface ISelectedModelOption {
   name: string;
   model: string;
@@ -27,6 +34,7 @@ export interface IReplaceableModelOption {
   type: ModelCategory;
   model: string;
   key: string;
+  configurableOptions?: IConfigurableOption[];
 }
 
 export interface ISelectedVoiceOption {
@@ -40,7 +48,17 @@ export interface ISelectedVoiceOption {
 export interface IReplaceableVoiceOption {
   voice: string;
   key: string;
+  configurableOptions?: IConfigurableOption[];
 }
+
+export type ConfigurableOptionType = 
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'select'
+  | 'textarea';
+
+export const configurableOptions: IConfigurableOption[] = [];
 
 export type ModelCategory =
   | '文本生成'
