@@ -57,7 +57,7 @@ const mediaSlice = createSlice({
       // 更新用户的意图和配置
       state.requestedVideoSource = 'camera';
       state.selectedVideoSource = 'camera';
-      state.selectedCamDeviceId = action.payload.camDeviceId || state.selectedCamDeviceId;
+      state.selectedCamDeviceId = action.payload.camDeviceId;
       // 更新状态，表示正在处理请求
       state.status = StreamStatus.PENDING;
       state.error = null;

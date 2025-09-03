@@ -38,9 +38,13 @@ const ScreenIconByStatus = React.memo((props: React.SVGProps<SVGSVGElement> & { 
 });
 
 // CamSelect 组件
-const CamSelect = (props: { currentDeviceId: string | null, onDeviceChange: (deviceId: string | null) => void, disabled?: boolean }) => {
-  const { currentDeviceId, onDeviceChange, disabled } = props;
-  const [items, setItems] = React.useState<SelectItem[]>([DEFAULT_CAM_ITEM]);
+const CamSelect = (props: {
+  currentDeviceId: string | null,
+  onDeviceChange: (deviceId: string | null) => void,
+  items: SelectItem[]; // 新增：接收外部传入的设备列表
+  disabled?: boolean
+}) => {
+  const { currentDeviceId, onDeviceChange, disabled, items } = props;
   // 使用 currentDeviceId 初始化 value，并监听其变化
   const [value, setValue] = React.useState(currentDeviceId === null ? DEFAULT_CAM_ITEM.value : currentDeviceId);
 
@@ -57,24 +61,6 @@ const CamSelect = (props: { currentDeviceId: string | null, onDeviceChange: (dev
       }
     }
   }, [currentDeviceId, items]);
-
-  React.useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
-      const processedDevices = videoInputDevices.map((item, index) => ({
-        label: item.label || `摄像头 ${index + 1}`,
-        value: item.deviceId || `videoinput-${index}`,
-        deviceId: item.deviceId || `videoinput-id-${index}`,
-      }));
-
-      setItems([
-        DEFAULT_CAM_ITEM,
-        ...processedDevices,
-      ]);
-    }).catch(error => {
-      console.error("[DEBUG_CAMERA] Error enumerating devices:", error);
-    });
-  }, []); // 仅在挂载时枚举设备一次，设备变化通过 useMediaDevices 处理
 
   const onChange = (selectedValue: string) => {
     const target = items.find((item) => item.value === selectedValue);
@@ -115,10 +101,21 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
 
   // 使用新的 Hooks 来获取状态和控制函数
   const { status, error, selectedVideoSource, isVideoEnabled } = useMediaState();
-  const { selectedCamDeviceId, setSelectedCamera } = useMediaDevices();
-  const { toggleCamera, toggleScreen } = useMediaControls(); // 暂时保留，但我们会用 requestCamera/Screen 替代
+  const { selectedCamDeviceId, setSelectedCamera, devices } = useMediaDevices(); // 获取 devices
+  // const { toggleCamera, toggleScreen } = useMediaControls(); // 暂时保留，但我们会用 requestCamera/Screen 替代
   const { toggleVideoEnabled } = useMediaTrackControls();
   const activeStream = useActiveMediaStream(); // 获取实际的媒体流
+
+  // 将 MediaDeviceInfo 转换为 SelectItem 格式
+  const cameraOptions = useMemo(() => {
+    const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
+    const processedDevices = videoInputDevices.map((item, index) => ({
+      label: item.label || `摄像头 ${index + 1}`,
+      value: item.deviceId || `videoinput-${index}`,
+      deviceId: item.deviceId || `videoinput-id-${index}`,
+    }));
+    return [DEFAULT_CAM_ITEM, ...processedDevices];
+  }, [devices]);
 
   const { isConnected } = useWebSocketSession(); // Get connection state
 
@@ -167,7 +164,7 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
         </Button>
       </div>
       <div className="flex items-center gap-2 mb-2">
-        <Select value={selectedVideoSource || "none"} onValueChange={handleVideoSourceChange} disabled={disabled}> {/* 使用 requestedVideoSource */}
+        <Select value={selectedVideoSource || "none"} onValueChange={handleVideoSourceChange} disabled={disabled}> {/* 使用 selectedVideoSource */}
           <SelectTrigger className="w-[120px] min-w-0"> {/* Add min-w-0 */}
             <SelectValue className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" /> {/* Add text truncation styles */}
           </SelectTrigger>
@@ -180,7 +177,12 @@ const CamSettingsBlock = (props: { disabled?: boolean }) => {
           </SelectContent>
         </Select>
         {selectedVideoSource === VideoSourceType.CAMERA && (
-        <CamSelect currentDeviceId={selectedCamDeviceId} onDeviceChange={setSelectedCamera} disabled={disabled} />
+        <CamSelect
+          currentDeviceId={selectedCamDeviceId}
+          onDeviceChange={setSelectedCamera}
+          items={cameraOptions} // 传递 devices
+          disabled={disabled}
+        />
         )}
       </div>
       {!isConnected && (
