@@ -11,7 +11,8 @@ import {
   IReplaceableVoiceOption,
   ModelCategory
 } from '@/types/modeOptions'; // 导入模式相关的类型
-import { modeOptions } from '@/common/mockModeOptionsData'; // 导入模式选项数据
+import {useSelector} from "react-redux";
+import {RootState} from "@/store"; // 导入模式选项数据
 
 /**
  * Custom hook that provides and manages an editable ISceneCard instance (editingScene) internally.
@@ -24,6 +25,8 @@ export const useAiPersonalEdit = () => {
   // 直接使用 useSelectedScene 的值，避免重复的 localStorage 管理
   const { selectedSceneAiPersonaName, switchSelectedScene } = useSelectedScene();
   const editingSceneAiPersonaName = selectedSceneAiPersonaName;
+
+  const modeOptions =  useSelector((state: RootState) => state.global.modeOptions);
 
   // 使用 useLocalStorage 来管理 editingScene (代表临时编辑状态)
   const [editingScene, setEditingScene] = useLocalStorage<ISceneCard>(

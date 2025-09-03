@@ -85,6 +85,9 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
           <DialogTitle>
             模型选择
           </DialogTitle>
+          <DialogDescription>
+            选择一个适合您当前场景的 AI 模型。
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); }} className="w-full flex flex-col flex-grow"> {/* Removed overflow-hidden and h-full */}
@@ -106,7 +109,7 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
               <div className="grid grid-cols-3 gap-4 py-4 max-h-[calc(100vh-350px)] overflow-y-auto"> {/* Changed to grid layout with 3 columns, added max height and scroll */}
                 {models.map((model: ISelectedModelOption) => (
                   <div
-                    key={model.model}
+                    key={model.name}
                     onClick={() => handleSelectModel(model.model)}
                     onMouseEnter={() => setHoveredModelId(model.model)}
                     onMouseLeave={() => setHoveredModelId(null)}

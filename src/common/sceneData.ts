@@ -83,7 +83,7 @@ export const sceneCards: ISceneCard[] = [
     prompt: SCREEN_READER_PROMPT,
     selectedModels: {
       text_model: 'qwen-plus',
-      vision_model: 'qwen-vl-max',
+      vision_model: 'qwen-vl-ocr',
     },
     selectedVoices: {
       cosy_voice_name: 'longjin_v2',
