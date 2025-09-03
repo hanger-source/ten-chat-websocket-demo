@@ -1,7 +1,7 @@
 "use client";
 
 import globalReducer from "./reducers/global";
-import mediaStreamReducer from "./reducers/mediaStream";
+import localMediaStreamReducer from "./reducers/localMediaStream";
 import { configureStore } from "@reduxjs/toolkit";
 
 export * from "./provider";
@@ -10,7 +10,7 @@ export const makeStore = () => {
   return configureStore({
     reducer: {
       global: globalReducer,
-      mediaStream: mediaStreamReducer, // 注册新的 mediaStream slice
+      localMediaStream: localMediaStreamReducer, // 注册新的 mediaStream slice
     },
     devTools: import.meta.env.DEV,
   });
