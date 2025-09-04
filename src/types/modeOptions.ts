@@ -18,7 +18,8 @@ export interface IConfigurableOption {
   name: string;
   description: string;
   key: string;
-  type: ConfigurableOptionType
+  type: ConfigurableOptionType,
+  supportModels: string[]
 }
 
 export interface ISelectedModelOption {

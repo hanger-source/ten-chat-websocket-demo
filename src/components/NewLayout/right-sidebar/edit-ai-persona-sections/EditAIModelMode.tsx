@@ -13,7 +13,7 @@ interface EditAIModelModeProps {
 }
 
 const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
-  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelOptions, getPersonaModelDescription, derivedModeConfiguration } = useAiPersonalEdit();
+  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelOptions, getPersonaModelDescription, getSelectedModelId, getFilteredConfigurableOptions, derivedModeConfiguration } = useAiPersonalEdit();
 
   const [showModal, setShowModal] = useState(false);
   const [modelKeyToSelect, setModelKeyToSelect] = useState<string | null>(null);
@@ -91,15 +91,23 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
                     >
                       <span className="bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">更换模型</span>
                     </Button>
-                    {getAvailableModelOptions(replaceableModel.key)?.configurableOptions && getAvailableModelOptions(replaceableModel.key)!.configurableOptions!.length > 0 && (
-                    <Button 
-                      onClick={() => handleConfigModelClick(replaceableModel.key)} 
-                      disabled={isChangeButtonDisabled} // Same disabled logic as ChangeModel button
-                      className="bg-gradient-to-br from-green-100 to-white border-none hover:border-b-[1px] hover:border-gray-300" // Green-white gradient background
-                    >
-                      <span className="bg-gradient-to-r from-green-700 to-teal-700 bg-clip-text text-transparent">配置</span>
-                    </Button>
-                    )}
+                    {(() => {
+                      const selectedModelId = getSelectedModelId(replaceableModel.key);
+                      const filteredConfigurableOptions = getFilteredConfigurableOptions(replaceableModel.key, selectedModelId);
+
+                      if (filteredConfigurableOptions.length > 0) {
+                        return (
+                          <Button
+                            onClick={() => handleConfigModelClick(replaceableModel.key)}
+                            disabled={isChangeButtonDisabled}
+                            className="bg-gradient-to-br from-green-100 to-white border-none hover:border-b-[1px] hover:border-gray-300"
+                          >
+                            <span className="bg-gradient-to-r from-green-700 to-teal-700 bg-clip-text text-transparent">配置</span>
+                          </Button>
+                        );
+                      }
+                      return null;
+                    })()}
                     </div>
                   </div>
                 );

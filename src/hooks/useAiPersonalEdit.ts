@@ -9,7 +9,8 @@ import {
   IReplaceableModelOption,
   ISelectedVoiceOption,
   IReplaceableVoiceOption,
-  ModelCategory
+  ModelCategory,
+  IConfigurableOption // 导入 IConfigurableOption
 } from '@/types/modeOptions'; // 导入模式相关的类型
 import {useSelector} from "react-redux";
 import {RootState} from "@/store"; // 导入模式选项数据
@@ -168,6 +169,20 @@ export const useAiPersonalEdit = () => {
     return metadataModel?.description || '暂无描述';
   }, [derivedModeConfiguration]);
 
+  const getFilteredConfigurableOptions = useCallback((modelKey: string | null, selectedModelId: string | null): IConfigurableOption[] => {
+    if (!derivedModeConfiguration || !modelKey || !selectedModelId) return [];
+
+    const availableModelConfig = derivedModeConfiguration.metadata?.replaceableModels?.find(
+      (rm: IReplaceableModelOption) => rm.key === modelKey
+    );
+
+    if (!availableModelConfig || !availableModelConfig.configurableOptions) return [];
+
+    return availableModelConfig.configurableOptions.filter(option => {
+      return !option.supportModels || option.supportModels.includes(selectedModelId);
+    });
+  }, [derivedModeConfiguration]);
+
   const getPersonaVoiceDisplayName = useCallback((voiceName: string): string => {
     const metadataVoice = derivedModeConfiguration?.metadata?.voices?.find(v => v.voice === voiceName);
     return metadataVoice?.name || '暂无描述';
@@ -204,6 +219,7 @@ export const useAiPersonalEdit = () => {
     getAvailableModelOptions, // Rename this
     getAvailableVoiceConfig,
     getPersonaModelDescription,
+    getFilteredConfigurableOptions,
     getPersonaVoiceDisplayName,
     getEditingSelectedVoiceInfo,
     derivedModeConfiguration, // 暴露 derivedModeConfiguration

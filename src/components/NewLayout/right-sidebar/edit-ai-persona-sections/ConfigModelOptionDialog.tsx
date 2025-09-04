@@ -18,25 +18,28 @@ interface ConfigModelOptionDialogProps {
 }
 
 const ConfigModelOptionDialog: React.FC<ConfigModelOptionDialogProps> = ({ showModal, setShowModal, modelKeyToConfig }) => {
-  const { editingScene, updateEditingModelOptions, getAvailableModelOptions } = useAiPersonalEdit();
+  const { editingScene, updateEditingModelOptions, getSelectedModelId, getFilteredConfigurableOptions } = useAiPersonalEdit();
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [configurableOptions, setConfigurableOptions] = useState<IConfigurableOption[]>([]);
 
   useEffect(() => {
     if (showModal && modelKeyToConfig) {
-      const availableModelConfig = getAvailableModelOptions(modelKeyToConfig);
-      const options = availableModelConfig?.configurableOptions || [];
-      setConfigurableOptions(options);
+      const selectedModelId = getSelectedModelId(modelKeyToConfig);
+
+      // 根据 selectedModelId 和 supportModels 过滤配置选项
+      const filteredOptions = getFilteredConfigurableOptions(modelKeyToConfig, selectedModelId);
+
+      setConfigurableOptions(filteredOptions);
 
       const initialFormValues: Record<string, any> = {};
-      options.forEach(option => {
+      filteredOptions.forEach(option => {
         // Initialize form values from current editing scene's model config, or default if not set
         initialFormValues[option.key] = editingScene?.selectedModelsOptions?.[modelKeyToConfig]?.[option.key] ?? '';
       });
       setFormValues(initialFormValues);
     }
-  }, [showModal, modelKeyToConfig, editingScene, getAvailableModelOptions]);
+  }, [showModal, modelKeyToConfig, editingScene, getSelectedModelId, getFilteredConfigurableOptions]);
 
   const handleInputChange = (key: string, value: any) => {
     setFormValues(prev => ({ ...prev, [key]: value }));
