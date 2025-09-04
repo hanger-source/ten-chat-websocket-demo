@@ -25,7 +25,7 @@ function App() {
       <AppInitializer /> {/* 在 StoreProvider 内部渲染 AppInitializer */}
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<NewHome />} />
           <Route path="/live" element={<NewHome />} />
         </Routes>
       </BrowserRouter>
