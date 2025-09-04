@@ -1,10 +1,21 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { webSocketManager } from '@/manager/websocket/websocket';
-import { Message, MessageType } from '@/types/message';
-import { IChatMessage, ITextMessage, IImageMessage, IAsrResultMessage, EMessageType } from '@/types/chat';
-import { ICommandResultMessage, ICustomCardMessage, IAudioMessage, IUnknownMessage } from '@/types/chat'; // 导入所有缺失的聊天消息类型
-import { parseWebSocketMessage } from '@/utils/messageParser';
-import { v4 as uuidv4 } from 'uuid';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {webSocketManager} from '@/manager/websocket/websocket';
+import {Message, MessageType} from '@/types/message';
+import {
+    EMessageType,
+    IAsrResultMessage,
+    IAudioMessage,
+    IChatMessage,
+    ICommandResultMessage,
+    ICustomCardMessage,
+    IImageMessage,
+    ITextMessage,
+    IUnknownMessage
+} from '@/types/chat'; // 导入所有缺失的聊天消息类型
+import {parseWebSocketMessage} from '@/utils/messageParser';
+import {v4 as uuidv4} from 'uuid';
+import {useOnFlushCommand} from './command/useOnFlushCommand'; // <-- 导入 useOnFlushCommand
+import {useAudioPlayer} from './audio/useAudioPlayer'; // <-- 导入 useAudioPlayer
 
 interface UseChatMessagesReturn {
     chatMessages: IChatMessage[];
@@ -24,6 +35,46 @@ const isUnknownMessage = (message: IChatMessage): message is IUnknownMessage => 
 export const useChatMessages = (): UseChatMessagesReturn => {
     const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
     const lastAsrRequestIdRef = useRef<string | undefined>(undefined); // 新增：用于跟踪当前正在处理的 ASR 请求的 ID
+    const { isPlaying } = useAudioPlayer(); // <-- 从 useAudioPlayer 获取 isPlaying 状态
+
+    // 定义处理 FLUSH 命令的回调函数
+    const handleChatFlush = useCallback(() => {
+      console.log("[FlushCmdLog] 收到 FLUSH 命令，标记最后一条 AI 消息为 '已打断'。");
+
+      // 只有当音频正在播放时，才执行标记操作
+      if (!isPlaying) {
+        console.log("[FlushCmdLog] 音频未播放，跳过聊天消息中断标记。");
+        return;
+      }
+
+      setChatMessages(prev => {
+        const newMessages = [...prev];
+        // 从后往前查找最近一条 AI 或 ASSISTANT 的消息
+        let lastAIMessageIndex = -1;
+        for (let i = newMessages.length - 1; i >= 0; i--) {
+          if (newMessages[i].role === EMessageType.AGENT || newMessages[i].role === EMessageType.ASSISTANT) {
+            lastAIMessageIndex = i;
+            break;
+          }
+        }
+
+        if (lastAIMessageIndex !== -1) {
+          // 找到消息，更新其 isInterrupted 属性
+            newMessages[lastAIMessageIndex] = {
+              ...newMessages[lastAIMessageIndex],
+              isInterrupted: true, // 设置为 true
+          };
+        } else {
+          console.warn("[FlushCmdLog] 收到 FLUSH 命令，但未找到可标记为已打断的 AI 消息。");
+        }
+
+        return newMessages;
+      });
+
+    }, [isPlaying]); // <-- 添加 isPlaying 依赖
+
+    // 关键部分：使用 useOnFlushCommand 监听 FLUSH 命令
+    useOnFlushCommand(handleChatFlush); // <-- 将 handleChatFlush 函数传递给监听器
 
     const processMessage = useCallback((rawMessage: Message) => {
         const parsedMessage = parseWebSocketMessage(rawMessage);
@@ -57,19 +108,17 @@ export const useChatMessages = (): UseChatMessagesReturn => {
                     // 找到了匹配的非最终 ASR 消息，进行更新
                     const messageToUpdate = newMessages[targetMessageIndex];
                     if (messageToUpdate.type === 'text') {
-                        const updatedMessage: ITextMessage = {
+                        newMessages[targetMessageIndex] = {
                             ...messageToUpdate,
-                            payload: { ...messageToUpdate.payload, text: asrText },
+                            payload: {...messageToUpdate.payload, text: asrText},
                             isFinal: isFinalAsr, // 根据 ASR 结果更新 isFinal 标志
                         };
-                        newMessages[targetMessageIndex] = updatedMessage;
                     } else if (messageToUpdate.type === 'image') {
-                        const updatedMessage: IImageMessage = {
+                        newMessages[targetMessageIndex] = {
                             ...messageToUpdate,
-                            payload: { ...messageToUpdate.payload, text: asrText },
+                            payload: {...messageToUpdate.payload, text: asrText},
                             isFinal: isFinalAsr, // 根据 ASR 结果更新 isFinal 标志
                         };
-                        newMessages[targetMessageIndex] = updatedMessage;
                     }
 
                     // 如果是最终 ASR 结果，则清除 lastAsrRequestIdRef
@@ -113,14 +162,13 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
             // 如果是文本消息的延续，则追加文本
             if (isContinuationOfText) {
-                const updatedLastMessage: ITextMessage = {
+                newMessages[newMessages.length - 1] = {
                     ...(lastMessage as ITextMessage),
                     payload: {
                         ...(lastMessage as ITextMessage).payload,
                         text: ((lastMessage as ITextMessage).payload.text || '') + (parsedMessage.payload.text || '')
                     }
                 };
-                newMessages[newMessages.length - 1] = updatedLastMessage;
                 return newMessages;
             }
 

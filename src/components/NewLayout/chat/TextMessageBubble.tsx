@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'; // 引入 useState, useEffect, useRef
-import { ITextMessage, EMessageType } from '@/types/chat'; // 修改为 ITextMessage
+import { ITextMessage, EMessageType } from '@/types/chat'; // <-- 保持为 ITextMessage
 import { cn } from '@/lib/utils';
 import { UserAvatarIcon } from '@/components/icons/userAvatar'; // 导入用户头像 SVG 组件
 
 interface TextMessageBubbleProps {
-    message: ITextMessage; // 修改为 ITextMessage
+    message: ITextMessage; // <-- 保持为 ITextMessage
     aiAvatarUrl?: string; // 新增 AI 头像 URL
     userName?: string; // 新增用户名称
     // isPlaying?: boolean; // 移除 isPlaying prop
@@ -113,7 +113,15 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                         borderRadiusClass
                     )}
                 >
-                    <p className="text-sm tracking-wide">{displayedText}</p> {/* 添加 tracking-wide 调整字间距 */}
+                    <p className="text-sm tracking-wide"> {/* <-- 恢复 p 标签的默认行为 */}
+                        <span className="items-baseline"> {/* <-- 新增内联 span 容器，包裹文本和 tag */} 
+                            {displayedText}
+                            {/* 条件性渲染 "已打断" tag，紧跟在文字后面，不换行 */} 
+                            {message.isInterrupted && (
+                                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full inline-flex items-center">已打断</span>
+                            )}
+                        </span>
+                    </p>
                 </div>
             </div>
         </div>

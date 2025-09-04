@@ -23,6 +23,7 @@ export interface IBaseChatMessage {
     isFinal?: boolean; // 兼容字段，从 properties 获取
     data_type?: EMessageDataType; // 兼容旧的IChatItem字段
     asrRequestId?: string; // 新增：用于关联同一段语音识别的 ASR 结果，如果适用
+    isInterrupted?: boolean; // 新增：表示消息是否已被中断
 }
 
 // 文本消息

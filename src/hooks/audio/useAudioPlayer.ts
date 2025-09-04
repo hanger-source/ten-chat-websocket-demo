@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
-import { WebSocketConnectionState } from '@/types/websocket';
-import { audioManager } from '@/manager/audio/AudioManager'; // 导入 AudioManager
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {useSelector} from 'react-redux'; // <-- 仅保留 useSelector
+import {RootState} from '@/store';
+import {WebSocketConnectionState} from '@/types/websocket';
+import {audioManager} from '@/manager/audio/AudioManager';
+import {useOnFlushCommand} from "@/hooks/command/useOnFlushCommand";
 
 interface AudioFrameData {
     data: Float32Array;
@@ -20,27 +21,28 @@ interface UseAudioPlayerReturn {
 }
 
 export const useAudioPlayer = (): UseAudioPlayerReturn => {
-    const [isPlaying, setIsPlaying] = useState(false);
     const unsubscribeRef = useRef<(() => void) | null>(null);
 
     const websocketConnectionState = useSelector((state: RootState) => state.global.websocketConnectionState);
     const agentConnected = useSelector((state: RootState) => state.global.agentConnected);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     const stopPlayback = useCallback(() => {
         audioManager.stopAudioPlayback();
-        setIsPlaying(false);
-    }, []);
+        setIsPlaying(false); // <-- 使用 setIsPlaying
+    }, [setIsPlaying]); // <-- 依赖 setIsPlaying
+
+    useOnFlushCommand(stopPlayback);
 
     const startPlayback = useCallback(async () => {
-        const unsubscribe = audioManager.onOutputMessage((message) => {
+        unsubscribeRef.current = audioManager.onOutputMessage((message) => {
             if (message && message.type === 'playing') {
-                setIsPlaying(true);
+                setIsPlaying(true); // <-- 使用 setIsPlaying
             } else if (message && message.type === 'stopped') {
-                setIsPlaying(false);
+                setIsPlaying(false); // <-- 使用 setIsPlaying
             }
         });
-        unsubscribeRef.current = unsubscribe;
-    }, []);
+    }, [setIsPlaying]); // <-- 依赖 setIsPlaying
 
     const resampleAudioData = useCallback((
         originalAudioData: Float32Array,

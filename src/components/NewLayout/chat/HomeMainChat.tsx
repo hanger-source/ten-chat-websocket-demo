@@ -6,7 +6,7 @@ import Draggable from 'react-draggable';
 import ChatControls from "./ChatControls";
 import {useChatMessages} from '@/hooks/useChatMessages';
 import {useAudioFrameReceiver} from '@/hooks/useAudioFrameReceiver'; // 现在接受 onFrameData 回调
-import {useAudioPlayer} from '@/hooks/useAudioPlayer';
+import {useAudioPlayer} from '@/hooks/audio/useAudioPlayer';
 import {useWebSocketEvents} from '@/hooks/useWebSocketEvents';
 import MessageListRenderer from './MessageListRenderer';
 import {useSelectedScene} from '@/hooks/useSelectedScene'; // 导入 useSelectedScene
@@ -34,7 +34,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
 
   // 使用新的 Hooks
   const { chatMessages, addChatMessage, clearMessages } = useChatMessages(); // 获取 addChatMessage 和 clearMessages
-  const { processAudioFrame, stopPlayback, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
+  const { processAudioFrame, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
   const { sessionState, defaultLocation, sendCommand} = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
@@ -145,7 +145,6 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
           () => {
             // 下发中断命令
             sendCommand(CommandType.FLUSH, defaultLocation, [defaultLocation]);
-            stopPlayback(); // 停止播放
           }
         } // 传递打断 AI 播放的函数
         className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20"
