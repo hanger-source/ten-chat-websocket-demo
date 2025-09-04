@@ -118,7 +118,7 @@ const TextMessageBubble: React.FC<TextMessageBubbleProps> = ({ message, aiAvatar
                             {displayedText}
                             {/* 条件性渲染 "已打断" tag，紧跟在文字后面，不换行 */} 
                             {message.isInterrupted && (
-                                <span className="px-2 py-0.5 text-xs font-semibold bg-pink-100 text-pink-700 rounded-full inline-flex items-center">已打断</span>
+                                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-pink-100 text-pink-700 rounded-full inline-flex items-center">已打断</span>
                             )}
                         </span>
                     </p>
