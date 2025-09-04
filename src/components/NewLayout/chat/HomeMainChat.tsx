@@ -1,23 +1,23 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react'; // 移除了 useEffect 的导入，因为它将不再被用于处理 audioFrames
-import { cn } from '@/lib/utils';
+import React, {useCallback, useEffect, useRef, useState} from 'react'; // 移除了 useEffect 的导入，因为它将不再被用于处理 audioFrames
+import {cn} from '@/lib/utils';
 import ChatCamera from "./ChatCamera";
 // import ChatCard from "@/components/Chat/ChatCard";
 import Draggable from 'react-draggable';
 import ChatControls from "./ChatControls";
-import { useChatMessages } from '@/hooks/useChatMessages';
-import { useAudioFrameReceiver } from '@/hooks/useAudioFrameReceiver'; // 现在接受 onFrameData 回调
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { useWebSocketEvents } from '@/hooks/useWebSocketEvents';
+import {useChatMessages} from '@/hooks/useChatMessages';
+import {useAudioFrameReceiver} from '@/hooks/useAudioFrameReceiver'; // 现在接受 onFrameData 回调
+import {useAudioPlayer} from '@/hooks/useAudioPlayer';
+import {useWebSocketEvents} from '@/hooks/useWebSocketEvents';
 import MessageListRenderer from './MessageListRenderer';
-import { useSelectedScene } from '@/hooks/useSelectedScene'; // 导入 useSelectedScene
-import { isMobile } from '@/common/utils'; // 导入 isMobile 函数
+import {useSelectedScene} from '@/hooks/useSelectedScene'; // 导入 useSelectedScene
+import {isMobile} from '@/common/utils'; // 导入 isMobile 函数
 import ChatInput from './ChatInput'; // 导入 ChatInput 组件
-import { v4 as uuidv4 } from 'uuid'; // 导入 uuidv4 用于生成唯一 ID
-import { EMessageType, ITextMessage } from '@/types/chat'; // 导入 EMessageType 和 ITextMessage
-import { SessionConnectionState } from '@/types/websocket'; // 导入 SessionConnectionState
-import { useWebSocketSession } from '@/hooks/useWebSocketSession'; // 导入 useWebSocketSession
-import { useUserMicrophoneStream } from '@/hooks/useUserMicrophoneStream'; // 导入 useUserMicrophoneStream
-import AIAudioControls from './AIAudioControls'; // 导入 AIAudioControls
+import {v4 as uuidv4} from 'uuid'; // 导入 uuidv4 用于生成唯一 ID
+import {EMessageType, ITextMessage} from '@/types/chat'; // 导入 EMessageType 和 ITextMessage
+import {SessionConnectionState} from '@/types/websocket'; // 导入 SessionConnectionState
+import {useWebSocketSession} from '@/hooks/useWebSocketSession'; // 导入 useWebSocketSession
+import AIAudioControls from './AIAudioControls';
+import {CommandType} from "@/types/message"; // 导入 AIAudioControls
 
 interface HomeMainChatProps {
   className?: string;
@@ -35,7 +35,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   // 使用新的 Hooks
   const { chatMessages, addChatMessage, clearMessages } = useChatMessages(); // 获取 addChatMessage 和 clearMessages
   const { processAudioFrame, stopPlayback, isPlaying } = useAudioPlayer(); // 获取 isPlaying 状态
-  const { sessionState, defaultLocation } = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
+  const { sessionState, defaultLocation, sendCommand} = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
   useWebSocketEvents();
@@ -141,7 +141,13 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
       {/* 音频输入控制组件 */}
       <AIAudioControls 
         isPlaying={isPlaying} // 传递 AI 播放状态
-        onInterrupt={stopPlayback} // 传递打断 AI 播放的函数
+        onInterrupt={
+          () => {
+            // 下发中断命令
+            sendCommand(CommandType.FLUSH, defaultLocation, [defaultLocation]);
+            stopPlayback(); // 停止播放
+          }
+        } // 传递打断 AI 播放的函数
         className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20"
       />
 

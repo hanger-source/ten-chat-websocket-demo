@@ -96,7 +96,9 @@ export enum MessageType {
 }
 
 // 命令类型枚举 - 匹配后端的 GraphEventCommandType (Keep as is, but START_GRAPH/STOP_GRAPH are also names in Java Command's JsonSubTypes)
-export enum CommandType {
+export enum CommandType {   
     START_GRAPH = 'CMD_START_GRAPH',
     STOP_GRAPH = 'CMD_STOP_GRAPH',
+    
+    FLUSH = "flush"
 }
