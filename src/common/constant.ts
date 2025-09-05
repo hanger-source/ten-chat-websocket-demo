@@ -112,8 +112,6 @@ export const isLLM = (extensionName: string) => {
 
 export const isEditModeOn = import.meta.env.VITE_EDIT_GRAPH_MODE === "true";
 
-// ocket 消息相关常量
-export const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 对应后端的 MessageUtils.TEN_MSGPACK_EXT_TYPE_MSG
 
 export const MESSAGE_CONSTANTS = {
   NOT_APPLICABLE: 'N/A',

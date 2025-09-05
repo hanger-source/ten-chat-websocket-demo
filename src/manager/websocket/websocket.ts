@@ -1,38 +1,17 @@
+import {WebSocketConnectionState} from '@/types/websocket';
+import {decodeMessage as msgpackDecodeMessage, encodeMessage as msgpackEncodeMessage} from '@/manager/msgpack/index'
 import {
-    WebSocketConnectionState
-} from '@/types/websocket';
-import {decode, encode, ExtensionCodec} from '@msgpack/msgpack';
-import {
-    AudioFrame, Command,
-    CommandType, Message,
+    AudioFrame,
+    AudioFrameDataFmt,
+    Command,
+    CommandType,
     Location,
+    Message,
     MessageType,
     StartGraphCommand,
     StopGraphCommand,
     VideoFrame
 } from "@/types/message";
-// TEN框架自定义MsgPack扩展类型码
-const TEN_MSGPACK_EXT_TYPE_MSG = -1; // 恢复自定义扩展类型码
-
-// 创建扩展编解码器
-const extensionCodec = new ExtensionCodec(); // 恢复扩展编解码器实例
-
-// 注册自定义扩展类型
-extensionCodec.register({
-    type: TEN_MSGPACK_EXT_TYPE_MSG,
-    encode: (input: unknown) => {
-        // 检查是否是Message类型的对象
-        if (input && typeof input === 'object' && 'type' in input && 'name' in input) {
-            // 将Message对象编码为MsgPack字节数组
-            return encode(input);
-        }
-        return null;
-    },
-    decode: (data: Uint8Array) => {
-        // 解码内部MsgPack数据为Message对象
-        return decode(data) as Message;
-    }
-}); // 恢复扩展编解码器注册逻辑
 
 export interface WebSocketMessage {
     type: string;
@@ -132,7 +111,7 @@ export class WebSocketManager {
         }
 
         try {
-            // 使用扩展编解码器编码消息
+            // 使用新的编解码模块编码消息
             const encodedMessage = this.encodeMessage(message);
             this.ws.send(encodedMessage);
             console.log('发送消息:', message);
@@ -161,24 +140,7 @@ export class WebSocketManager {
     }
 
     // 发送 JSON 数据
-    public sendJsonData(name: string, jsonData: any, srcLoc: Location, destLocs: Location[] = []): void {
-        const dataMessage: Message = {
-            id: this.generateMessageId(),
-            type: MessageType.DATA,
-            name: name, // name 字段直接放在这里
-            src_loc: srcLoc,
-            dest_locs: destLocs,
-            timestamp: Date.now(),
-            properties: {
-              json_data: jsonData, // 将 JSON 数据本身作为属性发送
-              content_type: 'application/json',
-              encoding: 'UTF-8',
-            },
-        };
-        this.sendMessage(dataMessage);
-    }
-
-    // 发送音频帧数据
+// 发送音频帧数据
     public sendAudioFrame(
         audioData: Uint8Array,
         srcLoc: Location,
@@ -200,7 +162,7 @@ export class WebSocketManager {
             sample_rate: sampleRate,
             number_of_channel: channels,
             bits_per_sample: bitsPerSample,
-            format: "pcm", // Assuming PCM format
+            data_fmt: AudioFrameDataFmt.INTERLEAVE,
             frame_timestamp: Date.now(), // Add frame_timestamp
             timestamp: Date.now(),
         };
@@ -281,6 +243,7 @@ export class WebSocketManager {
             case CommandType.STOP_GRAPH:
                 finalCommand = {
                     ...baseCommand,
+                    graph_id: properties.graph_id,
                     type: MessageType.CMD_STOP_GRAPH, // 覆盖为 CMD_STOP_GRAPH
                     location_uri: properties.location_uri,
                 } as StopGraphCommand; // 转换为 StopGraphCommand
@@ -432,26 +395,18 @@ export class WebSocketManager {
     }
 
     private encodeMessage(message: Message): ArrayBuffer {
-        const extData = extensionCodec.tryToEncode(message, undefined);
-        if (extData) {
-            const encoded = encode(extData);
-            return encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
-        } else {
-            const encoded = encode(message);
-            return encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
-        }
+        return msgpackEncodeMessage(message);
     }
 
     private decodeMessage(data: ArrayBuffer): Message {
         try {
-            const decoded = decode(new Uint8Array(data), { extensionCodec });
-            return decoded as Message;
+            return msgpackDecodeMessage(data);
         } catch (error) {
             console.error('MsgPack 解码错误:', error);
             if (error instanceof RangeError) {
                 console.error('RangeError: 数据可能被截断或格式不正确。');
             }
-            throw error; // 重新抛出，以便上层捕获
+            throw error;
         }
     }
 }

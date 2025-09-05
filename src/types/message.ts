@@ -2,7 +2,7 @@
 export interface Message {
     id: string; // 消息的唯一标识符
     type: MessageType; // 消息类型，使用枚举
-    src_loc: Location; // 消息的源位置
+    src_loc?: Location; // 消息的源位置
     dest_locs: Location[]; // 消息的目的位置列表
     name?: string; // 消息名称 (可选，用于路由或语义)
     properties?: Record<string, any>; // 消息的附加属性 (可选)
@@ -32,20 +32,24 @@ export interface StartGraphCommand extends Command {
 export interface StopGraphCommand extends Command {
     type: MessageType.CMD_STOP_GRAPH; // 明确指定 type
     name: typeof CommandType.STOP_GRAPH; // 明确指定 name
-    location_uri?: string; // 停止特定 Engine 的 Location URI
+    graph_id?: string; // 停止特定 Engine 的 Graph ID
 }
 
 // 命令结果消息
 export interface CommandResult extends Message {
     type: MessageType.CMD_RESULT;
     cmd_id: string; // Change type to string
-    success: boolean;
-    error?: string;
-    errorMessage?: string; // 添加 errorMessage 属性
-    detail?: string;      // 添加 detail 属性
-    data?: any; // 命令结果可能包含数据
-    original_cmd_id?: string; // Add original_cmd_id
+    original_cmd_id: string; // Add original_cmd_id
+    original_cmd_type: CommandType; // Add original_cmd_type
     original_cmd_name?: string; // Add original_cmd_name
+    status_code: number;
+    is_final: boolean;
+    is_completed: boolean;
+}
+
+export interface DataMessage extends Message {
+    type: MessageType.DATA;
+    data: Uint8Array; // 对应 data
 }
 
 // 音频帧消息
@@ -55,7 +59,7 @@ export interface AudioFrame extends Message {
     sample_rate: number;
     number_of_channel: number; // 对应 numberOfChannel
     bits_per_sample: number; // 对应 bytesPerSample
-    format: string; // 对应 dataFormat
+    data_fmt: AudioFrameDataFmt; // 对应 data_fmt，更改字段名为 data_fmt
     is_eof?: boolean;
     frame_timestamp: number; // 对应 frameTimestamp
     samples_per_channel?: number; // 对应 samplesPerChannel
@@ -96,9 +100,15 @@ export enum MessageType {
 }
 
 // 命令类型枚举 - 匹配后端的 GraphEventCommandType (Keep as is, but START_GRAPH/STOP_GRAPH are also names in Java Command's JsonSubTypes)
-export enum CommandType {   
+export enum CommandType {
     START_GRAPH = 'CMD_START_GRAPH',
     STOP_GRAPH = 'CMD_STOP_GRAPH',
     
     FLUSH = "flush"
+}
+
+// 音频帧数据格式枚举
+export enum AudioFrameDataFmt {
+    INTERLEAVE = 1,
+    NON_INTERLEAVE = 2,
 }

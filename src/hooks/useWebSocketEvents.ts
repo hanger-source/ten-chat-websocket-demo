@@ -11,16 +11,14 @@ export const useWebSocketEvents = () => {
     useEffect(() => {
         const handleCommandResult = (rawMessage: Message) => {
             const commandResult = rawMessage as CommandResult;
+            console.log("useWebSocketEvents: Received command result", commandResult);
 
-            if (!commandResult) {
-                console.warn("useWebSocketEvents: Received invalid CMD_RESULT message:", rawMessage);
-                return;
-            }
-
-            if (commandResult.success) {
-                // toast.success(commandResult.detail || '命令执行成功！', { duration: 3000 });
+            if (commandResult.status_code === 0) {
+                // Command succeeded
+                toast.success(`命令 ${commandResult.original_cmd_name} 执行成功！`);
             } else {
-                toast.error(commandResult.errorMessage || '命令执行失败！', { duration: 5000 });
+                // Command failed
+                toast.error(`命令 ${commandResult.original_cmd_name} 执行失败: ${commandResult.properties?.error_message || `状态码 ${commandResult.status_code}`}`);
             }
         };
 

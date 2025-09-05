@@ -73,7 +73,7 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
     const cmdResult = message as CommandResult;
 
     if (cmdResult.original_cmd_name === CommandType.START_GRAPH) {
-      if (cmdResult.success) {
+      if (cmdResult.status_code === 0) {
         dispatch(setSessionConnectionState(SessionConnectionState.SESSION_ACTIVE));
         dispatch(setAgentConnected(true));
         if (cmdResult.properties && cmdResult.properties.graph_id) {
@@ -85,17 +85,17 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       } else {
         dispatch(setSessionConnectionState(SessionConnectionState.IDLE));
         dispatch(setAgentConnected(false));
-        toast.error(`AI 启动失败: ${cmdResult.errorMessage || cmdResult.error}`);
+        toast.error(`AI 启动失败: ${cmdResult.properties?.error_message || `命令 ${cmdResult.original_cmd_name} 返回状态码 ${cmdResult.status_code}`}`);
       }
     } else if (cmdResult.original_cmd_name === CommandType.STOP_GRAPH) {
-      if (cmdResult.success) {
+      if (cmdResult.status_code === 0) {
         dispatch(setSessionConnectionState(SessionConnectionState.IDLE));
         dispatch(setAgentConnected(false));
         dispatch(setActiveGraphId(""));
         dispatch(setActiveAppUri(""));
         toast.info("AI 已停止。");
       } else {
-        toast.error(`AI 停止失败: ${cmdResult.errorMessage || cmdResult.error}`);
+        toast.error(`AI 停止失败: ${cmdResult.properties?.error_message || `命令 ${cmdResult.original_cmd_name} 返回状态码 ${cmdResult.status_code}`}`);
       }
     }
   }, [dispatch]);
