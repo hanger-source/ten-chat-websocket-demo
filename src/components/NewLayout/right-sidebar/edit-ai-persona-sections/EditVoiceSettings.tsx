@@ -60,37 +60,37 @@ const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
         </div>
         <div className="pt-2 text-gray-600 text-sm">
           {replaceableVoiceOption ? (
-            voiceInMetadata ? (
-              <div className="flex items-center justify-between space-x-2">
-                <div>
-                  <h4 className="font-semibold mb-1">{voiceInMetadata.name}</h4>
-                  {voiceInMetadata.voiceModelName && <p className="text-xs text-gray-500 mt-1">模型名称：<strong>{voiceInMetadata.voiceModelName}</strong></p>}
-                  {voiceInMetadata.feature && <p className="text-xs text-gray-500 mt-1">音色特质：{voiceInMetadata.feature}</p>}
-                </div>
-                <div className="flex items-center space-x-2 ml-auto">
-                  {voiceInMetadata.previewAudioUrl && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={() => handlePlayPreview(voiceInMetadata.previewAudioUrl)}
-                    >
-                      试听
-                    </Button>
-                  )}
-                  {replaceableVoiceOption && (
-                    <Button
-                      onClick={() => handleChangeVoiceClick(replaceableVoiceOption.key)}
-                      className="mt-2 bg-gradient-to-br from-blue-100 to-white border-none hover:border-b-[1px] hover:border-gray-300"
-                    >
-                      <span className="bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">更换音色</span>
-                    </Button>
-                  )}
-                </div>
+            <div className="flex items-center justify-between space-x-2">
+              <div>
+                {voiceInMetadata ? (
+                  <>
+                    <h4 className="font-semibold mb-1">{voiceInMetadata.name}</h4>
+                    {voiceInMetadata.voiceModelName && <p className="text-xs text-gray-500 mt-1">模型名称：<strong>{voiceInMetadata.voiceModelName}</strong></p>}
+                    {voiceInMetadata.feature && <p className="text-xs text-gray-500 mt-1">音色特质：{voiceInMetadata.feature}</p>}
+                  </>
+                ) : (
+                  <p>未选择音色。</p>
+                )}
               </div>
-            ) : (
-              <p>未选择音色。</p>
-            )
+              <div className="flex items-center space-x-2 ml-auto">
+                {voiceInMetadata?.previewAudioUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => handlePlayPreview(voiceInMetadata.previewAudioUrl)}
+                  >
+                    试听
+                  </Button>
+                )}
+                <Button
+                  onClick={() => handleChangeVoiceClick(replaceableVoiceOption.key)}
+                  className="mt-2 bg-gradient-to-br from-blue-100 to-white border-none hover:border-b-[1px] hover:border-gray-300"
+                >
+                  <span className="bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">更换音色</span>
+                </Button>
+              </div>
+            </div>
           ) : (
             <p>没有可选音色。</p>
           )}
