@@ -83,11 +83,12 @@ export const useAiPersonalEdit = () => {
     });
   }, [setEditingScene]);
 
-  const updateEditingSelectedVoice = useCallback((voiceKey: string, voiceId: string) => {
+  const updateEditingSelectedVoice = useCallback((voiceKey: string, voiceId: string, modelKey: string, selectedVoiceModel: string) => {
     setEditingScene(prevEditingScene => {
       const newSelectedVoices = {
         ...(prevEditingScene.selectedVoices || {}),
         [voiceKey]: voiceId,
+        [modelKey]: selectedVoiceModel,
       };
       return { ...prevEditingScene, selectedVoices: newSelectedVoices };
     });

@@ -41,6 +41,8 @@ export interface IReplaceableModelOption {
 export interface ISelectedVoiceOption {
   name: string;
   voice: string;
+  voiceModel?: string; // 新增：语音模型标识
+  voiceModelName?: string; // 新增：语音模型名称
   tag: string[];
   previewAudioUrl: string;
   feature?: string;
@@ -49,6 +51,8 @@ export interface ISelectedVoiceOption {
 export interface IReplaceableVoiceOption {
   voice: string;
   key: string;
+  model_key: string;
+  mode: string;
   configurableOptions?: IConfigurableOption[];
 }
 

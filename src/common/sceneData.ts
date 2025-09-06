@@ -26,7 +26,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longxiaochun_v2',
+      voice_name: 'longxiaochun_v2',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -51,7 +52,8 @@ export const sceneCards: ISceneCard[] = [
       },
     },
     selectedVoices: {
-      cosy_voice_name: 'longjielidou_v2',
+      voice_name: 'longjielidou_v2',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -71,7 +73,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longfeifei_v2',
+      voice_name: 'longfeifei_v2',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -91,7 +94,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-ocr',
     },
     selectedVoices: {
-      cosy_voice_name: 'longjin_v2',
+      voice_name: 'longjin_v2',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -111,7 +115,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longnan_v2',
+      voice_name: 'longnan_v2',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -131,7 +136,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longshuo_v2',
+      voice_name: 'longshuo_v2',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -151,7 +157,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      cosy_voice_name: 'longyingyan',
+      voice_name: 'longyingyan',
+      voice_model: 'cosy_voice'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
