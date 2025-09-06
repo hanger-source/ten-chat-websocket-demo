@@ -57,16 +57,16 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
       const selectedVoiceFromScene = getSelectedVoiceId(voiceKeyToSelect || ''); // 获取场景中已保存的语音
       const currentSelectedVoice = tempSelectedVoiceId || selectedVoiceFromScene; // 优先使用临时选择的语音
 
-      let initialModelTab = activeModelTab || Object.keys(groupedVoicesByModelAndTag)[0]; // Default to the first model tab, or retain current if exists
+      let initialModelTab = Object.keys(groupedVoicesByModelAndTag)[0]; // Default to the first model tab
       if (!groupedVoicesByModelAndTag[initialModelTab]) { // If current model tab is no longer valid, default to first
-          initialModelTab = Object.keys(groupedVoicesByModelAndTag)[0];
+        initialModelTab = Object.keys(groupedVoicesByModelAndTag)[0];
       }
 
       let initialTagTab = '';
       if (groupedVoicesByModelAndTag[initialModelTab] && Object.keys(groupedVoicesByModelAndTag[initialModelTab]).length > 0) {
-          initialTagTab = Object.keys(groupedVoicesByModelAndTag[initialModelTab])[0];
+        initialTagTab = Object.keys(groupedVoicesByModelAndTag[initialModelTab])[0];
       }
-      
+
       // If a voice is already selected, try to find its model and tag
       if (currentSelectedVoice && currentSelectedVoice !== '未选择') {
         let found = false;
@@ -97,7 +97,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
         setPlayingAudio(null);
       }
     }
-  }, [showModal, groupedVoicesByModelAndTag, voiceKeyToSelect, getSelectedVoiceId, tempSelectedVoiceId]); // 移除 activeModelTab 作为依赖，因为它在内部被设置
+  }, [showModal, groupedVoicesByModelAndTag, voiceKeyToSelect, getSelectedVoiceId]);
 
   const handleSelectVoice = (selectedVoice: string) => {
     setTempSelectedVoiceId(selectedVoice);
@@ -126,7 +126,6 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
           selectedVoiceOption.voiceModel || ''
         );
       } else {
-        // Fallback for when config or selected voice isn't found, though it should ideally not happen
         updateEditingSelectedVoice(voiceKeyToSelect, tempSelectedVoiceId, '', '');
       }
       setShowModal(false);
