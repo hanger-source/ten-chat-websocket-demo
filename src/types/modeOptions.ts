@@ -5,13 +5,13 @@ export interface IModeOption {
   name: string;
   description: string;
   metadata?: IModeMetadata; // New: To store mode-specific metadata
+  models?: ISelectedModelOption[];
+  voices?: ISelectedVoiceOption[];
 }
 
 export interface IModeMetadata {
   replaceableModels?: IReplaceableModelOption[];
   replaceableVoices?: IReplaceableVoiceOption[];
-  models?: ISelectedModelOption[];
-  voices?: ISelectedVoiceOption[];
 }
 
 export interface IConfigurableOption {

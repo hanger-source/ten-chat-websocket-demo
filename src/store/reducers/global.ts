@@ -236,12 +236,15 @@ const initializeGraphData = createAsyncThunk(
       const graphInfos = await apiFetchGraphs(); // 获取 graphInfos
       // console.log("initializeGraphData: fetchedGraphInfos (dev mode):", graphInfos); // 排查日志
       
-      const modeOptions: IModeOption[] = graphInfos.map(graphInfo => ({
+      const modeOptions: IModeOption[] = graphInfos.map((graphInfo: GraphInfo & { voices?: any[], models?: any[] }) => ({
         value: graphInfo.name,
         label: graphInfo.name,
         name: graphInfo.name, // 确保添加 name 属性
         description: "", // Or extract from graphInfo.metadata if available
         metadata: graphInfo.metadata || {},
+        // 新增：直接从 graphInfo 映射 voices 和 models
+        voices: graphInfo.voices,
+        models: graphInfo.models,
       }));
       dispatch(setModeOptions(modeOptions));
 
@@ -257,12 +260,15 @@ const initializeGraphData = createAsyncThunk(
       const graphInfos = await apiFetchGraphs(); // 获取 graphInfos
       // console.log("initializeGraphData: fetchedGraphInfos (prod mode):", graphInfos); // 排查日志
       
-      const modeOptions: IModeOption[] = graphInfos.map(graphInfo => ({
+      const modeOptions: IModeOption[] = graphInfos.map((graphInfo: GraphInfo & { voices?: any[], models?: any[] }) => ({
         value: graphInfo.name,
         label: graphInfo.name,
         name: graphInfo.name, // 确保添加 name 属性
         description: "", // Or extract from graphInfo.metadata if available
         metadata: graphInfo.metadata || {},
+        // 新增：直接从 graphInfo 映射 voices 和 models
+        voices: graphInfo.voices,
+        models: graphInfo.models,
       }));
       dispatch(setModeOptions(modeOptions));
 

@@ -9,6 +9,8 @@ export interface GraphInfo {
   autoStart: boolean;
   docUrl?: string;
   metadata?: any; // Object to store mode-specific metadata, using 'any' for now to match Object in Java
+  voices?: any[]; // 新增：与后端返回的 voices 字段对应
+  models?: any[]; // 新增：与后端返回的 models 字段对应
 }
 
 // 从 window 对象获取动态注入的环境变量，如果没有则回退到 /api

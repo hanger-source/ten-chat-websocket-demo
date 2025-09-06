@@ -143,7 +143,7 @@ export const useAiPersonalEdit = () => {
       (rm: IReplaceableModelOption & { key: string }) => rm.key === modelKey
     );
     if (!availableModelConfig) return [];
-    const modelsFromMetadata = derivedModeConfiguration.metadata.models || [];
+    const modelsFromMetadata = derivedModeConfiguration.models || [];
     return modelsFromMetadata.filter((modelOption: ISelectedModelOption) => {
       return modelOption.type.some((t: ModelCategory) => availableModelConfig.type.includes(t));
     });
@@ -151,7 +151,7 @@ export const useAiPersonalEdit = () => {
 
   const getVoicesForAvailableKey = useCallback((voiceKey: string | null): ISelectedVoiceOption[] => {
     if (!derivedModeConfiguration || !voiceKey || !derivedModeConfiguration.metadata?.replaceableVoices || !editingScene) return [];
-    return derivedModeConfiguration.metadata.voices || [];
+    return derivedModeConfiguration.voices || [];
   }, [derivedModeConfiguration, editingScene]);
 
   const getAvailableModelOptions = useCallback((modelKey: string | null): IReplaceableModelOption | undefined => {
@@ -165,7 +165,7 @@ export const useAiPersonalEdit = () => {
   }, [derivedModeConfiguration, editingScene]);
 
   const getPersonaModelDescription = useCallback((modelName: string): string => {
-    const metadataModel = derivedModeConfiguration?.metadata?.models?.find(m => m.model === modelName);
+    const metadataModel = derivedModeConfiguration?.models?.find(m => m.model === modelName);
     return metadataModel?.description || '暂无描述';
   }, [derivedModeConfiguration]);
 
@@ -184,14 +184,14 @@ export const useAiPersonalEdit = () => {
   }, [derivedModeConfiguration]);
 
   const getPersonaVoiceDisplayName = useCallback((voiceName: string): string => {
-    const metadataVoice = derivedModeConfiguration?.metadata?.voices?.find(v => v.voice === voiceName);
+    const metadataVoice = derivedModeConfiguration?.voices?.find(v => v.voice === voiceName);
     return metadataVoice?.name || '暂无描述';
   }, [derivedModeConfiguration]);
 
   const getEditingSelectedVoiceInfo = useCallback((voiceKey: string): ISelectedVoiceOption | undefined => {
     const selectedVoiceId = editingScene?.selectedVoices?.[voiceKey];
-    if (selectedVoiceId && derivedModeConfiguration?.metadata?.voices) {
-      return derivedModeConfiguration.metadata.voices.find(v => v.voice === selectedVoiceId);
+    if (selectedVoiceId && derivedModeConfiguration?.voices) {
+      return derivedModeConfiguration.voices.find(v => v.voice === selectedVoiceId);
     }
     return undefined;
   }, [editingScene, derivedModeConfiguration]);

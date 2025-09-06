@@ -93,7 +93,7 @@ export const useSelectedScene = () => {
     // 查找当前场景的默认模式配置，如果不存在则使用第一个模式配置
     const currentModeOption = modeOptions.find(mode => mode.value === scene.defaultModeValue) || modeOptions[0];
 
-    if (!currentModeOption || !currentModeOption.metadata || !currentModeOption.metadata.replaceableVoices || !currentModeOption.metadata.voices) {
+    if (!currentModeOption || !currentModeOption.metadata || !currentModeOption.metadata.replaceableVoices || !currentModeOption.voices) {
       return ''; // 默认值
     }
 
@@ -107,7 +107,7 @@ export const useSelectedScene = () => {
     }
 
     // 从 voices 中找到匹配的 voiceId (即 replaceableVoiceConfig.voice) 对应的显示名称
-    const voiceOption = currentModeOption.metadata.voices.find(
+    const voiceOption = currentModeOption.voices.find(
       (v: ISelectedVoiceOption) => v.voice === selectedVoiceId
     );
 

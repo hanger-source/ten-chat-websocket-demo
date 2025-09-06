@@ -29,7 +29,7 @@ const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
   }, [editingScene, replaceableVoiceOption]);
 
   const voiceInMetadata = useMemo(() => {
-    return derivedModeConfiguration?.metadata?.voices?.find(v => v.voice === selectedVoiceName);
+    return derivedModeConfiguration?.voices?.find(v => v.voice === selectedVoiceName);
   }, [derivedModeConfiguration, selectedVoiceName]);
 
   const handleChangeVoiceClick = (key: string) => {
