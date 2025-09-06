@@ -188,7 +188,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
                   ))}
                 </TabsList>
                 <TabsContent value={activeTagTab} className="flex-1 p-4 border border-gray-200 rounded-b-lg bg-white">
-                  <div className="grid grid-cols-3 gap-4 py-4 max-h-[calc(100vh-350px)] overflow-y-auto">
+                  <div className="grid grid-cols-3 gap-4 py-4 max-h-[calc(100vh-550px)] overflow-y-auto">
                     {tags[activeTagTab] && tags[activeTagTab].map((voice: ISelectedVoiceOption) => (
                       <div
                         key={voice.voice}
@@ -216,18 +216,8 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
                                   : 'text-gray-800')
                             }
                           `}>{voice.name}</div> 
-                          <div className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-3">
-                            {voice.feature && <p className="mb-1">音色特质：{voice.feature}</p>}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="text-left w-full">
-                                  <div className="line-clamp-3">{getPersonaVoiceDisplayName(voice.voice)}</div>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs text-wrap break-words">
-                                  {getPersonaVoiceDisplayName(voice.voice)}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                          <div className="text-gray-500 text-sm mt-1 leading-relaxed line-clamp-3">
+                            {voice.feature && <p className="mb-1 text-sm">{voice.feature}</p>}
                           </div>
                           {voice.previewAudioUrl && (
                             <Button 

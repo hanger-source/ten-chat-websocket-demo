@@ -64,8 +64,12 @@ const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
               <div>
                 {voiceInMetadata ? (
                   <>
-                    <h4 className="font-semibold mb-1">{voiceInMetadata.name}</h4>
-                    {voiceInMetadata.voiceModelName && <p className="text-xs text-gray-500 mt-1">模型名称：<strong>{voiceInMetadata.voiceModelName}</strong></p>}
+                    <h4 className="font-semibold mb-1">
+                      {voiceInMetadata.name}
+                      {voiceInMetadata.voiceModelName && (
+                        <span>（<strong>{voiceInMetadata.voiceModelName}</strong>）</span>
+                      )}
+                    </h4>
                     {voiceInMetadata.feature && <p className="text-xs text-gray-500 mt-1">音色特质：{voiceInMetadata.feature}</p>}
                   </>
                 ) : (
