@@ -67,7 +67,7 @@ const CommandResultMessageBubble: React.FC<CommandResultMessageBubbleProps> = ({
                             </p>
                         )}
                         {/* 显示文本内容，通常是成功或失败的描述 */}
-                        <p>{text || (isSuccess ? "命令执行成功" : "命令执行失败")}</p>
+                        {/* <p>{text || (isSuccess ? "命令执行成功" : "命令执行失败")}</p> */}
                         {/* 可以根据需要显示更多详情 */}
                         {commandResult?.detail && <p className="text-xs opacity-75">{commandResult.detail}</p>}
                         {commandResult?.errorMessage && <p className="text-xs text-red-600">{commandResult.errorMessage}</p>}

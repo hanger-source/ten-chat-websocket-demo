@@ -36,7 +36,7 @@ const MessageListRenderer: React.FC<MessageListRendererProps> = ({ messages, aiA
     }, [messages]);
 
     return (
-        <div className={cn("flex-1", isMobile() ? "px-2" : "px-4", "overflow-y-auto py-6")}> {/* 根据设备类型调整 px，py-6 保持不变 */}
+        <div className={cn("flex-1", isMobile() ? "px-2" : "px-4", "overflow-y-auto pt-6 pb-24")}> {/* 根据设备类型调整 px，py-6 保持不变 */}
             {messages.map((message) => {
                 const Renderer = messageRenderers[message.type] || messageRenderers['unknown'];
                 return (

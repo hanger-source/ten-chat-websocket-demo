@@ -105,7 +105,7 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
           className={cn(
             "z-10 flex flex-col",
             isMobileDevice
-              ? "absolute bottom-[180px] right-4 w-48 h-36" // 调整为更合适的高度 (bottom-[80px])
+              ? "absolute top-[140px] right-4 w-48 h-36" // 调整为更合适的高度 (bottom-[80px])
               : "absolute top-[40px] right-8 w-64 h-48"
           )} // 根据设备类型调整定位和尺寸
         >
