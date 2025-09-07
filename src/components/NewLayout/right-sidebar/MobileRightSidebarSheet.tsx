@@ -22,11 +22,11 @@ const MobileRightSidebarSheet: React.FC<MobileRightSidebarSheetProps> = () => {
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent side="right" className="w-full max-w-sm bg-white p-4 overflow-y-auto">
-        <SheetHeader>
+      <SheetContent side="right" className="w-full bg-white p-4 overflow-y-auto flex flex-col pb-24">
+        <SheetHeader className="px-6">
           <SheetTitle>设置</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="flex-1 py-6 pr-6 pl-0 overflow-y-auto min-h-0">
           <HomeRightSidebar /> {/* Directly render HomeRightSidebar content */}
         </div>
       </SheetContent>

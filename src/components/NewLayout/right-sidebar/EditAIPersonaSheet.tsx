@@ -42,26 +42,28 @@ const EditAIPersonaSheet: React.FC<EditAIPersonaSheetProps> = ({ isOpen, onClose
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[960px] bg-gradient-to-bl from-[#e1e5ff] to-white shadow-sm pb-24" overlayClassName="bg-transparent">
+      <SheetContent side="right" className="w-full md:w-[600px] lg:w-[960px] bg-gradient-to-bl from-[#e1e5ff] to-white shadow-sm flex flex-col" overlayClassName="bg-transparent">
         <SheetHeader>
           <SheetTitle>选择 你所需要的 <span className="bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">AI 人设</span></SheetTitle>
           <SheetDescription>我们已经为您配置好对应人设的 基本参数，您也可以根据自己的需求 进行自定义设置</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 py-6 pr-6 pl-0">
+        <div className="flex-1 overflow-y-auto min-h-0">
           <EditAIPersonaScenes onCapsuleClick={handleCapsuleClick} onScenePositionsChange={setScenePositions} /> {/* 传递 onScenePositionsChange */}
 
           {/* New container for all settings */}
-          <div className="relative mt-4 bg-white p-6 rounded-lg shadow-md">
+          <div className="relative mt-4 bg-white px-6 py-4 md:py-6 rounded-lg shadow-md">
             {/* Triangle pointing up from the top-middle of this container */}
             <div className="absolute top-[-17px] w-0 h-0 border-l-[18px] border-r-[18px] border-b-[18px] border-l-transparent border-r-transparent border-b-white" style={{ left: triangleLeft, transform: 'translateX(-50%)' }}></div>
 
             {/* All settings components go here */}
-            <div className="flex space-x-4 mb-6">
+            <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0 mb-6">
               <EditAIModelMode className="flex-1" />
-              <EditVoiceSettings className="flex-1" />
+              <div className="flex-1 flex flex-col">
+                <EditVoiceSettings />
+                <EditWelcomeMessage className="mt-4" />
+              </div>
             </div>
             <EditSystemPrompt />
-            <EditWelcomeMessage />
           </div>
         </div>
         <SheetFooter className="mt-auto">

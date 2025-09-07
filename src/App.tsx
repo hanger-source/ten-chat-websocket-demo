@@ -25,8 +25,8 @@ function App() {
       <AppInitializer /> {/* 在 StoreProvider 内部渲染 AppInitializer */}
       <BrowserRouter>
         <Routes>
+          <Route path="/ten-ui" element={<Home />} />
           <Route path="/" element={<NewHome />} />
-          <Route path="/live" element={<NewHome />} />
         </Routes>
       </BrowserRouter>
       <Toaster richColors closeButton theme="light" />

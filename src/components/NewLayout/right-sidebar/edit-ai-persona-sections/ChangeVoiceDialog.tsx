@@ -140,7 +140,7 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
 
   return (
     <Dialog open={showModal} onOpenChange={setShowModal}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-full md:max-w-[800px] px-4 py-6">
         <DialogHeader>
           <DialogTitle>
             音色选择
@@ -156,13 +156,13 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
           } else {
             setActiveTagTab(''); // 如果没有标签，则设置为空
           }
-        }} className="w-full flex flex-col flex-grow">
-          <TabsList className="flex flex-wrap w-full p-0 bg-transparent">
+        }} className="w-full flex flex-col flex-grow overflow-hidden">
+          <TabsList className="flex w-full p-0 bg-transparent overflow-x-auto whitespace-nowrap scrollbar-hide">
             {Object.keys(groupedVoicesByModelAndTag).map((modelName) => (
               <TabsTrigger 
                 key={modelName} 
                 value={modelName} 
-                className={`flex-grow-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200 
+                className={`flex-grow-0 flex-shrink-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200 
                   ${activeModelTab === modelName 
                     ? `bg-white shadow ${BASE_TEXT_GRADIENT} !text-transparent`
                     : 'bg-transparent text-gray-600 hover:bg-gray-50 border-b-2 border-transparent'} 
@@ -172,13 +172,15 @@ const ChangeVoiceDialog: React.FC<ChangeVoiceDialogProps> = (props) => {
           </TabsList>
           {Object.entries(groupedVoicesByModelAndTag).map(([modelName, tags]) => (
             <TabsContent key={modelName} value={modelName} className="flex-1 p-4 border border-gray-200 rounded-b-lg bg-white">
-              <Tabs value={activeTagTab} onValueChange={(value) => { setActiveTagTab(value); }} className="w-full flex flex-col flex-grow">
-                <TabsList className="flex flex-wrap w-full p-0 bg-transparent">
+              <Tabs value={activeTagTab} onValueChange={(value) => {
+                setActiveTagTab(value);
+              }} className="w-full flex flex-col flex-grow overflow-hidden">
+                <TabsList className="flex w-full p-0 bg-transparent overflow-x-auto whitespace-nowrap scrollbar-hide">
                   {Object.keys(tags).map((tag) => (
                     <TabsTrigger 
                       key={tag} 
                       value={tag} 
-                      className={`flex-grow-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200 
+                      className={`flex-grow-0 flex-shrink-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200 
                         ${activeTagTab === tag 
                           ? `bg-white shadow ${BASE_TEXT_GRADIENT} !text-transparent`
                           : 'bg-transparent text-gray-600 hover:bg-gray-50 border-b-2 border-transparent'} 

@@ -33,7 +33,7 @@ const EditAIPersonaScenes: React.FC<EditAIPersonaScenesProps> = ({ onCapsuleClic
   }, [allScenes, onScenePositionsChange]); // 依赖 allScenes 和 onScenePositionsChange
 
   return (
-    <div ref={containerRef} className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-px-6">
+    <div ref={containerRef} className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory">
       {allScenes.map((card: ISceneCard) => {
         return (
           <div
@@ -42,7 +42,7 @@ const EditAIPersonaScenes: React.FC<EditAIPersonaScenesProps> = ({ onCapsuleClic
             onClick={() => {
               onCapsuleClick(card, capsuleRefs.current[card.aiPersonaName]);
             }}
-            className={`group relative rounded-xl cursor-pointer transition-all duration-200 w-28 h-28 border-2
+            className={`group relative flex-shrink-0 rounded-xl cursor-pointer transition-all duration-200 w-28 h-28 border-2
               ${editingScene?.aiPersonaName === card.aiPersonaName // 如果是选中状态
                 ? 'bg-gradient-to-br from-purple-400 to-pink-400 border-transparent bg-origin-border bg-clip-border shadow-md'
                 : 'border-gray-200 bg-white hover:border-transparent hover:bg-gradient-to-br hover:from-blue-400 hover:to-pink-400 hover:via-purple-400 hover:bg-origin-border hover:bg-clip-border hover:shadow-xl'
