@@ -1,6 +1,7 @@
 import { ISceneCard } from '@/types';
 import { sceneCards } from '@/common/sceneData';
-import {useLocalStorage} from "usehooks-ts"; // 导入 sceneData 作为最终默认值的来源
+import {useLocalStorage} from "usehooks-ts";
+import { IModeOption, IReplaceableModelOption, IReplaceableVoiceOption } from '@/types/modeOptions'; // 导入 IModeOption, IReplaceableModelOption 和 IReplaceableVoiceOption
 
 // Function to get a dynamic key for local storage
 export const getEditingSceneKey = (aiPersonaName: string): string => `editingAiPersonaScene_${aiPersonaName}`;
@@ -20,9 +21,10 @@ const getDefaultSceneFromData = (): ISceneCard => {
  * If not found, returns a default scene from sceneData.ts.
  * @param aiPersonaName The aiPersonaName of the scene to load.
  * @param type The type of scene to load: 'editing' or 'saved'.
+ * @param modeOptions All available mode options to determine default models.
  * @returns ISceneCard The loaded or default ISceneCard.
  */
-export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' | 'saved' = 'editing'): ISceneCard => {
+export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' | 'saved' = 'editing', modeOptions: IModeOption[] = []): ISceneCard => {
   // 首先尝试从 sceneData.ts 中找到与 aiPersonaName 匹配的场景作为该 aiPersonaName 的默认场景。
   const initialDefaultScene = sceneCards.find(scene => scene.aiPersonaName === aiPersonaName) || getDefaultSceneFromData();
   
@@ -32,12 +34,15 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' 
   const localStorageKey = type === 'editing' ? getEditingSceneKey(aiPersonaName) : getSavedSceneKey(aiPersonaName);
   try {
     const serializedScene = localStorage.getItem(localStorageKey);
+    let loadedScene: ISceneCard;
     if (serializedScene === null) {
-      return initialDefaultScene;
+      loadedScene = initialDefaultScene;
+    } else {
+      loadedScene = JSON.parse(serializedScene);
     }
-    const loadedScene: ISceneCard = JSON.parse(serializedScene);
+
     // Robustness: ensure all properties exist and aiPersonaName is consistent
-    return {
+    const sceneToReturn: ISceneCard = {
       tag: loadedScene.tag !== undefined ? loadedScene.tag : null,
       bgColor: loadedScene.bgColor !== undefined ? loadedScene.bgColor : null,
       iconSrc: loadedScene.iconSrc || '',
@@ -53,6 +58,27 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' 
       selectedModelsOptions: loadedScene.selectedModelsOptions || {},
       defaultModeValue: loadedScene.defaultModeValue || '',
     };
+
+    // Apply default models if selectedModels are missing keys based on replaceableModels
+    const currentModeConfiguration = modeOptions.find(mode => mode.value === sceneToReturn.defaultModeValue);
+    if (currentModeConfiguration?.metadata?.replaceableModels) {
+      currentModeConfiguration.metadata.replaceableModels.forEach((rm: IReplaceableModelOption) => {
+        if (!sceneToReturn.selectedModels![rm.key] || sceneToReturn.selectedModels![rm.key] === '未选择') {
+          sceneToReturn.selectedModels![rm.key] = rm.model;
+        }
+      });
+    }
+
+    // Apply default voices if selectedVoices are missing keys based on replaceableVoices
+    if (currentModeConfiguration?.metadata?.replaceableVoices) {
+      currentModeConfiguration.metadata.replaceableVoices.forEach((rv: IReplaceableVoiceOption) => {
+        if (!sceneToReturn.selectedVoices![rv.key] || sceneToReturn.selectedVoices![rv.key] === '未选择') {
+          sceneToReturn.selectedVoices![rv.key] = rv.voice;
+        }
+      });
+    }
+
+    return sceneToReturn;
   } catch (error) {
     console.error(`Error loading scene '${aiPersonaName}' (${type}) from local storage:`, error);
     return initialDefaultScene;

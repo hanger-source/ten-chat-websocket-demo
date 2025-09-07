@@ -33,16 +33,16 @@ export const useAiPersonalEdit = () => {
   const [editingScene, setEditingScene] = useLocalStorage<ISceneCard>(
     getEditingSceneKey(editingSceneAiPersonaName), // localStorage key
     // 初始值在组件首次挂载时加载对应 selectedSceneAiPersonaName 的“已保存”场景
-    () => loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved')
+    () => loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved', modeOptions)
   );
 
   // 当 selectedSceneAiPersonaName 变化时（包括刷新），重置 editingScene 为该角色的“已保存”状态
   useEffect(() => {
-    const savedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved');
+    const savedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved', modeOptions);
     // 将“已保存”场景写入本地存储作为“编辑中”状态，以清除旧的临时编辑
     saveSceneByNameToLocal(savedScene, 'editing');
     setEditingScene(savedScene); // 同时更新当前 state
-  }, [editingSceneAiPersonaName, setEditingScene]);
+  }, [editingSceneAiPersonaName, setEditingScene, modeOptions]);
 
   const switchEditingScene = useCallback((aiPersonaName: string) => {
     switchSelectedScene(aiPersonaName);
