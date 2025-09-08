@@ -13,7 +13,7 @@ interface EditAIModelModeProps {
 }
 
 const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
-  const { editingScene, setEditingSceneMode, getEditingDefaultModeValue, getModelsForAvailableKey, getAvailableModelOptions, getPersonaModelDescription, getSelectedModelId, getFilteredConfigurableOptions, derivedModeConfiguration } = useAiPersonalEdit();
+  const { editingScene, setEditingSceneMode, getEditingSelectedModeValue, getModelsForAvailableKey, getAvailableModelOptions, getPersonaModelDescription, getSelectedModelId, getFilteredConfigurableOptions, derivedModeConfiguration } = useAiPersonalEdit();
 
   const [showModal, setShowModal] = useState(false);
   const [modelKeyToSelect, setModelKeyToSelect] = useState<string | null>(null);
@@ -61,7 +61,7 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
               key={mode.value}
               onClick={() => handleModeSelect(mode)}
               className={`cursor-pointer px-3 py-1 rounded-md text-sm font-normal transition-colors duration-200
-                ${getEditingDefaultModeValue() === mode.value
+                ${getEditingSelectedModeValue() === mode.value
                   ? 'bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent border-transparent'
                   : 'bg-white text-gray-700 border-none hover:bg-gray-50 hover:border-b-[1px] hover:border-gray-300'
                 }`

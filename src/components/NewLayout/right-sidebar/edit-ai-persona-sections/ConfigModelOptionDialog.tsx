@@ -34,8 +34,11 @@ const ConfigModelOptionDialog: React.FC<ConfigModelOptionDialogProps> = ({ showM
 
       const initialFormValues: Record<string, any> = {};
       filteredOptions.forEach(option => {
-        // Initialize form values from current editing scene's model config, or default if not set
-        initialFormValues[option.key] = editingScene?.selectedModelsOptions?.[modelKeyToConfig]?.[option.key] ?? '';
+        // Initialize form values from current editing scene's model config,
+        // then fall back to option.defaultValue, then to an empty string.
+        initialFormValues[option.key] = editingScene?.selectedModelsOptions?.[modelKeyToConfig]?.[option.key]
+          ?? option.defaultValue
+          ?? '';
       });
       setFormValues(initialFormValues);
     }

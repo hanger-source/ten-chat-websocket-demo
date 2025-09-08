@@ -57,6 +57,7 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' 
       selectedVoices: loadedScene.selectedVoices || {},
       selectedModelsOptions: loadedScene.selectedModelsOptions || {},
       defaultModeValue: loadedScene.defaultModeValue || '',
+      selectedModeValue: loadedScene.selectedModeValue || loadedScene.defaultModeValue || initialDefaultScene.defaultModeValue || '', // Initialize selectedModeValue
     };
 
     // Apply default models if selectedModels are missing keys based on replaceableModels

@@ -10,7 +10,7 @@ interface EditVoiceSettingsProps {
 }
 
 const EditVoiceSettings: React.FC<EditVoiceSettingsProps> = ({ className }) => {
-  const { editingScene, getEditingDefaultModeValue, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersonalEdit();
+  const { editingScene, getEditingSelectedModeValue, getVoicesForAvailableKey, getAvailableVoiceConfig, getPersonaVoiceDisplayName, derivedModeConfiguration } = useAiPersonalEdit();
 
   // 添加 useEffect 来监听 editingScene 的变化
   useEffect(() => {

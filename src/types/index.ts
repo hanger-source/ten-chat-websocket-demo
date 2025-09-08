@@ -47,6 +47,7 @@ export interface ISceneCard {
   selectedVoices?: Record<string, string>; // New: To store dynamically selected voices for the scene
   selectedModelsOptions?: Record<string, Record<string, any>>; // New: To store configurable options for each selected model
   defaultModeValue?: string; // New: To store the default mode associated with this scene
+  selectedModeValue?: string; // New: To store the selected mode associated with this scene
 }
 
 export interface ISceneSetting {

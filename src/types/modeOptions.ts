@@ -19,6 +19,7 @@ export interface IConfigurableOption {
   description: string;
   key: string;
   type: ConfigurableOptionType,
+  defaultValue: any,
   supportModels: string[]
 }
 
@@ -78,4 +79,5 @@ export type ModelCategory =
   | '向量模型'
   | '语音合成'
   | '语音识别'
-  | '排序模型';
+  | '排序模型'
+  | string;

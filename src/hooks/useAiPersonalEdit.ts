@@ -14,6 +14,8 @@ import {
 } from '@/types/modeOptions'; // 导入模式相关的类型
 import {useSelector} from "react-redux";
 import {RootState} from "@/store"; // 导入模式选项数据
+import { useAppDispatch } from '@/common'; // 导入 useAppDispatch
+import { setSelectedGraphId } from '@/store/reducers/global'; // 导入 setSelectedGraphId action
 
 /**
  * Custom hook that provides and manages an editable ISceneCard instance (editingScene) internally.
@@ -28,6 +30,8 @@ export const useAiPersonalEdit = () => {
   const editingSceneAiPersonaName = selectedSceneAiPersonaName;
 
   const modeOptions =  useSelector((state: RootState) => state.global.modeOptions);
+  const graphList = useSelector((state: RootState) => state.global.graphList); // 获取 graphList
+  const dispatch = useAppDispatch(); // 获取 dispatch 函数
 
   // 使用 useLocalStorage 来管理 editingScene (代表临时编辑状态)
   const [editingScene, setEditingScene] = useLocalStorage<ISceneCard>(
@@ -42,7 +46,16 @@ export const useAiPersonalEdit = () => {
     // 将“已保存”场景写入本地存储作为“编辑中”状态，以清除旧的临时编辑
     saveSceneByNameToLocal(savedScene, 'editing');
     setEditingScene(savedScene); // 同时更新当前 state
-  }, [editingSceneAiPersonaName, setEditingScene, modeOptions]);
+
+    // 根据 savedScene 的 selectedModeValue (或 defaultModeValue) 更新 Redux 中的 selectedGraphId
+    const currentModeValue = savedScene.selectedModeValue || savedScene.defaultModeValue;
+    if (currentModeValue) {
+      const selectedGraph = graphList.find(graph => graph.name === currentModeValue);
+      if (selectedGraph) {
+        dispatch(setSelectedGraphId(selectedGraph.uuid));
+      }
+    }
+  }, [editingSceneAiPersonaName, setEditingScene, modeOptions, graphList, dispatch]);
 
   const switchEditingScene = useCallback((aiPersonaName: string) => {
     switchSelectedScene(aiPersonaName);
@@ -58,7 +71,7 @@ export const useAiPersonalEdit = () => {
       saveSceneByNameToLocal(updatedSavedScene, 'editing'); // 更新 editing 状态为 saved 状态
       setEditingScene(updatedSavedScene); // 更新当前 state
     }
-  }, [editingScene, editingSceneAiPersonaName, setEditingScene, setLastSavedTimestamp]); // 添加 setLastSavedTimestamp 作为依赖
+  }, [editingScene, editingSceneAiPersonaName, setEditingScene, setLastSavedTimestamp]); // 移除 graphList 和 dispatch 作为依赖
 
   // --- 更新 editingScene 内部状态的方法 ---
 
@@ -104,15 +117,15 @@ export const useAiPersonalEdit = () => {
     });
   }, [setEditingScene]);
 
-  // --- 模式相关的逻辑：根据 editingScene 的 defaultModeValue 派生 currentMode ---
+  // --- 模式相关的逻辑：根据 editingScene 的 selectedModeValue (或 defaultModeValue) 派生 currentMode ---
   const derivedModeConfiguration: IModeOption | undefined = useMemo(
-    () => modeOptions.find(mode => mode.value === editingScene.defaultModeValue),
-    [editingScene.defaultModeValue]
+    () => modeOptions.find(mode => mode.value === (editingScene.selectedModeValue || editingScene.defaultModeValue)),
+    [editingScene.selectedModeValue, editingScene.defaultModeValue]
   );
 
-  // --- 更新 editingScene 的 defaultModeValue (即更新当前模式) ---
+  // --- 更新 editingScene 的 selectedModeValue (即更新当前模式) ---
   const setEditingSceneMode = useCallback((modeValue: string) => {
-    updateEditingSceneField('defaultModeValue', modeValue);
+    updateEditingSceneField('selectedModeValue', modeValue);
   }, [updateEditingSceneField]);
 
   // --- 从 editingScene 中读取属性的纯函数 ---
@@ -132,9 +145,9 @@ export const useAiPersonalEdit = () => {
     return editingScene.selectedVoices?.[voiceKey] || '未选择';
   }, [editingScene.selectedVoices, editingScene]); // 增加 editingScene.selectedVoices 作为依赖
 
-  const getEditingDefaultModeValue = useCallback((): string => { // 重命名以区分
-    return editingScene.defaultModeValue || '';
-  }, [editingScene.defaultModeValue, editingScene]); // 增加 editingScene.defaultModeValue 作为依赖
+  const getEditingSelectedModeValue = useCallback((): string => {
+    return editingScene.selectedModeValue || editingScene.defaultModeValue || '';
+  }, [editingScene.selectedModeValue, editingScene.defaultModeValue, editingScene]);
 
   // --- 辅助数据获取和派生方法 (基于 editingScene 和 derivedModeConfiguration) ---
 
@@ -214,7 +227,7 @@ export const useAiPersonalEdit = () => {
     getAiResponseGreeting,
     getSelectedModelId,
     getSelectedVoiceId,
-    getEditingDefaultModeValue, // 提供获取模式的方法
+    getEditingSelectedModeValue, // 提供获取模式的方法
     getModelsForAvailableKey,
     getVoicesForAvailableKey,
     getAvailableModelOptions, // Rename this
