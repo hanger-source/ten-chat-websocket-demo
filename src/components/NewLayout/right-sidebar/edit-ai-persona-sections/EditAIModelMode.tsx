@@ -75,13 +75,15 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
           {hasReplaceableModels && (
             <div className="flex flex-col space-y-4">
               {replaceableModels.map((replaceableModel: IReplaceableModelOption) => {
-                const selectedModelName = editingScene?.selectedModels?.[replaceableModel.key] || '未选择';
+                const selectedModelId = editingScene?.selectedModels?.[replaceableModel.key] || '未选择';
+                const selectedModelName = getModelsForAvailableKey(replaceableModel.key).find(model => model.model === selectedModelId)?.name || '未选择';
+                const modelType = replaceableModel.type;
 
                 return (
                   <div key={replaceableModel.key} className="flex items-center justify-between space-x-2">
                     <div>
                       <h4 className="font-semibold mb-1">{replaceableModel.type}：{selectedModelName}</h4>
-                      {getPersonaModelDescription(selectedModelName) && <p className="text-xs text-gray-500">{getPersonaModelDescription(selectedModelName)}</p>}
+                      {getPersonaModelDescription(selectedModelId, modelType) && <p className="text-xs text-gray-500">{getPersonaModelDescription(selectedModelId, modelType)}</p>}
                     </div>
                     <div className="flex flex-col space-y-2">
                     <Button 

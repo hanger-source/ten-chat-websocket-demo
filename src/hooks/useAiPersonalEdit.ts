@@ -146,7 +146,7 @@ export const useAiPersonalEdit = () => {
     if (!availableModelConfig) return [];
     const modelsFromMetadata = derivedModeConfiguration.models || [];
     return modelsFromMetadata.filter((modelOption: ISelectedModelOption) => {
-      return modelOption.type.some((t: ModelCategory) => availableModelConfig.type.includes(t));
+      return modelOption.type.some((t: ModelCategory) => availableModelConfig.type === t);
     });
   }, [derivedModeConfiguration, editingScene]);
 
@@ -165,8 +165,8 @@ export const useAiPersonalEdit = () => {
     return derivedModeConfiguration.metadata.replaceableVoices.find((rv: IReplaceableVoiceOption) => rv.key === voiceKey);
   }, [derivedModeConfiguration, editingScene]);
 
-  const getPersonaModelDescription = useCallback((modelName: string): string => {
-    const metadataModel = derivedModeConfiguration?.models?.find(m => m.model === modelName);
+  const getPersonaModelDescription = useCallback((modelName: string, modelType: ModelCategory): string => {
+    const metadataModel = derivedModeConfiguration?.models?.find(m => m.model === modelName && m.type.includes(modelType));
     return metadataModel?.description || '暂无描述';
   }, [derivedModeConfiguration]);
 

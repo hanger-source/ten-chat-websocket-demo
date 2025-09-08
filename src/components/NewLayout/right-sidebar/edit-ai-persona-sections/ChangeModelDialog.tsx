@@ -24,7 +24,7 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
     setShowModal,
     modelKeyToSelect,
   } = props;
-  const { editingScene, updateEditingSelectedModel, getSelectedModelId, getModelsForAvailableKey, getAvailableModelConfig, getPersonaModelDescription } = useAiPersonalEdit();
+  const { editingScene, updateEditingSelectedModel, getSelectedModelId, getModelsForAvailableKey, getPersonaModelDescription } = useAiPersonalEdit();
   const [activeTab, setActiveTab] = useState<string>('');
   const [hoveredModelId, setHoveredModelId] = useState<string | null>(null);
   const [tempSelectedModelId, setTempSelectedModelId] = useState<string | null>(null);
@@ -138,10 +138,10 @@ const ChangeModelDialog: React.FC<ChangeModelDialogProps> = (props) => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger className="text-left w-full">
-                              <div className="line-clamp-3">{getPersonaModelDescription(model.model)}</div>
+                              <div className="line-clamp-3">{model.description}</div>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs text-wrap break-words">
-                              {getPersonaModelDescription(model.model)}
+                              {model.description}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
