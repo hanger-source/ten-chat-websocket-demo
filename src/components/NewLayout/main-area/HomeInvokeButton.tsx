@@ -11,11 +11,13 @@ const HomeInvokeButton = () => {
   const selectedGraphId = useAppSelector((state) => state.global.selectedGraphId);
   const graphList = useAppSelector((state) => state.global.graphList);
 
-  // 将 loading 状态直接与 sessionState 的 CONNECTING 状态关联
-  const isLoading = sessionState === SessionConnectionState.CONNECTING_SESSION;
+  const [localLoading, setLocalLoading] = useState(false); // 重新引入本地 loading 状态
   const [dots, setDots] = useState('');
 
   const { getSceneSetting } = useSelectedScene();
+
+  // 组合的 isLoading 状态：当本地 loading 为 true 或 sessionState 为 CONNECTING_SESSION 时
+  const isLoading = localLoading || sessionState === SessionConnectionState.CONNECTING_SESSION;
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -33,8 +35,16 @@ const HomeInvokeButton = () => {
     };
   }, [isLoading]); // 依赖于 isLoading
 
+  // 监听 sessionState 变化来重置 localLoading，确保状态同步
+  useEffect(() => {
+    if (localLoading && sessionState !== SessionConnectionState.CONNECTING_SESSION) {
+      // 如果 localLoading 为 true 但 sessionState 已经不是连接中（可能是成功或失败），则重置 localLoading
+      setLocalLoading(false);
+    }
+  }, [sessionState, localLoading]);
+
   const handleClick = async () => {
-    if (isLoading) return; // 连接中时，禁止重复点击
+    if (isLoading) return; // 避免重复点击
 
     if (isConnected) {
       // 已经连接，则断开连接
@@ -42,28 +52,31 @@ const HomeInvokeButton = () => {
         await stopSession();
       } catch (error) {
         console.error("Error stopping session:", error);
-        toast.error("断开连接失败");
+        // toast.error("断开连接失败"); // 由 useWebSocketEvents 统一处理
       }
     } else {
       // 未连接，则开始会话
-      const selectedGraph = graphList.find(
-        (graph) => graph.uuid === selectedGraphId,
-      );
-      if (!selectedGraph) {
-        toast.error("请先选择一个图");
-        return;
-      }
-      const latestSettings = getSceneSetting();
-      if (!latestSettings) {
-        toast.error("获取场景设置失败，请检查。");
-        return;
-      }
+      setLocalLoading(true); // 立即设置为本地 loading 状态
       try {
+        const selectedGraph = graphList.find(
+          (graph) => graph.uuid === selectedGraphId,
+        );
+        if (!selectedGraph) {
+          // toast.error("请先选择一个图"); // 由 useWebSocketEvents 统一处理
+          return;
+        }
+        const latestSettings = getSceneSetting();
+        if (!latestSettings) {
+          // toast.error("获取场景设置失败，请检查。"); // 由 useWebSocketEvents 统一处理
+          return;
+        }
         await webSocketManager.connect(); // 确保 WebSocket 已连接
         await startSession(latestSettings);
       } catch (error) {
         console.error("Error starting session:", error);
-        toast.error("AI 连接或启动失败");
+        // toast.error("AI 连接或启动失败"); // 由 useWebSocketEvents 统一处理
+      } finally {
+        setLocalLoading(false); // 无论成功或失败，都在最后重置本地 loading
       }
     }
   };
