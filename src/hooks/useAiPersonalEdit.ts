@@ -126,7 +126,29 @@ export const useAiPersonalEdit = () => {
   // --- 更新 editingScene 的 selectedModeValue (即更新当前模式) ---
   const setEditingSceneMode = useCallback((modeValue: string) => {
     updateEditingSceneField('selectedModeValue', modeValue);
-  }, [updateEditingSceneField]);
+
+    setEditingScene(prevEditingScene => {
+      const newScene = { ...prevEditingScene, selectedModeValue: modeValue };
+      const currentModeConfiguration = modeOptions.find(mode => mode.value === (newScene.selectedModeValue || newScene.defaultModeValue));
+
+      // 重新初始化 selectedModelsOptions 以反映新模式的默认配置
+      const newSelectedModelsOptions: Record<string, Record<string, any>> = {};
+      if (currentModeConfiguration?.metadata?.replaceableModels) {
+        currentModeConfiguration.metadata.replaceableModels.forEach(rm => {
+          if (rm.configurableOptions && rm.configurableOptions.length > 0) {
+            newSelectedModelsOptions[rm.key] = {};
+            rm.configurableOptions.forEach(option => {
+              if (option.defaultValue !== undefined) {
+                newSelectedModelsOptions[rm.key][option.key] = option.defaultValue;
+              }
+            });
+          }
+        });
+      }
+
+      return { ...newScene, selectedModelsOptions: newSelectedModelsOptions };
+    });
+  }, [updateEditingSceneField, modeOptions, setEditingScene]);
 
   // --- 从 editingScene 中读取属性的纯函数 ---
   const getPrompt = useCallback((): string => {

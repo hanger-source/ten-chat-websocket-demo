@@ -79,6 +79,22 @@ export const loadSceneByNameFromLocal = (aiPersonaName: string, type: 'editing' 
       });
     }
 
+    // Initialize selectedModelsOptions with default configurable options if missing
+    if (Object.keys(sceneToReturn.selectedModelsOptions || {}).length === 0 && currentModeConfiguration?.metadata?.replaceableModels) {
+      const defaultModelOptions: Record<string, Record<string, any>> = {};
+      currentModeConfiguration.metadata.replaceableModels.forEach((rm: IReplaceableModelOption) => {
+        if (rm.configurableOptions && rm.configurableOptions.length > 0) {
+          defaultModelOptions[rm.key] = {};
+          rm.configurableOptions.forEach(option => {
+            if (option.defaultValue !== undefined) {
+              defaultModelOptions[rm.key][option.key] = option.defaultValue;
+            }
+          });
+        }
+      });
+      sceneToReturn.selectedModelsOptions = defaultModelOptions;
+    }
+
     return sceneToReturn;
   } catch (error) {
     console.error(`Error loading scene '${aiPersonaName}' (${type}) from local storage:`, error);
