@@ -70,8 +70,17 @@ export const useAiPersonalEdit = () => {
       const updatedSavedScene = loadSceneByNameFromLocal(editingSceneAiPersonaName, 'saved');
       saveSceneByNameToLocal(updatedSavedScene, 'editing'); // 更新 editing 状态为 saved 状态
       setEditingScene(updatedSavedScene); // 更新当前 state
+
+      // 手动保存后，根据 updatedSavedScene 的 selectedModeValue 更新 Redux 中的 selectedGraphId
+      const currentModeValue = updatedSavedScene.selectedModeValue || updatedSavedScene.defaultModeValue;
+      if (currentModeValue) {
+        const selectedGraph = graphList.find(graph => graph.name === currentModeValue);
+        if (selectedGraph) {
+          dispatch(setSelectedGraphId(selectedGraph.uuid));
+        }
+      }
     }
-  }, [editingScene, editingSceneAiPersonaName, setEditingScene, setLastSavedTimestamp]); // 移除 graphList 和 dispatch 作为依赖
+  }, [editingScene, editingSceneAiPersonaName, setEditingScene, setLastSavedTimestamp, graphList, dispatch]);
 
   // --- 更新 editingScene 内部状态的方法 ---
 

@@ -11,17 +11,15 @@ const HomeInvokeButton = () => {
   const selectedGraphId = useAppSelector((state) => state.global.selectedGraphId);
   const graphList = useAppSelector((state) => state.global.graphList);
 
-  const [loading, setLoading] = useState(false);
+  // 将 loading 状态直接与 sessionState 的 CONNECTING 状态关联
+  const isLoading = sessionState === SessionConnectionState.CONNECTING_SESSION;
   const [dots, setDots] = useState('');
 
   const { getSceneSetting } = useSelectedScene();
 
-  // Use isConnected from useWebSocketSession for the button's connecting state
-  // const isConnecting = loading || isConnected; // Button is 'connecting' if actively loading or already connected
-
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
-    if (loading) { // Only show dots when actively loading
+    if (isLoading) { // 只有在连接中时才显示点点点动画
       interval = setInterval(() => {
         setDots(prev => (prev.length < 3 ? prev + '.' : ''));
       }, 500);
@@ -33,32 +31,13 @@ const HomeInvokeButton = () => {
         clearInterval(interval);
       }
     };
-  }, [loading]); // Depend on loading only for dots
-
-  // Add an effect to reset loading when connection status changes
-  useEffect(() => {
-    // console.log("HomeInvokeButton: useEffect triggered. Current loading:", loading, "isConnected:", isConnected, "sessionState:", sessionState);
-    if (loading && isConnected) {
-      setLoading(false);
-      // toast.success("AI 连接成功！"); // Removed: Handled by useWebSocketSession
-    } else if (loading && !isConnected && sessionState === SessionConnectionState.IDLE) {
-      // This means a start attempt failed, and session is back to IDLE
-      setLoading(false);
-      // A specific error toast for connection failure is handled in useWebSocketSession
-    }
-  }, [isConnected, loading, sessionState]);
+  }, [isLoading]); // 依赖于 isLoading
 
   const handleClick = async () => {
-    // console.log("HomeInvokeButton: handleClick called. Current loading:", loading, "isConnected:", isConnected);
-    if (loading) return; // Prevent multiple clicks while loading
-
-    // Only set loading to true when trying to connect
-    if (!isConnected) {
-      setLoading(true);
-    }
+    if (isLoading) return; // 连接中时，禁止重复点击
 
     if (isConnected) {
-      // Already connected, so disconnect
+      // 已经连接，则断开连接
       try {
         await stopSession();
       } catch (error) {
@@ -66,39 +45,34 @@ const HomeInvokeButton = () => {
         toast.error("断开连接失败");
       }
     } else {
-      // Not connected, so start session
+      // 未连接，则开始会话
       const selectedGraph = graphList.find(
         (graph) => graph.uuid === selectedGraphId,
       );
       if (!selectedGraph) {
         toast.error("请先选择一个图");
-        setLoading(false);
         return;
       }
       const latestSettings = getSceneSetting();
       if (!latestSettings) {
         toast.error("获取场景设置失败，请检查。");
-        setLoading(false);
         return;
       }
       try {
-        await webSocketManager.connect(); // Ensure WebSocket is connected
+        await webSocketManager.connect(); // 确保 WebSocket 已连接
         await startSession(latestSettings);
-        // setLoading(false); // Removed: Handled by useEffect now
       } catch (error) {
         console.error("Error starting session:", error);
         toast.error("AI 连接或启动失败");
-        setLoading(false); // Keep this here for immediate errors before session state update
       }
     }
-    // setLoading(false); // Removed: Handled by useEffect now
   };
 
   return (
     <div className="mt-8 flex flex-col items-center">
       <button
         className={`w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-red-500 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow 
-          ${isConnected || loading ? 'animate-glow-pulse' : 'hover:animate-glow-pulse'}`}
+          ${isConnected || isLoading ? 'animate-glow-pulse' : 'hover:animate-glow-pulse'}`}
         onClick={handleClick}
       >
         {/* SVG Icon */}
@@ -109,7 +83,7 @@ const HomeInvokeButton = () => {
         </svg>
       </button>
       <span className="mt-2 text-lg font-semibold text-gray-800">
-        {isConnected ? '停止通话' : loading ? `连接中${dots}` : '开始通话'}
+        {isConnected ? '停止通话' : isLoading ? `连接中${dots}` : '开始通话'}
       </span>
     </div>
   );
