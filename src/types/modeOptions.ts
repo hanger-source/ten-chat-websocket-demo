@@ -7,6 +7,7 @@ export interface IModeOption {
   metadata?: IModeMetadata; // New: To store mode-specific metadata
   models?: ISelectedModelOption[];
   voices?: ISelectedVoiceOption[];
+  doc_url?: string;
 }
 
 export interface IModeMetadata {

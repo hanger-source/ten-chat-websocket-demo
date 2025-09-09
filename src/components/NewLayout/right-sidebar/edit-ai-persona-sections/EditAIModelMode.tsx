@@ -23,6 +23,10 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
   // 从 Redux store 获取 modeOptions
   const modeOptions = useAppSelector((state: RootState) => state.global.modeOptions);
 
+  const currentSelectedModeValue = getEditingSelectedModeValue();
+  const currentMode = modeOptions.find(mode => mode.value === currentSelectedModeValue);
+  const currentModeDocUrl = currentMode?.doc_url;
+
   // 添加 useEffect 来监听 editingScene 的变化
   useEffect(() => {
     // 这里不需要更新内部状态，因为模型和模式信息都直接从 editingScene 派生
@@ -67,7 +71,7 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
                 }`
               }
             >
-              {mode.name}
+              {mode.name} 
             </div>
           ))}
         </div>
@@ -117,6 +121,18 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
             </div>
           )}
         </div>
+        {currentModeDocUrl && (
+          <div className="mt-4 pt-4 border-t border-gray-200 text-gray-500 text-base block break-all text-right">
+            <a
+              href={currentModeDocUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              查看操作手册
+            </a>
+          </div>
+        )}
       </div>
 
       <ChangeModelDialog
@@ -129,6 +145,7 @@ const EditAIModelMode: React.FC<EditAIModelModeProps> = ({ className }) => {
         setShowModal={setShowConfigModal}
         modelKeyToConfig={modelKeyToConfig}
       />
+
     </div>
   );
 };
