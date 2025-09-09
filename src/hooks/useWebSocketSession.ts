@@ -121,6 +121,14 @@ export const useWebSocketSession = (): UseWebSocketSessionResult => {
       toast.error("无法启动 AI：WebSocket 未连接或 AI 已激活");
       return;
     }
+
+    // 确保 AudioManager 已初始化
+    await audioManager.init();
+    if (!audioManager.getIsInitialized()) {
+      toast.error("音频管理器初始化失败，无法启动音频流。");
+      throw new Error("AudioManager failed to initialize.");
+    }
+
     webSocketManager.sendCommand(CommandType.START_GRAPH, {
       ...defaultLocation,
       graph_id: selectedGraph.uuid,

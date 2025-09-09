@@ -18,6 +18,7 @@ class AudioManager {
   private mediaStream: MediaStream | null = null;
   private isInitialized = false;
   private _isInitializing = false; // 新增：防止在初始化过程中被意外关闭
+  private _initPromise: Promise<void> | null = null; // 新增：缓存初始化Promise，防止竞态条件
   private inputMessageHandlers: ((message: AudioWorkletProcessorMessage) => void)[] = [];
   private outputMessageHandlers: ((message: AudioWorkletProcessorMessage) => void)[] = [];
 
@@ -31,57 +32,55 @@ class AudioManager {
   }
 
   public async init(): Promise<void> {
-    if (this.isInitialized || this._isInitializing) {
-      console.log("AudioManager already initialized or initializing.");
-      return;
+    if (this._initPromise) {
+      return this._initPromise;
     }
 
-    this._isInitializing = true; // 开始初始化
-
-    try {
-      console.log("AudioManager: Attempting to create AudioContext...");
-      const currentAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 48000 });
-      this.audioContext = currentAudioContext;
-      
-      if (!this.audioContext) {
-        throw new Error("AudioContext failed to initialize (instance is null).");
-      }
-      console.log("AudioManager: AudioContext created. State:", this.audioContext.state);
-
-      if (this.audioContext.state === 'suspended') {
-        console.log("AudioManager: AudioContext is suspended, attempting to resume...");
-        await this.audioContext.resume();
-        console.log("AudioManager: AudioContext resumed. State:", this.audioContext.state);
-      }
-
-      if (!this.audioContext.audioWorklet) {
-        throw new Error("AudioContext does not support audioWorklet.");
-      }
-      console.log("AudioManager: AudioWorklet property found on AudioContext.");
-
-      await this.audioContext.audioWorklet.addModule(audioInputProcessorUrl);
-      console.log("AudioManager: AudioInputProcessor module added.");
-
-      if (!this.audioContext) {
-        throw new Error("AudioContext became null after adding AudioInputProcessor module.");
-      }
-
-      await this.audioContext.audioWorklet.addModule(audioPlayerProcessorUrl);
-      console.log("AudioManager: AudioPlayerProcessor module added.");
-
-      this.isInitialized = true;
-      console.log("AudioManager initialized successfully.");
-    } catch (error) {
-      console.error("Failed to initialize AudioManager:", error);
-      this.isInitialized = false;
-      if (this.audioContext && this.audioContext.state !== 'closed') {
-        this.audioContext.close().catch(console.error);
-      }
-      this.audioContext = null;
-      throw error;
-    } finally {
-      this._isInitializing = false; // 无论成功或失败，结束初始化
+    if (this.isInitialized) {
+      return Promise.resolve();
     }
+
+    this._initPromise = new Promise<void>(async (resolve, reject) => {
+      this._isInitializing = true; // 开始初始化
+      try {
+        const currentAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 48000 });
+        this.audioContext = currentAudioContext;
+        
+        if (!this.audioContext) {
+          console.error("AudioContext is null after creation attempt.");
+          throw new Error("AudioContext failed to initialize (instance is null).");
+        }
+        if (this.audioContext.state === 'suspended') { 
+          await this.audioContext.resume();
+        }
+
+        if (!this.audioContext.audioWorklet) {
+          console.error("AudioContext does not support audioWorklet property.");
+          throw new Error("AudioContext does not support audioWorklet.");
+        }
+        await this.audioContext.audioWorklet.addModule(audioInputProcessorUrl);      
+        if (!this.audioContext) {
+          console.error("AudioContext became null after adding AudioInputProcessor module.");
+          throw new Error("AudioContext became null after adding AudioInputProcessor module.");
+        }
+
+        await this.audioContext.audioWorklet.addModule(audioPlayerProcessorUrl);
+        this.isInitialized = true;
+        resolve(); // 初始化成功，解析 Promise
+      } catch (error: any) {
+        console.error("Failed to initialize AudioManager. Details:", error?.message || error);
+        this.isInitialized = false;
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+          this.audioContext.close().catch(console.error);
+        }
+        this.audioContext = null;
+        reject(error); // 初始化失败，拒绝 Promise
+      } finally {
+        this._isInitializing = false; // 无论成功或失败，结束初始化
+        this._initPromise = null; // 清除 Promise，允许下次重新初始化
+      }
+    });
+    return this._initPromise;
   }
 
   public async startMicrophoneStream(stream: MediaStream): Promise<void> {
@@ -148,7 +147,7 @@ class AudioManager {
       this.outputWorkletNode.disconnect();
       this.outputWorkletNode = null;
     }
-    console.log("Audio playback stopped.");
+    
   }
 
   public onInputMessage(handler: (message: AudioWorkletProcessorMessage) => void): () => void {
@@ -184,7 +183,7 @@ class AudioManager {
       this.stopMicrophoneStream();
       this.stopAudioPlayback();
       this.audioContext.close().then(() => {
-        console.log("AudioManager AudioContext closed.");
+        
         this.audioContext = null;
         this.isInitialized = false;
       }).catch(error => {

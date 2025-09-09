@@ -142,6 +142,12 @@ export const useUserMicrophoneStream = ({ defaultLocation, sessionState}: UseUse
     }
 
     try {
+      // 确保 AudioManager 已初始化
+      await audioManager.init();
+      if (!audioManager.getIsInitialized()) {
+        throw new Error("AudioManager failed to initialize.");
+      }
+
       setMicPermission('pending');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
