@@ -104,7 +104,7 @@ const ConfigModelOptionDialog: React.FC<ConfigModelOptionDialogProps> = ({ showM
               href={value}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-500 hover:underline cursor-pointer text-base"
+              className="text-blue-500 hover:underline cursor-pointer text-base block break-all"
             >
               {value}
             </a>
