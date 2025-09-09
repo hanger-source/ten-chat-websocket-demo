@@ -166,21 +166,22 @@ export default function ChatCard(props: { className?: string }) {
       }
     });
 
-    const unsubscribeCmdResult = webSocketManager.onMessage(MessageType.CMD_RESULT, (message: Message) => { // Explicitly typed message
-      // ChatCard no longer manages its own session state, rely on Home via useWebSocketSession
-      // This handler can still be used for displaying toasts related to command results if needed
-      console.log('ChatCard: 收到命令结果 (via onMessage):', message);
-      const commandResult = message as CommandResult; // Explicit type assertion
-      if (!commandResult.success && commandResult.errorMessage) {
-        toast.error(commandResult.errorMessage, { duration: 5 });
-      } else if (commandResult.success && commandResult.detail) {
-        // toast.success(commandResult.detail, { duration: 5 });
-      } else if (commandResult.success) {
-        toast.success('命令执行成功！', { duration: 5 });
-      } else {
-        toast.error('命令执行失败！', { duration: 5 });
-      }
-    });
+    // 使用 useEffect 监听 WebSocket 消息，并根据命令结果显示 toast
+    React.useEffect(() => {
+      const unsubscribeCmdResult = webSocketManager.onMessage(MessageType.CMD_RESULT, (message: Message) => {
+        console.log('ChatCard: 收到命令结果 (via onMessage):', message);
+        const commandResult = message as CommandResult; // Explicit type assertion
+        if (commandResult.status_code === 0) {
+          toast.success(`命令 ${commandResult.original_cmd_name} 执行成功！`, { duration: 5 });
+        } else {
+          toast.error(`命令 ${commandResult.original_cmd_name} 执行失败: ${commandResult.properties?.error_message || `状态码 ${commandResult.status_code}`}`, { duration: 5 });
+        }
+      });
+
+      return () => {
+        unsubscribeCmdResult();
+      };
+    }, []);
 
     // Removed subscription to command send events, rely on Home for session state
     // Removed initial connection attempt
@@ -188,7 +189,6 @@ export default function ChatCard(props: { className?: string }) {
     // 清理函数
     return () => {
       unsubscribeData();
-      unsubscribeCmdResult();
     };
   }, []);
 

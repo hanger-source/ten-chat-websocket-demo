@@ -17,7 +17,7 @@ import {EMessageType, ITextMessage} from '@/types/chat'; // 导入 EMessageType 
 import {SessionConnectionState} from '@/types/websocket'; // 导入 SessionConnectionState
 import {useWebSocketSession} from '@/hooks/useWebSocketSession'; // 导入 useWebSocketSession
 import AIAudioControls from './AIAudioControls';
-import {CommandType} from "@/types/message"; // 导入 AIAudioControls
+import {CommandResult, CommandType} from "@/types/message"; // 导入 CommandResult, CommandType, Message
 
 interface HomeMainChatProps {
   className?: string;
@@ -38,7 +38,34 @@ const HomeMainChat = ({ className }: HomeMainChatProps) => {
   const { sessionState, defaultLocation, sendCommand} = useWebSocketSession(); // 从 useWebSocketSession 获取 sessionState、defaultLocation、activeAppUri 和 activeGraphId
   // 将 processAudioFrame 直接作为回调传递给 useAudioFrameReceiver
   useAudioFrameReceiver({ onFrameData: processAudioFrame });
-  useWebSocketEvents();
+
+  // 定义自定义的命令结果处理函数，返回 toast 消息字符串
+  const customCommandResultProcessed = useCallback((commandResult: CommandResult): string | undefined | null => {
+    const commandName = commandResult.original_cmd_name || commandResult.original_cmd_type;
+    const errorMessage = commandResult.properties?.error_message || `状态码 ${commandResult.status_code}`;
+
+    if (commandResult.status_code === 0) {
+      switch (commandResult.original_cmd_type) {
+        case CommandType.START_GRAPH:
+          return `通话已连接！`;
+        case CommandType.STOP_GRAPH:
+          return `通话已结束！`;
+        default:
+          return `命令 ${commandName} 执行成功！`;
+      }
+    } else {
+      switch (commandResult.original_cmd_type) {
+        case CommandType.START_GRAPH:
+          return `连接通话失败: ${errorMessage}`;
+        case CommandType.STOP_GRAPH:
+          return `结束通话失败: ${errorMessage}`;
+        default:
+          return `命令 ${commandName} 执行失败: ${errorMessage}`;
+      }
+    }
+  }, []);
+
+  useWebSocketEvents(CommandType.START_GRAPH, customCommandResultProcessed); // 传入 cmdName (undefined 表示不过滤) 和自定义回调
   const { selectedScene } = useSelectedScene(); // 获取 selectedScene
   const aiAvatarUrl = selectedScene?.iconSrc; // 提取 AI 头像 URL
   const aiPersonaName = selectedScene?.aiPersonaName; // 提取 AI 角色名称
