@@ -35,14 +35,6 @@ const HomeInvokeButton = () => {
     };
   }, [isLoading]); // 依赖于 isLoading
 
-  // 监听 sessionState 变化来重置 localLoading，确保状态同步
-  useEffect(() => {
-    if (localLoading && sessionState !== SessionConnectionState.CONNECTING_SESSION) {
-      // 如果 localLoading 为 true 但 sessionState 已经不是连接中（可能是成功或失败），则重置 localLoading
-      setLocalLoading(false);
-    }
-  }, [sessionState, localLoading]);
-
   const handleClick = async () => {
     if (isLoading) return; // 避免重复点击
 
