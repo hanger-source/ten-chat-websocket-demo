@@ -87,6 +87,12 @@ export const useChatMessages = (): UseChatMessagesReturn => {
             const newMessages = [...prevMessages];
             let lastMessage = newMessages[newMessages.length - 1];
 
+            // 如果新消息的 group_timestamp 存在且小于最后一条消息的 group_timestamp，则直接丢弃
+            if (parsedMessage.group_timestamp && lastMessage && lastMessage.group_timestamp && parsedMessage.group_timestamp < lastMessage.group_timestamp) {
+                console.log(`[ChatMessage] 丢弃旧消息片段 (group_timestamp: ${parsedMessage.group_timestamp})，当前最新消息的 group_timestamp 为 ${lastMessage.group_timestamp}`);
+                return newMessages;
+            }
+
             // ASR Result Handling: Update the latest AI text/image message
             if (parsedMessage.type === 'asr_result' && parsedMessage.payload.asrText) {
                 const asrText = parsedMessage.payload.asrText;

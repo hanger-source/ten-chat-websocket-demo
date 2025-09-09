@@ -26,8 +26,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      voice_name: 'longxiaochun_v2',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhiya-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -52,8 +52,8 @@ export const sceneCards: ISceneCard[] = [
       },
     },
     selectedVoices: {
-      voice_name: 'longjielidou_v2',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhiying-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -73,8 +73,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      voice_name: 'longfeifei_v2',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhistella-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -94,8 +94,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-ocr',
     },
     selectedVoices: {
-      voice_name: 'longjin_v2',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhiming-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -115,8 +115,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      voice_name: 'longnan_v2',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhiye-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -136,8 +136,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      voice_name: 'longshuo_v2',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhixiang-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },
@@ -157,8 +157,8 @@ export const sceneCards: ISceneCard[] = [
       vision_model: 'qwen-vl-max',
     },
     selectedVoices: {
-      voice_name: 'longyingyan',
-      voice_model: 'cosy_voice'
+      voice_name: 'sambert-zhiyue-v1',
+      voice_model: 'sambert'
     },
     defaultModeValue: STANDARD_DIALOGUE_MODE_VALUE, // Set default mode for this scene
   },

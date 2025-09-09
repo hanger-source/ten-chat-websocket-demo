@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input'; // Import Input component
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea component
 import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox component
 import { Label } from '@/components/ui/label'; // Import Label component
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react'; // Import Info icon
 import { IConfigurableOption, ConfigurableOptionType } from '@/types/modeOptions';
 import { useAiPersonalEdit } from '../../../../hooks/useAiPersonalEdit';
 
@@ -62,18 +64,20 @@ const ConfigModelOptionDialog: React.FC<ConfigModelOptionDialogProps> = ({ showM
         return (
           <Input
             type="text"
-            value={value}
+            value={option.readOnly && !value ? option.description : value} // Display description if readOnly and value is empty
             onChange={(e) => handleInputChange(option.key, e.target.value)}
             placeholder={option.description}
+            readOnly={option.readOnly} // Add readOnly attribute
           />
         );
       case 'number':
         return (
           <Input
             type="number"
-            value={value}
+            value={option.readOnly && !value ? option.description : value} // Display description if readOnly and value is empty
             onChange={(e) => handleInputChange(option.key, e.target.value)}
             placeholder={option.description}
+            readOnly={option.readOnly} // Add readOnly attribute
           />
         );
       case 'boolean':
@@ -81,15 +85,38 @@ const ConfigModelOptionDialog: React.FC<ConfigModelOptionDialogProps> = ({ showM
           <Checkbox
             checked={value}
             onCheckedChange={(checked) => handleInputChange(option.key, checked)}
+            disabled={option.readOnly} // Use disabled for Checkbox
           />
         );
       case 'textarea':
         return (
           <Textarea
-            value={value}
+            value={option.readOnly && !value ? option.description : value} // Display description if readOnly and value is empty
             onChange={(e) => handleInputChange(option.key, e.target.value)}
             placeholder={option.description}
+            readOnly={option.readOnly} // Add readOnly attribute
           />
+        );
+      case 'link': // Add new case for 'link' type
+        return (
+          option.readOnly && value ? (
+            <a 
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline cursor-pointer text-base"
+            >
+              {value}
+            </a>
+          ) : (
+            <Input
+              type="url" // Use type="url" for link inputs
+              value={option.readOnly && !value ? option.description : value} // Display description if readOnly and value is empty
+              onChange={(e) => handleInputChange(option.key, e.target.value)}
+              placeholder={option.description}
+              readOnly={option.readOnly} // Add readOnly attribute
+            />
+          )
         );
       // Add more cases for other types if needed (e.g., 'select')
       default:
@@ -113,7 +140,21 @@ const ConfigModelOptionDialog: React.FC<ConfigModelOptionDialogProps> = ({ showM
           ) : (
             configurableOptions.map(option => (
               <div key={option.key} className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor={option.key} className="">{option.name}</Label>
+                <Label htmlFor={option.key} className="flex items-center space-x-1">
+                  <span>{option.name}</span>
+                  {option.description && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{option.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </Label>
                 <div className="col-span-3">
                   {renderFormElement(option)}
                 </div>

@@ -20,7 +20,8 @@ export interface IConfigurableOption {
   key: string;
   type: ConfigurableOptionType,
   defaultValue: any,
-  supportModels: string[]
+  supportModels: string[],
+  readOnly?: boolean; // Add readOnly property, optional and defaults to false
 }
 
 export interface ISelectedModelOption {
@@ -62,7 +63,8 @@ export type ConfigurableOptionType =
   | 'number'
   | 'boolean'
   | 'select'
-  | 'textarea';
+  | 'textarea'
+  | 'link';
 
 export const configurableOptions: IConfigurableOption[] = [];
 
