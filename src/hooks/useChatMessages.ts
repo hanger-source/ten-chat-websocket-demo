@@ -35,6 +35,7 @@ const isUnknownMessage = (message: IChatMessage): message is IUnknownMessage => 
 export const useChatMessages = (): UseChatMessagesReturn => {
     const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
     const lastAsrRequestIdRef = useRef<string | undefined>(undefined); // 新增：用于跟踪当前正在处理的 ASR 请求的 ID
+    const lastMessageTimestamps = useRef<Map<EMessageType | string, number>>(new Map()); // 新增：存储每种消息类型的最新 group_timestamp
     const { isPlaying } = useAudioPlayer(); // <-- 从 useAudioPlayer 获取 isPlaying 状态
 
     // 定义处理 FLUSH 命令的回调函数
@@ -85,11 +86,14 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
         setChatMessages(prevMessages => {
             const newMessages = [...prevMessages];
-            let lastMessage = newMessages[newMessages.length - 1];
+            // let lastMessage = newMessages[newMessages.length - 1]; // 移除此行，因为我们将按类型查找最后一条消息
 
-            // 如果新消息的 group_timestamp 存在且小于最后一条消息的 group_timestamp，则直接丢弃
-            if (parsedMessage.group_timestamp && lastMessage && lastMessage.group_timestamp && parsedMessage.group_timestamp < lastMessage.group_timestamp) {
-                console.log(`[ChatMessage] 丢弃旧消息片段 (group_timestamp: ${parsedMessage.group_timestamp})，当前最新消息的 group_timestamp 为 ${lastMessage.group_timestamp}`);
+            // 获取当前消息类型对应的最新 group_timestamp
+            const lastTimestampForType = lastMessageTimestamps.current.get(parsedMessage.type);
+
+            // 如果新消息的 group_timestamp 存在且小于该类型对应的最新 group_timestamp，则直接丢弃
+            if (parsedMessage.group_timestamp && lastTimestampForType && parsedMessage.group_timestamp < lastTimestampForType) {
+                console.log(`[ChatMessage] 丢弃旧消息片段 (type: ${parsedMessage.type}, group_timestamp: ${parsedMessage.group_timestamp})，当前最新消息的 group_timestamp 为 ${lastTimestampForType}`);
                 return newMessages;
             }
 
@@ -135,6 +139,10 @@ export const useChatMessages = (): UseChatMessagesReturn => {
                         }
                     } else {
                     }
+                    // 更新该类型消息的最新 group_timestamp
+                    if (parsedMessage.group_timestamp) {
+                        lastMessageTimestamps.current.set(parsedMessage.type, parsedMessage.group_timestamp);
+                    }
                     return newMessages;
                 } else { // 如果没有找到匹配的消息，无论是中间结果还是最终结果，都添加为新消息
                     const newAsrMessage: ITextMessage = { // 使用 ITextMessage 因为它是文本内容
@@ -151,6 +159,10 @@ export const useChatMessages = (): UseChatMessagesReturn => {
                     if (isFinalAsr) {
                         lastAsrRequestIdRef.current = undefined;
                     }
+                    // 更新该类型消息的最新 group_timestamp
+                    if (parsedMessage.group_timestamp) {
+                        lastMessageTimestamps.current.set(parsedMessage.type, parsedMessage.group_timestamp);
+                    }
                     return newMessages;
                 }
 
@@ -158,28 +170,38 @@ export const useChatMessages = (): UseChatMessagesReturn => {
 
             // Grouping logic for text/image messages
             const currentGroupTimestamp = parsedMessage.group_timestamp;
+            const lastMessageOfType = newMessages.findLast(msg => msg.type === parsedMessage.type && msg.role === parsedMessage.role);
 
             // 检查是否是当前消息组的延续，并且类型匹配，且不是片段的结束
-            const isContinuationOfText = lastMessage &&
-                                         lastMessage.type === 'text' &&
+            const isContinuationOfText = lastMessageOfType &&
+                                         lastMessageOfType.type === 'text' &&
                                          parsedMessage.type === 'text' &&
-                                         lastMessage.group_timestamp === currentGroupTimestamp &&
-                                         (lastMessage.role === parsedMessage.role);
+                                         lastMessageOfType.group_timestamp === currentGroupTimestamp &&
+                                         (lastMessageOfType.role === parsedMessage.role);
 
             // 如果是文本消息的延续，则追加文本
             if (isContinuationOfText) {
-                newMessages[newMessages.length - 1] = {
-                    ...(lastMessage as ITextMessage),
+                const lastMessageIndex = newMessages.lastIndexOf(lastMessageOfType);
+                newMessages[lastMessageIndex] = {
+                    ...(lastMessageOfType as ITextMessage),
                     payload: {
-                        ...(lastMessage as ITextMessage).payload,
-                        text: ((lastMessage as ITextMessage).payload.text || '') + (parsedMessage.payload.text || '')
+                        ...(lastMessageOfType as ITextMessage).payload,
+                        text: ((lastMessageOfType as ITextMessage).payload.text || '') + (parsedMessage.payload.text || '')
                     }
                 };
+                // 更新该类型消息的最新 group_timestamp
+                if (parsedMessage.group_timestamp) {
+                    lastMessageTimestamps.current.set(parsedMessage.type, parsedMessage.group_timestamp);
+                }
                 return newMessages;
             }
 
             // 否则，添加为新消息
             newMessages.push(parsedMessage);
+            // 更新该类型消息的最新 group_timestamp
+            if (parsedMessage.group_timestamp) {
+                lastMessageTimestamps.current.set(parsedMessage.type, parsedMessage.group_timestamp);
+            }
             // 如果是新的 AI 文本或图片消息，跟踪其 ID 以便可能的 ASR 更新
             if ((parsedMessage.type === 'text' || parsedMessage.type === 'image') && (parsedMessage.role === EMessageType.AGENT || parsedMessage.role === EMessageType.ASSISTANT)) {
                 // lastAiMessageIdRef.current = parsedMessage.id; // This line is removed
