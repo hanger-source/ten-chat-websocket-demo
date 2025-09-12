@@ -14,7 +14,9 @@ const NoiseReductionSetting: React.FC = () => {
   return (
     <div className="flex items-center justify-between py-2">
       <div>
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">环境音降噪</h3>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">环境音降噪
+          <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">Beta</span>
+        </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">开启后可减少环境噪音干扰</p>
       </div>
       <label htmlFor="noise-reduction-toggle" className="flex items-center cursor-pointer">
