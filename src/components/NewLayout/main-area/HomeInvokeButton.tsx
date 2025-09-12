@@ -5,6 +5,7 @@ import { webSocketManager } from "@/manager/websocket/websocket";
 import { toast } from 'sonner';
 import { useAppSelector } from "@/common";
 import { SessionConnectionState } from "@/types/websocket";
+import { getGlobalSettings } from "@/hooks/useGlobalSettings"; // 导入 getGlobalSettings
 
 const HomeInvokeButton = () => {
   const { isConnected, startSession, stopSession, sessionState } = useWebSocketSession();
@@ -62,8 +63,13 @@ const HomeInvokeButton = () => {
           // toast.error("获取场景设置失败，请检查。"); // 由 useWebSocketEvents 统一处理
           return;
         }
+        // 获取全局设置
+        const globalSettings = getGlobalSettings();
+        // 合并全局设置到 latestSettings
+        const mergedSettings = { ...latestSettings, ...globalSettings };
+
         await webSocketManager.connect(); // 确保 WebSocket 已连接
-        await startSession(latestSettings);
+        await startSession(mergedSettings); // 传递合并后的设置
       } catch (error) {
         console.error("Error starting session:", error);
         // toast.error("AI 连接或启动失败"); // 由 useWebSocketEvents 统一处理

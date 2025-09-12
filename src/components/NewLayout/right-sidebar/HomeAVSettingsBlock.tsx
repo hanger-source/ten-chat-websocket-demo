@@ -1,6 +1,7 @@
 import React from 'react';
 import MicSettingsBlock from "./MicSettingsBlock"; // 导入 MicSettingsBlock
 import CamSettingsBlock from "./CamSettingsBlock"; // 导入 CamSettingsBlock
+import NoiseReductionSetting from "./NoiseReductionSetting"; // 导入 NoiseReductionSetting
 import { useWebSocketSession } from "@/hooks/useWebSocketSession"; // 导入 useWebSocketSession
 import { cn } from '@/lib/utils'; // 导入 cn 工具函数
 
@@ -21,6 +22,12 @@ const HomeAVSettingsBlock = () => {
 
       {/* 摄像头设置 */}
       <CamSettingsBlock disabled={isConnected} />
+
+      {/* 分隔线 */}
+      <div className="border-b border-gray-200 my-4"></div>
+
+      {/* 环境音降噪设置 */}
+      <NoiseReductionSetting />
     </div>
   );
 };

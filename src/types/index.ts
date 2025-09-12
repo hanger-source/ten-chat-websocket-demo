@@ -91,3 +91,9 @@ export interface IPdfData {
   fileName: string;
   collection: string;
 }
+
+// 定义全局设置的接口
+export interface IGlobalSettings {
+  enable_denoising: boolean; // 将 noiseReductionEnabled 重命名为 enable_denoising
+  // 未来可以添加其他全局设置
+}
